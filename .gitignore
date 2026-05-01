@@ -1,0 +1,20 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.lodestone/
+coverage/
+.DS_Store
+*.log
+!.provenance-cleared.log
+.vitest-cache/
+
+# Secret hygiene
+.env
+.env.*
+!.env.example
+
+# Editor swap files
+*.swp
+*.swo
+.idea/
+.vscode/

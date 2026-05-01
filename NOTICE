@@ -1,0 +1,18 @@
+Lodestone
+Copyright 2026 Theferalmoon
+
+This product includes algorithmic core extracted from the CMNDI codebase
+(authored by Theferalmoon), specifically:
+
+  - cmndi-flywheel        (ingestion pipeline, training queue)
+  - cmndi-clusterer       (Leiden community detection — clean-room rewrite as Louvain in v0)
+  - cmndi-skill-emitter   (cluster -> SKILL.md emitter, gating, archive logic)
+  - cmndi-context-engine  (RAG search core)
+  - cmnd-embed-home       (FastAPI embedder service patterns)
+
+The relicensing of these components under Apache License, Version 2.0
+is documented in LICENSE-AUTHORIZATION.md, signed by the rights holder.
+
+This product also depends on third-party software released under their
+own licenses; see each dependency's LICENSE file in node_modules/ for
+details.
