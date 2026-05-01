@@ -1,0 +1,47 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Symbol/Edge/Cluster types > Cluster: post-Codex shape (name_status, agent_instruction, naming_evidence, diagnostics) 1`] = `
+{
+  "agent_instruction": "synthesize_name_from_members",
+  "bridges": [],
+  "description": "Authentication subsystem clustered around the User entity.",
+  "diagnostics": {
+    "algorithm": "louvain",
+    "algorithm_version": "graphology-communities-louvain@2.0.4",
+    "bridge_count": 5,
+    "graph_edge_count": 800,
+    "graph_node_count": 200,
+    "modularity": 0.62,
+    "resolution": 1.5,
+    "seed": 42,
+    "singleton_count": 3,
+    "stability_hash": "sha256-abc...",
+  },
+  "id": "auth-cluster-01",
+  "members": [],
+  "name": "login-User",
+  "name_status": "heuristic",
+  "naming_evidence": {
+    "anchor_symbol": "src/auth.ts::User::login",
+    "dominant_verb": "login",
+    "members_sampled": 12,
+  },
+  "size": 14,
+}
+`;
+
+exports[`Symbol/Edge/Cluster types > LodestoneSymbol: representative shape 1`] = `
+{
+  "cluster_id": "auth-cluster-01",
+  "docstring": "Validates credentials and returns a session.",
+  "kind": "method",
+  "language": "typescript",
+  "path": "src/auth.ts",
+  "range": {
+    "end_line": 28,
+    "start_line": 12,
+  },
+  "signature": "async login(email: string, password: string): Promise<Session>",
+  "symbol": "src/auth.ts::User::login",
+}
+`;

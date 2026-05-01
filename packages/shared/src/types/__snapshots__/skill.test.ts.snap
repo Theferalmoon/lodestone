@@ -1,0 +1,18 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Skill type (post-Codex maturity field) > seed skill snapshot — deterministic_seed, no source_cluster_id 1`] = `
+{
+  "body": "# Custom Error Subclass Pattern
+
+…",
+  "confidence": 1,
+  "description": "How this codebase models domain errors via Error subclasses.",
+  "emitted_at": "2026-05-01T03:00:00Z",
+  "evidence_count": 8,
+  "id": "seed-error-handling",
+  "maturity": "deterministic_seed",
+  "name": "Custom Error Subclass Pattern",
+  "observed_days": 0,
+  "slug": "error-handling",
+}
+`;

@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LodestoneToolResponse<T> envelope > snapshot: representative envelope shape 1`] = `
+{
+  "diagnostics": {
+    "coverage": 0.95,
+    "coverage_basis": "files-indexed-vs-non-ignored",
+  },
+  "provenance": {
+    "commits_behind_upstream": 0,
+    "commits_since_index": 0,
+    "dirty_at_index": false,
+    "dirty_now": false,
+    "has_upstream": true,
+    "head_commit": "abc1234",
+    "index_epoch": 42,
+    "indexed_at": "2026-05-01T03:00:00Z",
+    "indexed_commit": "abc1234",
+    "is_git_repo": true,
+    "source": "live",
+    "staleness_seconds": 0,
+    "upstream_branch": "origin/main",
+  },
+  "request_id": "01927e8c-d4f2-7000-9c4a-000000000001",
+  "results": [
+    {
+      "symbol": "src/auth.ts::User::login",
+    },
+  ],
+}
+`;
