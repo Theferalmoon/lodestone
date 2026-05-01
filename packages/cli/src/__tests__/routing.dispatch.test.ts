@@ -20,13 +20,15 @@ describe("dispatch", () => {
     err.mockRestore();
   });
 
-  it("`init` dispatches to the init stub (warns, returns 0)", async () => {
+  it("`init --dry-run` dispatches to init() and returns 0 without filesystem side-effects", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const code = await main(["init"]);
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const code = await main(["init", "--dry-run"]);
     expect(code).toBe(0);
-    const printed = err.mock.calls.flat().join("\n");
-    expect(printed).toMatch(/init.*not yet implemented/i);
+    const stdout = log.mock.calls.flat().join("\n");
+    expect(stdout).toMatch(/--dry-run set/);
     err.mockRestore();
+    log.mockRestore();
   });
 
   it("`seed-skills` dispatches to the seed-skills stub", async () => {
@@ -45,10 +47,12 @@ describe("dispatch", () => {
     err.mockRestore();
   });
 
-  it("`init --write-claude-md --pro` is accepted (stub returns 0)", async () => {
+  it("`init --dry-run --write-claude-md --pro` is accepted (no side-effects in dry-run)", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const code = await main(["init", "--write-claude-md", "--pro"]);
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const code = await main(["init", "--dry-run", "--write-claude-md", "--pro"]);
     expect(code).toBe(0);
     err.mockRestore();
+    log.mockRestore();
   });
 });

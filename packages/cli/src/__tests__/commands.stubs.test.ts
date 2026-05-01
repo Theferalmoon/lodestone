@@ -1,30 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect, vi } from "vitest";
-import { init, parseInitArgv } from "../commands/init.js";
 import { reindex } from "../commands/reindex.js";
 import { doctor } from "../commands/doctor.js";
 import { seedSkills } from "../commands/seed-skills.js";
 import { upgrade } from "../commands/upgrade.js";
 import { uninstall, parseUninstallArgv } from "../commands/uninstall.js";
 
+// init() is no longer a stub — it does real install work in §04.
+// See commands.init.test.ts for its dedicated coverage.
+
 describe("stub commands (return 0, warn, accept future flags)", () => {
-  it("init() stub returns 0 and warns", async () => {
-    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    expect(await init([])).toBe(0);
-    expect(err).toHaveBeenCalled();
-    err.mockRestore();
-  });
-
-  it("init parser accepts --write-claude-md and --pro flags", () => {
-    expect(parseInitArgv([])).toEqual({ writeClaudeMd: false, pro: false });
-    expect(parseInitArgv(["--write-claude-md"])).toEqual({ writeClaudeMd: true, pro: false });
-    expect(parseInitArgv(["--pro"])).toEqual({ writeClaudeMd: false, pro: true });
-    expect(parseInitArgv(["--write-claude-md", "--pro"])).toEqual({
-      writeClaudeMd: true,
-      pro: true,
-    });
-  });
-
   it("reindex() stub returns 0", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
     expect(await reindex([])).toBe(0);

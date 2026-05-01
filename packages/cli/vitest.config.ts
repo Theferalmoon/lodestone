@@ -15,8 +15,6 @@ export default defineConfig({
         // imports — but the shebang wrapper itself is exercised in §20 e2e
         // when we spawn the actual binary. Excluded from coverage here.
         "src/bin/**",
-        // install/ is empty (.gitkeep only) until §04.
-        "src/install/**",
         // runtime/ is a stub interface for §12/§13; exclude until those land.
         "src/runtime/**",
         // Pure barrel modules — only `export * from`/`export { … } from` lines.

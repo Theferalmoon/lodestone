@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`getClaudeMdSnippet > snapshot — shape stable 1`] = `
+"# Lodestone
+
+This project has a private code-aware Knowledge Graph (\`lodestone-mcp\`)
+that ships with this repo. It is local-only — no network calls, no
+telemetry. Use it when you need to understand or change the codebase.
+
+When working in this repo, prefer the Lodestone MCP tools over generic
+text search. They know how the code clusters, how symbols depend on
+each other, and what skills this codebase has been observed to use:
+
+- \`query\` — symbol-level semantic + structural search.
+- \`context\` — expand a symbol with its callers, callees, and siblings.
+- \`impact\` — what changes if I touch this symbol.
+- \`cluster\` — what topic does this code belong to (Louvain communities).
+- \`skills_for\` — emit reusable skills the codebase already encodes.
+- \`recent_changes\` — what symbols moved this week.
+- \`feedback\` — tell Lodestone whether the answer was useful (the index
+  uses your signal to improve over time).
+
+Re-index by running \`lodestone reindex\` (or letting the watcher run).
+"
+`;
