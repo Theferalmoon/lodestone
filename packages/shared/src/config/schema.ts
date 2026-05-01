@@ -67,7 +67,25 @@ const skillEmitterSchema = z
     path: ["expire_days"],
   });
 
-const DEFAULT_MCP_EXPOSE = [
+/**
+ * Canonical MCP tool names. `sql` is the post-Codex rename of `cypher` and is
+ * the only "dangerous" tool — exposing it requires `dangerous_tools_enabled`.
+ * Treating `expose` as an enum (not free-form strings) catches friend-facing
+ * typos at parse time. Codex impl-002 finding C5/A6.
+ */
+const MCP_TOOL = z.enum([
+  "query",
+  "context",
+  "impact",
+  "cluster",
+  "skills_for",
+  "recent_changes",
+  "feedback",
+  "sql",
+]);
+export type McpToolName = z.infer<typeof MCP_TOOL>;
+
+const DEFAULT_MCP_EXPOSE: readonly McpToolName[] = [
   "query",
   "context",
   "impact",
@@ -79,12 +97,16 @@ const DEFAULT_MCP_EXPOSE = [
 
 const mcpSchema = z
   .object({
-    expose: z.array(z.string()).default([...DEFAULT_MCP_EXPOSE]),
+    expose: z.array(MCP_TOOL).default([...DEFAULT_MCP_EXPOSE]),
     dangerous_tools_enabled: z.boolean().default(false),
     max_in_flight: z.number().int().min(1).default(4),
     max_response_kb: z.number().int().min(1).default(256),
   })
-  .strict();
+  .strict()
+  .refine((v) => !v.expose.includes("sql") || v.dangerous_tools_enabled, {
+    message: "exposing 'sql' requires dangerous_tools_enabled = true",
+    path: ["expose"],
+  });
 
 const proSchema = z
   .object({

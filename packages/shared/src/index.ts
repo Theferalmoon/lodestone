@@ -5,6 +5,10 @@
 export type { LodestoneToolResponse, Provenance, Diagnostics } from "./types/envelope.js";
 export { provenanceSchema, parseProvenance } from "./types/envelope.js";
 
+// Readiness marker (.lodestone/ready.json) — Codex impl-002 D3.
+export type { ReadyJson } from "./types/ready.js";
+export { readyJsonSchema, parseReadyJson } from "./types/ready.js";
+
 // Symbol / graph / cluster
 export type {
   Language,

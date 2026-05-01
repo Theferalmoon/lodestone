@@ -66,10 +66,51 @@ export const provenanceSchema = z
     index_epoch: z.number().int().nonnegative(),
     source: z.enum(["live", "stale", "not_ready"]),
   })
+  .strict()
   .refine((v) => v.staleness_seconds >= 0 || v.staleness_seconds === -1, {
     message: "staleness_seconds must be >= 0 or exactly -1 (never-indexed sentinel)",
     path: ["staleness_seconds"],
-  });
+  })
+  // Codex impl-002 C4: when not a git repo, every git-derived field must be
+  // null/false/0 and source must be "not_ready". Prevents inconsistent envelopes
+  // from slipping through into MCP responses.
+  .refine(
+    (v) =>
+      v.is_git_repo ||
+      (v.head_commit === null &&
+        v.indexed_commit === null &&
+        v.dirty_at_index === false &&
+        v.dirty_now === false &&
+        v.commits_since_index === 0 &&
+        v.has_upstream === false &&
+        v.upstream_branch === null &&
+        v.commits_behind_upstream === 0 &&
+        v.source === "not_ready"),
+    {
+      message:
+        "is_git_repo=false requires git fields to be null/false/0 and source=='not_ready'",
+      path: ["is_git_repo"],
+    }
+  )
+  // No upstream branch ⇔ branch null and zero commits-behind. Caught one bug in
+  // shadow testing; codify it now so MCP handlers can't drift.
+  .refine(
+    (v) => v.has_upstream || (v.upstream_branch === null && v.commits_behind_upstream === 0),
+    {
+      message: "has_upstream=false requires upstream_branch=null and commits_behind_upstream=0",
+      path: ["has_upstream"],
+    }
+  )
+  // Never-indexed: indexed_at null ⇔ indexed_commit null AND staleness_seconds=-1.
+  .refine(
+    (v) =>
+      v.indexed_at !== null || (v.indexed_commit === null && v.staleness_seconds === -1),
+    {
+      message:
+        "indexed_at=null requires indexed_commit=null and staleness_seconds=-1 (never-indexed)",
+      path: ["indexed_at"],
+    }
+  );
 
 /** Validates a Provenance candidate. Throws ZodError on invalid shape. */
 export function parseProvenance(raw: unknown): Provenance {

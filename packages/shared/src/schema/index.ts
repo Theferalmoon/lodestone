@@ -11,6 +11,7 @@
 // row may be inserted before the field is computed). §08 owns the read-side
 // map that fills missing values with sensible defaults before constructing
 // the application-level type.
+import type { FeedbackSignal } from "../types/feedback.js";
 import type { Maturity } from "../types/skill.js";
 import type { Language, NameStatus, SymbolKind, EdgeKind } from "../types/symbol.js";
 
@@ -125,7 +126,12 @@ export interface FeedbackRow {
   recorded_at: string;
   tool: string;
   request_id: string;
-  signal: string;
+  /**
+   * Codex impl-002 B5: narrowed from `string` to the `FeedbackSignal` union.
+   * SQLite still stores TEXT; the row type narrows at the type-system boundary.
+   * §08 owns the runtime check that decodes/validates the literal on read.
+   */
+  signal: FeedbackSignal;
   note: string | null;
 }
 

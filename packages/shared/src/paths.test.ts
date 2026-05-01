@@ -51,7 +51,6 @@ describe("paths resolver", () => {
       "emergingSkills",
       "archiveSkills",
       "runtime",
-      "feedbackJsonl",
       "ready",
       "config",
       "installManifest",

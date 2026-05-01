@@ -13,7 +13,11 @@ export const LODESTONE_DIRNAME = ".lodestone";
  * NOTE: per the POST-CODEX-001 amendments, the storage substrate is SQLite
  * (better-sqlite3 in WAL mode), NOT KuzuDB. The original section spec body
  * referenced `kuzu`, `feedback`, `version` keys; those are renamed here to
- * `sqlite`, `feedbackJsonl`, `ready` per claude-plan.md §1.3 and §1.5.
+ * `sqlite`, `ready` per claude-plan.md §1.3 and §1.5.
+ *
+ * Codex impl-002 D2: the previous `feedbackJsonl` key was removed. Per
+ * claude-plan.md §4.8, feedback persists to the SQLite `feedback` table —
+ * the JSONL surface invited drift back to the deprecated storage path.
  */
 const SUBPATHS = {
   lance: "lance",
@@ -24,7 +28,6 @@ const SUBPATHS = {
   emergingSkills: path.join("skills", "emerging"),
   archiveSkills: path.join("skills", ".archive"),
   runtime: "runtime",
-  feedbackJsonl: "feedback.jsonl",
   ready: "ready.json",
   config: "lodestone.toml",
   installManifest: "install-manifest.json",

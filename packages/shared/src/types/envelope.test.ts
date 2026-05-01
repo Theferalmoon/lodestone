@@ -141,4 +141,82 @@ describe("provenanceSchema (runtime validator)", () => {
   it("schema export is the same object the parser uses", () => {
     expect(provenanceSchema).toBeDefined();
   });
+
+  // Codex impl-002 C4: cross-field invariants. Each refine must be exercised
+  // so unintended re-laxing in future edits is caught.
+  it(".strict(): rejects unknown extra keys", () => {
+    expect(() => parseProvenance({ ...valid, sneaky: "kthx" })).toThrow();
+  });
+
+  it("rejects is_git_repo=false with git fields not nulled out", () => {
+    expect(() =>
+      parseProvenance({
+        ...valid,
+        is_git_repo: false,
+        head_commit: null,
+        indexed_commit: null,
+        dirty_at_index: false,
+        dirty_now: false,
+        commits_since_index: 0,
+        has_upstream: false,
+        upstream_branch: null,
+        commits_behind_upstream: 0,
+        // source still "live" — must be "not_ready" when not a git repo
+      })
+    ).toThrow(/is_git_repo/);
+  });
+
+  it("accepts the canonical non-git provenance shape", () => {
+    expect(() =>
+      parseProvenance({
+        is_git_repo: false,
+        head_commit: null,
+        indexed_commit: null,
+        dirty_at_index: false,
+        dirty_now: false,
+        commits_since_index: 0,
+        has_upstream: false,
+        upstream_branch: null,
+        commits_behind_upstream: 0,
+        indexed_at: null,
+        staleness_seconds: -1,
+        index_epoch: 0,
+        source: "not_ready",
+      })
+    ).not.toThrow();
+  });
+
+  it("rejects has_upstream=false with upstream_branch set", () => {
+    expect(() =>
+      parseProvenance({ ...valid, has_upstream: false, upstream_branch: "origin/main" })
+    ).toThrow(/has_upstream/);
+  });
+
+  it("rejects has_upstream=false with non-zero commits_behind_upstream", () => {
+    expect(() =>
+      parseProvenance({
+        ...valid,
+        has_upstream: false,
+        upstream_branch: null,
+        commits_behind_upstream: 3,
+      })
+    ).toThrow(/has_upstream/);
+  });
+
+  it("rejects indexed_at=null with indexed_commit still set", () => {
+    expect(() =>
+      parseProvenance({ ...valid, indexed_at: null, staleness_seconds: -1 })
+    ).toThrow(/indexed_at/);
+  });
+
+  it("rejects indexed_at=null with staleness_seconds != -1", () => {
+    expect(() =>
+      parseProvenance({
+        ...valid,
+        indexed_at: null,
+        indexed_commit: null,
+        staleness_seconds: 0,
+      })
+    ).toThrow(/indexed_at/);
+  });
 });

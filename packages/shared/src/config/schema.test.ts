@@ -108,4 +108,32 @@ describe("lodestoneConfigSchema (mirror of claude-plan.md §5)", () => {
   it("schema export is the same object the parser uses", () => {
     expect(lodestoneConfigSchema).toBeDefined();
   });
+
+  // Codex impl-002 C5/A6: tool-name enum + sql exposure refine.
+  it("rejects unknown MCP tool names in expose (typo guard)", () => {
+    expect(() =>
+      parseLodestoneConfig({
+        project: { name: "demo" },
+        mcp: { expose: ["qurey"] },
+      })
+    ).toThrow();
+  });
+
+  it("rejects 'sql' in expose unless dangerous_tools_enabled is true", () => {
+    expect(() =>
+      parseLodestoneConfig({
+        project: { name: "demo" },
+        mcp: { expose: ["query", "sql"], dangerous_tools_enabled: false },
+      })
+    ).toThrow(/sql/);
+  });
+
+  it("accepts 'sql' in expose when dangerous_tools_enabled is true", () => {
+    const config = parseLodestoneConfig({
+      project: { name: "demo" },
+      mcp: { expose: ["query", "sql"], dangerous_tools_enabled: true },
+    });
+    expect(config.mcp.expose).toContain("sql");
+    expect(config.mcp.dangerous_tools_enabled).toBe(true);
+  });
 });
