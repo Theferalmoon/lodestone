@@ -4,7 +4,7 @@
 
 ## Authorization
 
-I, **Theferalmoon** (sole author and copyright holder of the CMNDI codebase under `/home/theferalmoon/local-opus-lab/`), hereby authorize the relicensing under the **Apache License, Version 2.0** of the algorithmic core of the following components, as they are extracted into the Lodestone distribution:
+I, **Theferalmoon** (sole author and copyright holder of the CMNDI codebase, an internal monorepo authored by me and not redistributed), hereby authorize the relicensing under the **Apache License, Version 2.0** of the algorithmic core of the following components, as they are extracted into the Lodestone distribution:
 
 - `cmndi-flywheel/` — the ingestion pipeline + training queue (the algorithmic core, excluding the CMNDI-specific Captain's Log, Locksmith, CMDB, IAM, mTLS, and TLS startup-chain integrations which are not extracted)
 - `cmndi-clusterer/` — the Leiden community detection and cluster naming heuristic (algorithm + heuristics; the cluster naming logic and short-content penalty are inspired-by, with an explicit clean-room rewrite for Lodestone v0)
@@ -22,7 +22,7 @@ This authorization explicitly covers:
 
 This authorization does **not**:
 
-- Relicense the original CMNDI source repository (`/home/theferalmoon/local-opus-lab/`). The CMNDI repository continues under whatever license(s) it carries today, which may be different from Apache 2.0.
+- Relicense the original CMNDI source repository. The CMNDI repository (an internal monorepo) continues under whatever license(s) it carries today, which may be different from Apache 2.0.
 - Authorize the relicensing of any CMNDI-internal infrastructure that is NOT extracted into Lodestone (Captain's Log, Locksmith, OpenBao, IAM, Cartographer/SkyMesh PQC mesh, CMDB, USG/HAL/golf-os SaaS, DAIV branding, compliance framework integrations).
 - Convey trademark rights to the "CMNDI" or "DAIV" names or marks.
 
@@ -44,7 +44,7 @@ This document **is** that authorization. It is committed to the Lodestone reposi
 
 **Recorded in commit:** see `git log` for the landing commit (this file is committed at the root of the lodestone repo).
 
-**Witness reference:** `/home/theferalmoon/local-opus-lab/docs/plans/2026-05-01-coding-kg-product/claude-integration-notes-codex-001.md` (planning artifact recording the explicit authorization decision)
+**Witness reference:** see the §6 "Relicensing" section of the Lodestone v0 implementation plan, recorded as `claude-integration-notes-codex-001.md` in the planning artifacts that accompany this distribution. The internal CMNDI source location is intentionally not disclosed in this public-facing document.
 
 ---
 

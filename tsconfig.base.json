@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
-    "useDefineForClassFields": true,
-    "verbatimModuleSyntax": false
+    "useDefineForClassFields": true
   }
 }
+
