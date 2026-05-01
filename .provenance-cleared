@@ -1,2 +1,0 @@
-# Provenance clearance — consumed on next commit.
-# 2026-05-01T19:00:48Z  Theferalmoon  Section-01 fix-up: no new direct deps. Re-clearing because package.json was modified (added pnpm.onlyBuiltDependencies allowlist for esbuild — already in lock as transitive of vitest).

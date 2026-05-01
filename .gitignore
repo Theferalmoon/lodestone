@@ -6,6 +6,9 @@ coverage/
 .DS_Store
 *.log
 !.provenance-cleared.log
+
+# Provenance one-shot token (consumed by pre-commit hook; never commit)
+.provenance-cleared
 .vitest-cache/
 
 # Secret hygiene
