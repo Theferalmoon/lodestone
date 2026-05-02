@@ -120,37 +120,62 @@ describe("sql tool (§15 gated escape hatch)", () => {
     expect((env.results[0] as { x: number }).x).toBe(1);
   });
 
-  it("rejects DROP at the driver level (OPEN_READONLY)", async () => {
+  // §15 RED #2 amendment: DROP/CREATE/INSERT now hit the statement-shape
+  // gate (must begin with SELECT or WITH) BEFORE the driver-level
+  // OPEN_READONLY rejection. Both layers are intentional defense-in-depth;
+  // the test asserts whichever fires first, since DDL/DML are flatly
+  // unacceptable regardless of which layer caught them.
+  it("rejects DROP at the statement-shape gate (or driver OPEN_READONLY)", async () => {
     const env = await handler({ query: "DROP TABLE symbols" });
     expect(env.results).toEqual([]);
     expect(env.diagnostics.warnings ?? []).toEqual([
-      expect.stringMatching(/read-only-violation|parse-error|attempt to write/i),
+      expect.stringMatching(
+        /statement-shape|SELECT or WITH|read-only-violation|parse-error|attempt to write/i,
+      ),
     ]);
   });
 
-  it("rejects CREATE at the driver level", async () => {
+  it("rejects CREATE at the statement-shape gate", async () => {
     const env = await handler({ query: "CREATE TABLE evil (x INTEGER)" });
     expect(env.results).toEqual([]);
     expect(env.diagnostics.warnings ?? []).toEqual([
-      expect.stringMatching(/read-only-violation|parse-error|attempt to write/i),
+      expect.stringMatching(
+        /statement-shape|SELECT or WITH|read-only-violation|parse-error|attempt to write/i,
+      ),
     ]);
   });
 
-  it("rejects INSERT at the driver level", async () => {
+  it("rejects INSERT at the statement-shape gate", async () => {
     const env = await handler({
       query: "INSERT INTO symbols (id) VALUES ('zzz')",
     });
     expect(env.results).toEqual([]);
     expect(env.diagnostics.warnings ?? []).toEqual([
-      expect.stringMatching(/read-only-violation|parse-error|attempt to write/i),
+      expect.stringMatching(
+        /statement-shape|SELECT or WITH|read-only-violation|parse-error|attempt to write/i,
+      ),
     ]);
   });
 
   it("surfaces malformed SQL as a structured parse-error (no crash)", async () => {
+    // After §15 RED #2: SELEC starts with neither SELECT nor WITH so the
+    // statement-shape gate fires first. We assert either error path —
+    // the user-visible outcome (empty results + structured warning) is
+    // unchanged.
     const env = await handler({ query: "SELEC bad-syntax" });
     expect(env.results).toEqual([]);
     expect(env.diagnostics.warnings ?? []).toEqual([
-      expect.stringMatching(/parse-error/),
+      expect.stringMatching(/parse-error|statement-shape|SELECT or WITH/i),
+    ]);
+  });
+
+  it("surfaces a real prepare-time parse error (after the shape gate)", async () => {
+    // Starts with SELECT so it passes the shape gate; better-sqlite3
+    // rejects at prepare() time with a syntax error.
+    const env = await handler({ query: "SELECT FROM" });
+    expect(env.results).toEqual([]);
+    expect(env.diagnostics.warnings ?? []).toEqual([
+      expect.stringMatching(/parse-error|cartesian/i),
     ]);
   });
 
@@ -183,5 +208,75 @@ describe("sql tool (§15 gated escape hatch)", () => {
   it("envelope channel is 'code' (POST-FORGE-VISION amendment §2)", async () => {
     const env = await handler({ query: "SELECT 1" });
     expect(env.channel).toBe("code");
+  });
+
+  // §15 RED #2 — DoS preflight + bounded materialization. better-sqlite3 is
+  // synchronous and exposes no JS binding for sqlite3_interrupt(), so we
+  // can't time out a long-running query from a setTimeout callback. The
+  // realistic defense is preflight rejection (statement shape + EXPLAIN
+  // QUERY PLAN smell test) + iterate()-based early-stop so MAX_ROWS is a
+  // pre-materialization cap rather than a post-materialization slice.
+
+  describe("§15 RED #2 — DoS hardening", () => {
+    it("rejects multi-statement queries (statement-shape gate)", async () => {
+      const env = await handler({
+        query: "SELECT 1; SELECT 2",
+      });
+      expect(env.results).toEqual([]);
+      expect(env.diagnostics.warnings ?? []).toEqual([
+        expect.stringMatching(/multi-statement|single statement/i),
+      ]);
+    });
+
+    it("rejects non-SELECT/WITH leading keyword (statement-shape gate)", async () => {
+      const env = await handler({
+        query: "PRAGMA table_info(symbols)",
+      });
+      expect(env.results).toEqual([]);
+      expect(env.diagnostics.warnings ?? []).toEqual([
+        expect.stringMatching(/SELECT or WITH|read-only/i),
+      ]);
+    });
+
+    it("accepts a leading WITH (CTE) read query", async () => {
+      const env = await handler({
+        query:
+          "WITH ids AS (SELECT id FROM symbols) SELECT id FROM ids ORDER BY id LIMIT 3",
+      });
+      expect(env.results.length).toBe(3);
+    });
+
+    it("rejects EXPLAIN QUERY PLAN cartesian patterns (cost preflight)", async () => {
+      // 5x5x5x5 cross product = 625 rows, easily blows MAX_ROWS but more
+      // importantly the EXPLAIN plan shows back-to-back SCANs with no
+      // WHERE-clause join filter — that's the cartesian smell we reject.
+      const env = await handler({
+        query:
+          "SELECT s1.id FROM symbols s1, symbols s2, symbols s3, symbols s4",
+      });
+      expect(env.results).toEqual([]);
+      expect(env.diagnostics.warnings ?? []).toEqual([
+        expect.stringMatching(/cartesian|too expensive|cost/i),
+      ]);
+    });
+
+    it("stops materializing after MAX_ROWS rows (iterate()-based early break)", async () => {
+      // Insert enough rows that a SELECT * would normally materialize >MAX_ROWS.
+      // Use a recursive-CTE generator to avoid having to seed thousands of rows.
+      const env = await handler({
+        query:
+          "WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM r WHERE n < 5000) SELECT n FROM r",
+      });
+      // Either rejected by preflight (recursive CTE without indexed source) OR
+      // truncated by iterate() at MAX_ROWS. Both are acceptable for v0.
+      const warnings = env.diagnostics.warnings ?? [];
+      const truncatedToMax =
+        env.results.length === 1000 &&
+        warnings.some((w) => /truncated to 1000/.test(w));
+      const rejected =
+        env.results.length === 0 &&
+        warnings.some((w) => /cartesian|too expensive|cost|preflight/i.test(w));
+      expect(truncatedToMax || rejected).toBe(true);
+    });
   });
 });
