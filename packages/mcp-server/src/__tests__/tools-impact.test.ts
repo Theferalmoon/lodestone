@@ -202,4 +202,68 @@ describe("impact tool (§15)", () => {
     const env = await handler({ file_or_symbol: "src/c.ts::c" });
     expect(env.channel).toBe("code");
   });
+
+  // §15 YELLOW (Codex impl-015): impact() reports a one-step approximation
+  // for shortest_path (`[origin, impacted]` regardless of true depth) and
+  // sets `blast_radius` to the CTE depth, not a real breadth/count radius.
+  // Agents that consume the response should be able to detect this so they
+  // don't treat the path as ground truth. Surface it via:
+  //   - `approximate: true` on each ImpactNode whose depth > 1 (the v0
+  //     CTE doesn't carry parent links)
+  //   - `path_kind: "exact" | "approximate"` to make it explicit
+  //   - top-level `diagnostics.warnings` entry the first time the response
+  //     contains any approximate path, so the agent gets a single visible
+  //     hint per call
+  describe("§15 YELLOW — approximate path disclosure", () => {
+    it("marks transitive-depth ImpactNodes as approximate", async () => {
+      const env = await handler({ file_or_symbol: "src/c.ts::c" });
+      const transitive = env.results.filter(
+        (n) => (n as { blast_radius: number }).blast_radius > 1,
+      );
+      expect(transitive.length).toBeGreaterThan(0);
+      for (const r of transitive) {
+        const node = r as { approximate?: boolean; path_kind?: string };
+        expect(node.approximate).toBe(true);
+        expect(node.path_kind).toBe("approximate");
+      }
+    });
+
+    it("marks depth-1 (direct caller) ImpactNodes as exact", async () => {
+      // src/b.ts::b is a direct caller of src/c.ts::c (b -> c).
+      const env = await handler({ file_or_symbol: "src/c.ts::c" });
+      const direct = env.results.find(
+        (n) => (n as { symbol: { symbol: string } }).symbol.symbol === "src/b.ts::b",
+      );
+      expect(direct).toBeDefined();
+      const node = direct as {
+        blast_radius: number;
+        approximate?: boolean;
+        path_kind?: string;
+      };
+      expect(node.blast_radius).toBe(1);
+      expect(node.approximate ?? false).toBe(false);
+      expect(node.path_kind).toBe("exact");
+    });
+
+    it("emits a top-level diagnostics warning when any path is approximate", async () => {
+      const env = await handler({ file_or_symbol: "src/c.ts::c" });
+      const warnings = env.diagnostics.warnings ?? [];
+      expect(
+        warnings.some((w) =>
+          /approximate|shortest_path.*one-step|v0 CTE/i.test(w),
+        ),
+      ).toBe(true);
+    });
+
+    it("does NOT emit the approximation warning when every result is direct", async () => {
+      // m1 / m2 callers are all depth-1 → no transitive approximation.
+      const env = await handler({ file_or_symbol: "src/multi.ts" });
+      const warnings = env.diagnostics.warnings ?? [];
+      expect(
+        warnings.some((w) =>
+          /approximate|shortest_path.*one-step|v0 CTE/i.test(w),
+        ),
+      ).toBe(false);
+    });
+  });
 });

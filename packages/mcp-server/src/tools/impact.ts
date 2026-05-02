@@ -52,12 +52,34 @@ interface SymbolRef {
   pagerank?: number;
 }
 
-/** Per-impacted-node payload — matches the §15 spec's ImpactNode shape. */
+/** Per-impacted-node payload — matches the §15 spec's ImpactNode shape.
+ *
+ * §15 YELLOW (Codex impl-015): `shortest_path` is a v0 one-step approximation
+ * (`[origin, impacted]`) regardless of true depth, because the IMPACT_OF_SQL
+ * recursive CTE doesn't carry parent links. `blast_radius` is set to the
+ * CTE's per-id depth, not a real breadth/count radius. We surface both
+ * caveats so callers can detect them:
+ *
+ *   - `path_kind: "exact"` when blast_radius === 1 (the path IS the direct
+ *     edge), `"approximate"` otherwise.
+ *   - `approximate: true` mirror of the same signal for callers that prefer
+ *     a boolean flag.
+ *   - top-level `diagnostics.warnings` entry the first time a response
+ *     contains any approximate path, so the agent gets a single visible
+ *     hint per call rather than per row.
+ */
 interface ImpactNode {
   symbol: SymbolRef;
   blast_radius: number;
   pagerank: number;
   shortest_path: SymbolRef[];
+  /** "exact" when the path is the literal direct caller edge (blast_radius === 1),
+   *  else "approximate" — the CTE doesn't carry parent links in v0. */
+  path_kind: "exact" | "approximate";
+  /** Boolean mirror of `path_kind === "approximate"`; surfaced for callers
+   *  that prefer a flag over a string discriminator. Omitted when false to
+   *  keep the wire payload small for the common direct-caller case. */
+  approximate?: true;
 }
 
 export async function handler(
@@ -145,12 +167,21 @@ export async function handler(
         const shortestPath: SymbolRef[] = startRef
           ? [startRef, ref]
           : [ref];
-        return {
+        // §15 YELLOW: depth=1 means the impacted node is a direct caller of
+        // the origin, so `[origin, impacted]` IS the literal shortest path.
+        // depth>1 means we're surfacing an indirect caller and the same
+        // two-element list is a one-step approximation — flag it so the
+        // caller doesn't treat the path as ground truth.
+        const isExact = depth === 1;
+        const node: ImpactNode = {
           symbol: ref,
           blast_radius: depth,
           pagerank: hit.pagerank ?? 0,
           shortest_path: shortestPath,
+          path_kind: isExact ? "exact" : "approximate",
         };
+        if (!isExact) node.approximate = true;
+        return node;
       },
     );
 
@@ -161,7 +192,22 @@ export async function handler(
     });
 
     const capped = nodes.slice(0, MAX_IMPACT_RESULTS);
-    return wrapOk<ImpactNode>(capped, LODESTONE_CHANNEL_V0);
+    const env = wrapOk<ImpactNode>(capped, LODESTONE_CHANNEL_V0);
+    // §15 YELLOW: emit a single top-level approximation-disclosure warning
+    // when ANY result row carries an approximate path. One warning per call
+    // keeps the diagnostics envelope readable while still surfacing the
+    // caveat to the agent. Omitted when every result is depth=1 (the
+    // file-path-expansion fast path that returns only direct callers).
+    if (capped.some((n) => n.path_kind === "approximate")) {
+      env.diagnostics = {
+        ...env.diagnostics,
+        warnings: [
+          ...(env.diagnostics.warnings ?? []),
+          "approximate: shortest_path entries with blast_radius>1 are a one-step approximation (v0 CTE does not carry parent links); treat path_kind=='approximate' rows as 'reachable from origin within blast_radius hops' rather than the literal call chain",
+        ],
+      };
+    }
+    return env;
   } finally {
     handle.close();
   }
