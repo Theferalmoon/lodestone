@@ -254,6 +254,59 @@ export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSum
       embedder,
     });
 
+    // §15 RED #3 (Codex impl-015): mirror cluster_members onto
+    // symbols.cluster_id. The §15 `context()` MCP tool reads
+    // `symbols.cluster_id` directly to surface cluster membership; pre-fix
+    // the pipeline wrote symbols BEFORE clustering (no cluster id known
+    // yet) and persistClusters only wrote `cluster_members`/`clusters`,
+    // leaving `symbols.cluster_id` NULL on every production reindex. Unit
+    // fixtures that seeded the column manually masked the gap.
+    //
+    // Implemented as two correlated UPDATEs in a single transaction:
+    //   (1) clear any stale cluster_id on symbols whose membership row is
+    //       gone (handles re-cluster moves), then
+    //   (2) set cluster_id from the current cluster_members row.
+    //
+    // We touch this in pipeline/ rather than in clusterer/persist.ts so the
+    // mirror is a pipeline-level concern (the §15 reader contract is what
+    // the §10 persist layer is being asked to satisfy here, and keeping the
+    // §10 helper backwards-compatible for direct callers preserves the
+    // unit-test surface the clusterer crate already ships).
+    progress("cluster-mirror");
+    const mirrorTx = w.transaction(() => {
+      // (1) Clear any cluster_id assignment that has no matching
+      // cluster_members row. ON DELETE SET NULL on the symbols.cluster_id
+      // FK already nulls a row when a `clusters` entry vanishes, but a
+      // membership-only move (same cluster id, different members) leaves
+      // an orphan we have to clean up explicitly.
+      w.prepare(
+        `UPDATE symbols SET cluster_id = NULL
+          WHERE cluster_id IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM cluster_members cm
+               WHERE cm.symbol_id = symbols.id
+                 AND cm.cluster_id = symbols.cluster_id
+            )`,
+      ).run();
+      // (2) Set cluster_id from the current membership. A symbol can only
+      // belong to one cluster at a time per §10 schema, so the LIMIT 1
+      // guard is defensive — a deterministic pick if the invariant ever
+      // gets violated.
+      w.prepare(
+        `UPDATE symbols
+            SET cluster_id = (
+              SELECT cm.cluster_id
+                FROM cluster_members cm
+               WHERE cm.symbol_id = symbols.id
+               LIMIT 1
+            )
+          WHERE EXISTS (
+            SELECT 1 FROM cluster_members cm WHERE cm.symbol_id = symbols.id
+          )`,
+      ).run();
+    });
+    mirrorTx();
+
     // 5. Skills (seed) — deterministic v0 source. Embedder backfills
     //    skills.description_embedding so §16 `skills_for` cosine search
     //    has data to match against (otherwise it falls back to substring).

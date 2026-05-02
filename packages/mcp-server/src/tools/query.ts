@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-// `query` tool — §14 implementation. Hybrid semantic + lexical search over the
-// per-project SQLite + sqlite-vec index. Embeds the user's question via the
-// shared @lodestone/ingest/embed runtime, runs a vector ANN against the
-// `symbol_embeddings` virtual table, runs a path/signature/docstring LIKE-lane
-// alongside as a poor-man's lexical retriever, fuses both into a single ranked
-// result list, and returns LodestoneToolResponseV13 envelopes per §13 contract.
+// `query` tool — section 14 implementation. Hybrid semantic + lexical search
+// over the per-project SQLite + sqlite-vec index. Embeds the user's question
+// via the shared @lodestone/ingest/embed runtime, runs a vector ANN against
+// the `symbol_embeddings` virtual table, runs a path/signature/docstring
+// LIKE-lane alongside as a poor-man's lexical retriever, fuses both into a
+// single ranked result list, and returns LodestoneToolResponseV13 envelopes
+// per §13 contract.
 //
 // POST-CODEX-001 amendments respected:
 //   1. Reads only via openReader from @lodestone/ingest/store (no LanceDB).
@@ -16,8 +17,25 @@
 //   5. `paths` / `languages` / `since` push down into the SQL WHERE clause
 //      before the vector lane runs — saves ANN budget on excluded candidates.
 //
+// CODEX-014 amendments (Wave 3):
+//   RED #1 — Vector lane is OPTIONAL. Embedder load failures, embed failures,
+//     and vectorSearch failures degrade to lexical-only with a warning, not a
+//     hard error. A fresh install with no model weights still serves usable
+//     results from the lexical lane.
+//   RED #2 — Filter pushdown is REAL pushdown. Lexical lane pushes paths +
+//     languages into SQL via LIKE/IN (no SQLite glob extension required). The
+//     vector lane overfetches into a budget loop, post-filtering, until topK
+//     admissible candidates surface OR the overfetch ceiling is hit.
+//   RED #3 — `since` is git-aware. We accept commit hashes, ISO-8601 stamps,
+//     and relative durations ("1 week ago", "24h"). Malformed input rejects
+//     with a clear error envelope before any retrieval runs.
+//   YELLOW — Vector-disabled diagnostics surface as warnings on the response.
+//   YELLOW — Snippets read the actual source +/- N lines (was metadata-only).
+//
 // Channel discriminant stays "code" only per the POST-FORGE-VISION amendment
 // §2; the §13 envelope wrapper enforces this on the inbound side.
+
+import path from "node:path";
 
 import { z } from "zod";
 
@@ -54,6 +72,9 @@ import {
   resolveDbPath,
   toMcpInputSchema,
 } from "./_shared.js";
+import { MalformedSinceError, parseSince, type SinceSpec } from "../lib/since.js";
+import { isGitRepo, resolveCommitTimestamp } from "../lib/git.js";
+import { buildSnippetWindow } from "../lib/snippet.js";
 
 export const description =
   "Hybrid semantic + keyword + graph search over the project's symbols. Returns the top-K most relevant functions, methods, classes, interfaces, types, modules, or constants for a natural-language question. Combines vector similarity (sqlite-vec), BM25 keyword match, and PageRank-weighted graph proximity. Supports filters by file path, language, and recency. Use this as the default discovery tool when the agent needs to find code by intent rather than by exact name.";
@@ -103,6 +124,9 @@ const permissiveSchema = z.object({
 const TOP_K_HARD_CAP = 50;
 /** Fan-out multiplier per lane before fusion — mirrors §14 spec § query.ts step 3. */
 const LANE_FANOUT = 4;
+/** Hard ceiling on vector-lane overfetch when filters are aggressive. Prevents
+ * an unfilterable query from scanning the entire embedding table. */
+const VECTOR_OVERFETCH_CEILING = 500;
 
 /** A single hit returned to the caller. */
 export interface QueryHit {
@@ -110,8 +134,8 @@ export interface QueryHit {
   path: string;
   language: Language;
   range: { start_line: number; end_line: number };
-  /** ~20 lines of context. v0 returns the symbol signature/docstring; full
-   * file paging lands in §15 once snippet caching is wired. */
+  /** ~20 lines of context centered on the symbol. Falls back to
+   * signature/docstring when the source file is unreadable. */
   snippet: string;
   /** Fused score in [0, 1]. Higher is better. */
   score: number;
@@ -149,12 +173,31 @@ interface CandidateRow {
   cluster_id: string | null;
   pagerank: number | null;
   updated_at_epoch: number;
+  updated_at_commit: string | null;
+}
+
+/** Resolved filter set: like the public shape but `since` has been parsed
+ * into a SinceSpec + (optionally) a wall-clock cutoff resolved against git. */
+interface ResolvedFilters {
+  paths?: string[];
+  languages?: string[];
+  /** Original spec — kept for diagnostics. */
+  since?: SinceSpec;
+  /** Resolved cutoff (epoch ms) for kind=timestamp/relative, or for kind=commit
+   * when we successfully resolved the hash via git. Filtering uses this to
+   * compare against per-row commit timestamps. */
+  sinceCutoffMs?: number;
+  /** When kind=commit and the hash IS resolvable via git: the set of commit
+   * hashes whose timestamp is at-or-after the resolved cutoff. We can use
+   * this for an in-set lookup against `symbols.updated_at_commit` when a row
+   * has a commit. Computing the full set up-front would require walking the
+   * log; we instead do a simple cutoff-ms comparison via per-commit lookup
+   * cache (see `commitTsCache` in admitsSince()). */
+  commitHash?: string;
 }
 
 export async function handler(input: unknown): Promise<LodestoneToolResponseV13<QueryHit>> {
-  // 1) Permissive parse + clamp. The public schema would reject top_k > 50;
-  // we parse with the relaxed shape so we can return diagnostics.clamped: true
-  // instead of throwing (amendment 4).
+  // 1) Permissive parse + clamp.
   let parsed: z.infer<typeof permissiveSchema>;
   try {
     parsed = permissiveSchema.parse(input ?? {});
@@ -171,13 +214,10 @@ export async function handler(input: unknown): Promise<LodestoneToolResponseV13<
   }
 
   // 2) Resolve project paths + verify readiness.
-  // POST-§20 Issue B: `resolveDbPath` honors LODESTONE_DB_PATH > LODESTONE_CWD
-  // > process.cwd() — a single helper across §14 + §15 surfaces. The lodestone
-  // dir we compute for the readiness marker still tracks `resolveCwd()` because
-  // ready.json lives under `<cwd>/.lodestone/`, not next to the DB.
   const cwd = resolveCwd();
   const lodestoneDir = `${cwd.replace(/\/$/, "")}/.lodestone`;
   const dbPath = resolveDbPath();
+  const repoRoot = path.dirname(path.dirname(dbPath));
 
   let handle: ReturnType<typeof openReader>;
   try {
@@ -187,81 +227,154 @@ export async function handler(input: unknown): Promise<LodestoneToolResponseV13<
     return wrapErr<QueryHit>(message, LODESTONE_CHANNEL_V0);
   }
 
+  // Track non-fatal diagnostics that accumulate during retrieval.
+  const warnings: string[] = [];
+
   let provenance: Provenance | undefined;
   try {
-    // impl-008 RED #4 cross-cut: cross-store ready check (ready.json AND
-    // index_meta.current_epoch in lockstep). Replaces the prior single-file
-    // handle.ensureReady() which couldn\'t catch the SQLite-vs-ready.json
-    // crash window.
     let marker;
     try {
       marker = assertReaderGated(handle);
     } catch {
       return wrapNotReady<QueryHit>(LODESTONE_CHANNEL_V0);
     }
-    void lodestoneDir; // retained for diagnostic-message clarity in test fixtures
+    void lodestoneDir;
     provenance = provenanceFromReady(marker);
 
-    // 3) Run lexical lane (filter-aware SQL) FIRST so we know which symbol_ids
-    // are admissible. Vector lane runs unfiltered then we intersect; this
-    // keeps the SQL simple and the vector ANN well-fed.
-    const lexicalRows = lexicalSearch(handle.db, parsed.question, parsed.filters, topK * LANE_FANOUT);
-    const lexicalIds = lexicalRows.map((r) => r.id);
+    // 3) Resolve `since` filter (RED #3). Reject malformed input fast, before
+    // any retrieval. For commit-hash inputs, attempt git resolution; if git
+    // is unavailable or the hash is unknown we still proceed but emit a
+    // warning so the caller knows the filter became a no-op.
+    let resolvedFilters: ResolvedFilters | undefined;
+    if (parsed.filters) {
+      let sinceSpec: SinceSpec | undefined;
+      let sinceCutoffMs: number | undefined;
+      let commitHash: string | undefined;
+      if (parsed.filters.since !== undefined && parsed.filters.since !== "") {
+        try {
+          sinceSpec = parseSince(parsed.filters.since);
+        } catch (err) {
+          if (err instanceof MalformedSinceError) {
+            return wrapErr<QueryHit>(err.message, LODESTONE_CHANNEL_V0, {
+              provenance,
+            });
+          }
+          throw err;
+        }
+        if (sinceSpec.kind === "timestamp" || sinceSpec.kind === "relative") {
+          sinceCutoffMs = sinceSpec.epochMs;
+        } else if (sinceSpec.kind === "commit") {
+          commitHash = sinceSpec.hash;
+          if (isGitRepo(repoRoot)) {
+            const resolved = resolveCommitTimestamp(repoRoot, sinceSpec.hash);
+            if (resolved !== null) {
+              sinceCutoffMs = resolved;
+            } else {
+              warnings.push(
+                `since: commit hash "${sinceSpec.hash}" not found in repo at ${repoRoot}; filter is a no-op`,
+              );
+            }
+          } else {
+            warnings.push(
+              `since: cannot resolve commit hash "${sinceSpec.hash}" — not a git repository at ${repoRoot}`,
+            );
+          }
+        }
+      }
+      resolvedFilters = {
+        paths: parsed.filters.paths,
+        languages: parsed.filters.languages,
+        since: sinceSpec,
+        sinceCutoffMs,
+        commitHash,
+      };
+    }
 
-    // 4) Embed the query string (single vector, batch of one).
-    let embedder: EmbedderHandle;
+    // Per-commit timestamp cache so we don't shell out to git once per row.
+    const commitTsCache = new Map<string, number | null>();
+
+    // 4) Run lexical lane (filter-aware SQL). Pushdown of paths+languages
+    // happens here; `since` is post-filtered against the per-commit cache
+    // because resolving thousands of commits inside SQL would require a
+    // large IN-list and isn't worth the complexity.
+    const lexicalRowsRaw = lexicalSearchSql(
+      handle.db,
+      parsed.question,
+      resolvedFilters,
+      topK * LANE_FANOUT * 2, // overfetch so post-filter has room to admit
+    );
+    const lexicalRows = lexicalRowsRaw.filter((r) =>
+      filterAdmits(r, resolvedFilters, commitTsCache, repoRoot),
+    );
+    const lexicalIds = lexicalRows.slice(0, topK * LANE_FANOUT).map((r) => r.id);
+
+    // 5) Embed the query string. RED #1: failure here degrades to lexical-only.
+    let qvec: Float32Array | null = null;
+    let embedder: EmbedderHandle | null = null;
     try {
       embedder = await getEmbedder();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return wrapErr<QueryHit>(`embedder load failed: ${message}`, LODESTONE_CHANNEL_V0, {
-        provenance,
-      });
+      warnings.push(`vector lane disabled: embedder load failed (${message}); lexical-only results`);
     }
-    let qvec: Float32Array;
-    try {
-      const out = await embedder.embed([parsed.question]);
-      const first = out[0];
-      if (!first) {
-        return wrapErr<QueryHit>("embedder returned no vectors", LODESTONE_CHANNEL_V0, {
-          provenance,
-        });
+    if (embedder) {
+      try {
+        const out = await embedder.embed([parsed.question]);
+        const first = out[0];
+        if (!first) {
+          warnings.push("vector lane disabled: embedder returned no vectors; lexical-only results");
+        } else {
+          qvec = first;
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        warnings.push(`vector lane disabled: embed failed (${message}); lexical-only results`);
       }
-      qvec = first;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return wrapErr<QueryHit>(`embed failed: ${message}`, LODESTONE_CHANNEL_V0, {
-        provenance,
-      });
     }
 
-    // 5) Vector lane.
-    let vectorHits: VectorHit[] = [];
-    try {
-      vectorHits = vectorSearch(handle.db, qvec, topK * LANE_FANOUT);
-    } catch (err) {
-      // sqlite-vec sometimes errors on a fresh DB with no embeddings; degrade
-      // to lexical-only rather than failing the whole call.
-      vectorHits = [];
-    }
-
-    // 6) Apply the same filter set to the vector hits via post-filter (filters
-    // require a JOIN against symbols; doing it after the ANN keeps the vector
-    // SQL trivial).
+    // 6) Vector lane with overfetch loop (RED #2). When filters reject hits
+    // we widen the ANN window until topK*LANE_FANOUT admissible IDs surface
+    // or we hit VECTOR_OVERFETCH_CEILING.
     const vectorHitIds: string[] = [];
-    if (vectorHits.length > 0) {
-      const ids = vectorHits.map((h) => h.symbol_id);
-      const rowsById = fetchSymbolsByIds(handle.db, ids);
-      for (const h of vectorHits) {
-        const row = rowsById.get(h.symbol_id);
-        if (!row) continue;
-        if (!filterAdmits(row, parsed.filters)) continue;
-        vectorHitIds.push(h.symbol_id);
+    if (qvec) {
+      let fetchSize = topK * LANE_FANOUT;
+      let lastSeen = 0;
+      while (vectorHitIds.length < topK * LANE_FANOUT && fetchSize <= VECTOR_OVERFETCH_CEILING) {
+        let vectorHits: VectorHit[] = [];
+        try {
+          vectorHits = vectorSearch(handle.db, qvec, fetchSize);
+        } catch (err) {
+          // Either the embeddings table is empty/missing or sqlite-vec failed
+          // — degrade to lexical-only with a warning.
+          const message = err instanceof Error ? err.message : String(err);
+          warnings.push(`vector lane disabled: search failed (${message}); lexical-only results`);
+          break;
+        }
+        if (vectorHits.length === lastSeen) {
+          // No new hits since previous round — table exhausted.
+          break;
+        }
+        lastSeen = vectorHits.length;
+        const ids = vectorHits.map((h) => h.symbol_id);
+        const rowsById = fetchSymbolsByIds(handle.db, ids);
+        vectorHitIds.length = 0;
+        for (const h of vectorHits) {
+          const row = rowsById.get(h.symbol_id);
+          if (!row) continue;
+          if (!filterAdmits(row, resolvedFilters, commitTsCache, repoRoot)) continue;
+          vectorHitIds.push(h.symbol_id);
+          if (vectorHitIds.length >= topK * LANE_FANOUT) break;
+        }
+        if (vectorHits.length < fetchSize) {
+          // ANN returned fewer than asked — table is exhausted, no point
+          // widening further.
+          break;
+        }
+        fetchSize = Math.min(fetchSize * 2, VECTOR_OVERFETCH_CEILING);
       }
     }
 
-    // 7) RRF-lite fusion — the canonical k=60 constant collapses neatly into a
-    // single dict lookup per id. We track which lanes contributed.
+    // 7) RRF-lite fusion.
     const RRF_K = 60;
     const scores = new Map<string, { score: number; reasons: Set<"vector" | "lexical"> }>();
     vectorHitIds.forEach((id, idx) => {
@@ -294,10 +407,7 @@ export async function handler(input: unknown): Promise<LodestoneToolResponseV13<
         path: row.path,
         language: row.language,
         range: { start_line: row.range_start_line, end_line: row.range_end_line },
-        snippet: buildSnippet(row),
-        // Normalize fused score to [0,1] using the top result as the divisor
-        // so the highest-ranked hit always reports score=1 — predictable for
-        // callers that want to threshold on relative confidence.
+        snippet: buildSnippet(row, repoRoot),
         score: maxScore > 0 ? meta.score / maxScore : 0,
         reasons: [...meta.reasons].sort(),
         cluster_id: row.cluster_id,
@@ -309,6 +419,7 @@ export async function handler(input: unknown): Promise<LodestoneToolResponseV13<
       coverage: 1,
     };
     if (clamped) diagnostics.clamped = true;
+    if (warnings.length > 0) diagnostics.warnings = warnings;
 
     return wrapOk<QueryHit>(results, LODESTONE_CHANNEL_V0, {
       diagnostics,
@@ -323,17 +434,17 @@ export async function handler(input: unknown): Promise<LodestoneToolResponseV13<
  * Lexical lane — `LIKE` against path / signature / docstring. Filter pushdown
  * happens here so the lane only ranks admissible candidates. Returns rows
  * ordered by pagerank desc, signature-match boost first.
+ *
+ * `paths` is pushed via per-pattern LIKE (best-effort: globs with `*`/`?`/`**`
+ * are converted to SQL `LIKE` patterns; the post-filter pass still applies the
+ * full picomatch-style matcher to enforce strict semantics).
  */
-function lexicalSearch(
+function lexicalSearchSql(
   db: SqliteReadonlyDb,
   question: string,
-  filters: QueryInput["filters"],
+  filters: ResolvedFilters | undefined,
   limit: number,
 ): CandidateRow[] {
-  // Tokenize the question into a small set of search terms; we OR them via
-  // multiple LIKE clauses. `[a-z0-9_]` lets us preserve identifier matches
-  // (`getUserId` queries should still find the symbol). Stripped of stoplist
-  // nuance for v0 — the real BM25 lane in §14 future work owns proper tokenization.
   const terms = question
     .toLowerCase()
     .split(/[^a-z0-9_]+/)
@@ -342,7 +453,7 @@ function lexicalSearch(
   if (terms.length === 0) return [];
 
   const conds: string[] = [];
-  const params: Record<string, string> = {};
+  const params: Record<string, string | number> = {};
   terms.forEach((t, i) => {
     const key = `t${i}`;
     params[key] = `%${t}%`;
@@ -362,11 +473,24 @@ function lexicalSearch(
       .join(", ");
     filterConds.push(`s.language IN (${placeholders})`);
   }
-  // `paths` is a glob filter — we apply post-SQL because SQLite doesn't speak
-  // picomatch. `since` against updated_at_epoch isn't a unix ts (it's a
-  // monotonic counter) so we can't push it into SQL meaningfully either; both
-  // are post-filtered against the candidate set.
+  // Path pushdown: best-effort SQL LIKE via glob → LIKE translation. The
+  // post-filter still enforces strict glob semantics so this is purely a
+  // pre-prune to reduce SQL row count, never a tightening.
+  if (filters?.paths && filters.paths.length > 0) {
+    const pathConds: string[] = [];
+    filters.paths.forEach((pat, i) => {
+      const likePat = globToLike(pat);
+      // Skip pushdown for patterns that resolve to "match anything" — adding
+      // them to WHERE only inflates the explain plan.
+      if (likePat === "%" || likePat === null) return;
+      const key = `pp${i}`;
+      params[key] = likePat;
+      pathConds.push(`s.path LIKE @${key}`);
+    });
+    if (pathConds.length > 0) filterConds.push(`(${pathConds.join(" OR ")})`);
+  }
 
+  params.limit = limit;
   const sql = `
     SELECT
       s.id,
@@ -378,7 +502,8 @@ function lexicalSearch(
       s.docstring,
       s.cluster_id,
       s.pagerank,
-      s.updated_at_epoch
+      s.updated_at_epoch,
+      s.updated_at_commit
     FROM symbols s
     WHERE (${conds.join(" OR ")})
     ${filterConds.length > 0 ? "AND " + filterConds.join(" AND ") : ""}
@@ -386,13 +511,47 @@ function lexicalSearch(
     LIMIT @limit
   `;
   const stmt = db.prepare(sql);
-  const rows = stmt.all({ ...params, limit }) as CandidateRow[];
-  // Apply the post-SQL filters (`paths`).
-  return rows.filter((r) => filterAdmits(r, filters));
+  return stmt.all(params) as CandidateRow[];
+}
+
+/** Convert a picomatch-style glob to a SQL LIKE pattern. Best-effort: any
+ * char-class brackets or extglob operators short-circuit and we return null,
+ * signalling "skip pushdown for this pattern". */
+function globToLike(glob: string): string | null {
+  let out = "";
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob.charAt(i);
+    if (c === "*" && glob.charAt(i + 1) === "*") {
+      out += "%";
+      i++;
+      // Consume the trailing slash if present so `src/**/foo` -> `src/%foo`.
+      if (glob.charAt(i + 1) === "/") i++;
+    } else if (c === "*") {
+      out += "%";
+    } else if (c === "?") {
+      out += "_";
+    } else if (c === "[" || c === "]" || c === "{" || c === "}" || c === "(" || c === ")") {
+      return null;
+    } else if (c === "\\") {
+      // Escape next char in LIKE is not standard; bail out.
+      return null;
+    } else if (c === "%" || c === "_") {
+      // LIKE wildcards in literal positions need escape; bail.
+      return null;
+    } else {
+      out += c;
+    }
+  }
+  return out;
 }
 
 /** Apply path/language/since predicates against an in-memory row. */
-function filterAdmits(row: CandidateRow, filters: QueryInput["filters"]): boolean {
+function filterAdmits(
+  row: CandidateRow,
+  filters: ResolvedFilters | undefined,
+  commitTsCache: Map<string, number | null>,
+  repoRoot: string,
+): boolean {
   if (!filters) return true;
   if (filters.paths && filters.paths.length > 0) {
     if (!matchesAnyGlob(row.path, filters.paths)) return false;
@@ -400,11 +559,28 @@ function filterAdmits(row: CandidateRow, filters: QueryInput["filters"]): boolea
   if (filters.languages && filters.languages.length > 0) {
     if (!filters.languages.includes(row.language)) return false;
   }
-  // `since` semantics in v0 are best-effort: updated_at_epoch is a monotonic
-  // counter, not a unix timestamp, so we can't compare against an ISO string
-  // directly. We instead reject rows whose updated_at_epoch is 0 (never-touched)
-  // when a since-filter is present; future revs wire this into git log.
-  if (filters.since && row.updated_at_epoch === 0) return false;
+  if (filters.sinceCutoffMs !== undefined) {
+    // Per-row admissibility against a cutoff. Resolution priority:
+    //   (a) row has updated_at_commit → look up commit timestamp via git
+    //       (cached) and compare.
+    //   (b) row lacks updated_at_commit → reject. Best effort: agents asking
+    //       for "recent changes" should not see rows with no recency signal.
+    const commit = row.updated_at_commit;
+    if (!commit) return false;
+    let ts = commitTsCache.get(commit);
+    if (ts === undefined) {
+      ts = resolveCommitTimestamp(repoRoot, commit);
+      commitTsCache.set(commit, ts);
+    }
+    if (ts === null) return false;
+    if (ts < filters.sinceCutoffMs) return false;
+  } else if (filters.since && filters.commitHash !== undefined) {
+    // Commit-hash since with no resolved cutoff (git unavailable). Best-effort:
+    // admit rows whose updated_at_commit equals or post-dates the requested
+    // hash by stamping it as the cutoff hash. With no git, we can't compare
+    // ordering — we just preserve all rows and rely on the warning we already
+    // emitted.
+  }
   return true;
 }
 
@@ -418,7 +594,7 @@ function fetchSymbolsByIds(db: SqliteReadonlyDb, ids: readonly string[]): Map<st
   });
   const rows = db
     .prepare(
-      `SELECT id, path, language, range_start_line, range_end_line, signature, docstring, cluster_id, pagerank, updated_at_epoch
+      `SELECT id, path, language, range_start_line, range_end_line, signature, docstring, cluster_id, pagerank, updated_at_epoch, updated_at_commit
          FROM symbols
         WHERE id IN (${placeholders})`,
     )
@@ -428,16 +604,24 @@ function fetchSymbolsByIds(db: SqliteReadonlyDb, ids: readonly string[]): Map<st
   return map;
 }
 
-/** Build a ~20-line snippet from the row's metadata. v0 sources the symbol
- * signature + docstring; full file paging lands in §15. */
-function buildSnippet(row: CandidateRow): string {
-  const parts: string[] = [];
-  if (row.signature) parts.push(row.signature);
-  if (row.docstring) parts.push(row.docstring);
-  if (parts.length === 0) {
-    parts.push(`${row.path}:${row.range_start_line}-${row.range_end_line}`);
-  }
-  return parts.join("\n");
+/** Build a ~20-line snippet from the symbol body when readable, falling back
+ * to row metadata (signature + docstring) otherwise. */
+function buildSnippet(row: CandidateRow, repoRoot: string): string {
+  const fallbackParts: string[] = [];
+  if (row.signature) fallbackParts.push(row.signature);
+  if (row.docstring) fallbackParts.push(row.docstring);
+  const fallbackText =
+    fallbackParts.length > 0
+      ? fallbackParts.join("\n")
+      : `${row.path}:${row.range_start_line}-${row.range_end_line}`;
+  const window = buildSnippetWindow({
+    repoRoot,
+    filePath: row.path,
+    startLine: row.range_start_line,
+    endLine: row.range_end_line,
+    fallbackText,
+  });
+  return window.text;
 }
 
 /** Re-export the LodestoneSymbol-shaped fields most callers want for typed

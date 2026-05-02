@@ -206,6 +206,12 @@ export function provenanceFromReady(
   const isGit = marker.commit_at_index !== null;
   // `source` heuristic: anything older than 5 minutes is "stale" until the
   // §12 watcher exposes a real lastFlushedAt getter.
+  //
+  // Codex impl-014 YELLOW: previously a non-git ready index reported
+  // `source: "not_ready"`, which was misleading — the index IS ready, the
+  // project just isn't a git repo. The `is_git_repo` field already carries
+  // the git-status signal; `source` should track ingest readiness only.
+  // Non-git-but-ready indexes now report live/stale alongside their git peers.
   const STALE_AFTER_SEC = 300;
   const source: Provenance["source"] = stalenessSec > STALE_AFTER_SEC ? "stale" : "live";
   return {
@@ -221,7 +227,7 @@ export function provenanceFromReady(
     indexed_at: marker.indexed_at,
     staleness_seconds: stalenessSec,
     index_epoch: marker.index_epoch,
-    source: isGit ? source : "not_ready",
+    source,
   };
 }
 

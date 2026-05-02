@@ -245,3 +245,184 @@ describe("query handler — provenance", () => {
     expect(res.request_id).toMatch(/-/);
   });
 });
+
+// ── Codex impl-014 RED #1: vector lane is OPTIONAL ───────────────────────────
+describe("query handler — vector-lane degradation (RED #1)", () => {
+  it("returns lexical-only results + warning when embedder load fails", async () => {
+    seed();
+    // Simulate load failure: setting cachedEmbedder to null then forcing the
+    // production loader to throw via __setEmbedderForTests semantics. The
+    // simplest test hook: inject an embedder whose embed() throws.
+    __setEmbedderForTests({
+      id: "broken" as const,
+      dim: 768,
+      maxBatch: 1,
+      async embed(): Promise<Float32Array[]> {
+        throw new Error("simulated weights-missing");
+      },
+      async dispose() {},
+    });
+    const res = await handler({ question: "authentication", top_k: 5 });
+    // We must still have lexical results — auth_login matches by signature.
+    expect(res.results.length).toBeGreaterThan(0);
+    // And a warning explaining the vector lane is off.
+    expect(res.diagnostics.warnings ?? []).toEqual(
+      expect.arrayContaining([expect.stringMatching(/vector lane disabled/i)]),
+    );
+    // None of the surviving hits report vector as a reason.
+    for (const hit of res.results) {
+      expect(hit.reasons).not.toContain("vector");
+      expect(hit.reasons).toContain("lexical");
+    }
+  });
+
+  it("returns lexical-only when embedder returns no vectors", async () => {
+    seed();
+    __setEmbedderForTests({
+      id: "empty" as const,
+      dim: 768,
+      maxBatch: 1,
+      async embed(): Promise<Float32Array[]> {
+        return [];
+      },
+      async dispose() {},
+    });
+    const res = await handler({ question: "authentication" });
+    expect(res.diagnostics.warnings ?? []).toEqual(
+      expect.arrayContaining([expect.stringMatching(/vector lane disabled/i)]),
+    );
+    // Lexical lane still produced hits.
+    expect(res.results.length).toBeGreaterThan(0);
+  });
+});
+
+// ── Codex impl-014 RED #2: filter pushdown produces non-empty results ────────
+describe("query handler — filter pushdown (RED #2)", () => {
+  it("paths filter does not lose admissible candidates to LIMIT-before-filter", async () => {
+    // Seed enough symbols that a naive top-N-then-filter would empty out.
+    mkdirSync(lodestoneDir, { recursive: true });
+    const { openWriter, bootstrap, writeSymbols, writeReady, _resetWriterRegistry, closeDb, writeEmbeddings } =
+      await import("@lodestone/ingest/store");
+    const db = openWriter(dbPath);
+    bootstrap(db);
+    // 50 noise symbols outside src/, all matching "format" — they would
+    // monopolize a naive LIMIT-then-filter result list.
+    const noise: LodestoneSymbol[] = [];
+    for (let i = 0; i < 50; i++) {
+      noise.push({
+        symbol: `noise_${i}`,
+        path: `legacy/noise_${i}.ts`,
+        language: "typescript",
+        kind: "function",
+        range: { start_line: 1, end_line: 5 },
+        signature: `function format_${i}()`,
+        docstring: `formatter noise ${i}`,
+      });
+    }
+    // One needle symbol inside src/ that also matches.
+    const needle: LodestoneSymbol = {
+      symbol: "needle_format",
+      path: "src/needle/format.ts",
+      language: "typescript",
+      kind: "function",
+      range: { start_line: 1, end_line: 5 },
+      signature: "function format_needle()",
+      docstring: "the needle",
+    };
+    writeSymbols(db, [...noise, needle], { index_epoch: 1, commit: "abc1234" });
+    // Embeddings for everything so the vector lane participates.
+    writeEmbeddings(
+      db,
+      [...noise, needle].map((s, i) => ({ symbol_id: s.symbol, vector: vec(i / 100) })),
+    );
+    closeDb(db);
+    _resetWriterRegistry();
+    writeReady(lodestoneDir, {
+      schema_version: 1,
+      lodestone_version: "0.1.0",
+      ready: true,
+      embedder: { id: "nomic-text-v1.5", dim: 768, quant: "fp32" },
+      languages_indexed: ["typescript"],
+      indexed_at: new Date().toISOString(),
+      commit_at_index: "abc1234",
+      dirty_at_index: false,
+      index_epoch: 1,
+      writer_pid: process.pid,
+    });
+
+    const res = await handler({
+      question: "format",
+      top_k: 5,
+      filters: { paths: ["src/**"] },
+    });
+    // The needle MUST surface — pre-fix, the lexical+vector lanes would have
+    // grabbed all 50 noise rows (which are pagerank-tied) and post-filter
+    // would have dropped every hit, returning empty.
+    expect(res.results.some((h) => h.symbol === "needle_format")).toBe(true);
+  });
+});
+
+// ── Codex impl-014 RED #3: real `since` semantics ────────────────────────────
+describe("query handler — `since` filter (RED #3)", () => {
+  it("rejects malformed since with a clear error envelope", async () => {
+    seed();
+    const res = await handler({ question: "auth", filters: { since: "yesterday-ish" } });
+    expect(res.results).toEqual([]);
+    expect(res.diagnostics.warnings?.[0]).toMatch(/Malformed `since`/);
+  });
+
+  it("accepts ISO timestamp without throwing", async () => {
+    seed();
+    const res = await handler({ question: "auth", filters: { since: "2020-01-01" } });
+    // Cutoff is in the past — but rows have commit hashes that don't resolve
+    // in this non-git tempdir, so they all get filtered out and we get an
+    // empty result list. Either is fine; the assertion is "no malformed
+    // error".
+    expect(
+      (res.diagnostics.warnings ?? []).some((w) => /Malformed `since`/.test(w)),
+    ).toBe(false);
+  });
+
+  it("accepts a relative duration without throwing", async () => {
+    seed();
+    const res = await handler({ question: "auth", filters: { since: "1 week ago" } });
+    expect(
+      (res.diagnostics.warnings ?? []).some((w) => /Malformed `since`/.test(w)),
+    ).toBe(false);
+  });
+
+  it("accepts a commit hash; warns when not in a git repo", async () => {
+    seed();
+    const res = await handler({ question: "auth", filters: { since: "abc1234" } });
+    // Tempdir is not a git repo, so the commit-hash-since path warns instead
+    // of throwing.
+    expect(
+      (res.diagnostics.warnings ?? []).some((w) => /git repository|not found/.test(w)),
+    ).toBe(true);
+  });
+});
+
+// ── Codex impl-014 YELLOW: source-window snippets ────────────────────────────
+describe("query handler — source-window snippets (YELLOW)", () => {
+  it("returns source lines from disk when the file exists", async () => {
+    // Seed a real file on disk inside the tempdir at the same relative path
+    // the symbols table records.
+    seed();
+    const realPath = path.join(workdir, "src/auth_login.ts");
+    mkdirSync(path.dirname(realPath), { recursive: true });
+    const { writeFileSync } = await import("node:fs");
+    const lines = [
+      "// header comment",
+      "export function login(user) {",
+      "  return authenticate(user);",
+      "}",
+      "// trailing",
+    ];
+    writeFileSync(realPath, lines.join("\n"));
+    const res = await handler({ question: "authentication" });
+    const hit = res.results.find((h) => h.symbol === "auth_login");
+    expect(hit).toBeDefined();
+    // Snippet should contain the actual function body lines, not just signature.
+    expect(hit!.snippet).toContain("authenticate(user)");
+  });
+});
