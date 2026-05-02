@@ -42,3 +42,19 @@ export type {
   ResolvedEdge,
   ResolveResult,
 } from "./graph/index.js";
+
+// File watcher + coalesce + git-pause integration — section 12.
+export {
+  createWatcher,
+  startWatcher,
+  BUILTIN_IGNORE_PATTERNS,
+} from "./watcher/index.js";
+export type {
+  FileBatch,
+  FileBatchReason,
+  RawEventKind,
+  Watcher,
+  WatcherEvent,
+  WatcherOptions,
+  WatcherStats,
+} from "./watcher/index.js";
