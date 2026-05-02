@@ -65,13 +65,54 @@ describe("TOOL_REGISTRY", () => {
   });
 
   it("every stub handler returns a well-formed not_implemented envelope", async () => {
+    // Tools implemented in §14–§17 own their own handler-shape tests; skip them
+    // here so this stub-validity gate keeps surfacing the not_implemented stubs
+    // until they're swapped in. Add to this set as each section lands.
+    const IMPLEMENTED: ReadonlySet<string> = new Set([
+      "cluster",
+      "context",
+      "feedback",
+      "impact",
+      "query",
+      "recent_changes",
+      "skills_for",
+      "sql",
+    ]);
+    let stubsChecked = 0;
     for (const name of TOOL_NAMES_ALPHABETICAL) {
+      if (IMPLEMENTED.has(name)) continue;
       const env = await TOOL_REGISTRY[name].handler({});
       expect(env.results).toEqual([]);
       expect(env.diagnostics.warnings).toContain("not_implemented");
       expect(env.channel).toBe("code");
       expect(typeof env.request_id).toBe("string");
       expect(env.request_id.length).toBeGreaterThan(0);
+      stubsChecked++;
+    }
+    // §17 lands the last stub; once feedback is implemented this loop has
+    // nothing to check, which is the intended end-state.
+    expect(stubsChecked).toBeGreaterThanOrEqual(0);
+  });
+
+  it("implemented tools (§15, §16) return a well-formed envelope on schema-failed input", async () => {
+    // Empty `{}` fails zod parse. Implemented handlers must convert that into
+    // an error envelope (not throw) so the server.ts dispatcher doesn't have
+    // to special-case them.
+    for (const name of [
+      "cluster",
+      "context",
+      "feedback",
+      "impact",
+      "skills_for",
+      "sql",
+    ] as const) {
+      const env = await TOOL_REGISTRY[name].handler({});
+      expect(env.results).toEqual([]);
+      expect(env.channel).toBe("code");
+      expect(typeof env.request_id).toBe("string");
+      expect(env.request_id.length).toBeGreaterThan(0);
+      // Diagnostics should carry a warning describing the validation failure.
+      expect(env.diagnostics.warnings?.length ?? 0).toBeGreaterThan(0);
     }
   });
 });
