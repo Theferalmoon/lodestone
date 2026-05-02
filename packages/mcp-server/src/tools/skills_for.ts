@@ -37,7 +37,8 @@ import {
   type LodestoneToolResponseV13,
 } from "../envelope.js";
 import { openReader, type ReaderHandle } from "../client/sqlite.js";
-import { assertReady, toMcpInputSchema } from "./_shared.js";
+import { readSkillBodyFromDisk } from "../lib/skill-disk.js";
+import { assertReady, readerLodestoneDir, toMcpInputSchema } from "./_shared.js";
 
 export const description =
   "Return the most relevant SKILL.md cards for a coding task. Skill cards are codebase-specific patterns Lodestone learned from the project — error-handling conventions, dependency-injection style, testing idioms, naming conventions, lint-preferred imports — surfaced as concise, actionable summaries with example symbol references and a maturity tag (deterministic_seed | emerging | observed). The agent should consult these BEFORE writing code so its output matches the project's house style. Top_k defaults to 5; semantic match against a task description. HONESTY MANDATE: results are best after Lodestone has watched the codebase for >=7 days; on a fresh install you will get only deterministic_seed skills (common conventions detected at index time). This tool may return zero results when no relevant skill exists for the task — empty results are reported honestly and the tool does not hallucinate a pattern. Communicate the seed-vs-emerging distinction (and any empty result) to the user truthfully.";
@@ -149,7 +150,27 @@ export function createHandler(
       );
 
       const top = ranked.slice(0, topK);
-      const results: Skill[] = top.map(({ row, score }) => skillFromRow(row, score));
+      // Codex impl-016 YELLOW: SQLite stores a snapshot of the body for
+      // indexing, but the on-disk SKILL.md is the source of truth (POST-
+      // CODEX-001 amendment 1, §16 spec line "trust the file"). When the
+      // disk file exists, return its content so a friend who edits a card
+      // in place sees their text in the agent's response.
+      const lodestoneDir = readerLodestoneDir(reader);
+      let diskHits = 0;
+      const results: Skill[] = top.map(({ row, score }) => {
+        const skill = skillFromRow(row, score);
+        const onDisk = readSkillBodyFromDisk(lodestoneDir, row.slug, row.maturity);
+        if (onDisk !== null) {
+          skill.body = onDisk;
+          diskHits += 1;
+        }
+        return skill;
+      });
+      if (diskHits > 0 && diskHits < results.length) {
+        warnings.push(
+          `${diskHits}/${results.length} skill bodies sourced from disk; the rest fell back to the SQLite snapshot (missing SKILL.md)`,
+        );
+      }
 
       // Honesty diagnostic per POST-CODEX-001 amendment 3: if every returned
       // skill is deterministic_seed, the index has not yet observed enough.

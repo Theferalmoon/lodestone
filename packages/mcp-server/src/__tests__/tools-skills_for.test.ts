@@ -4,7 +4,7 @@
 // diagnostics, embedding cosine ranking, the substring fallback, and the
 // POST-CODEX-001 envelope shape.
 
-import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -377,6 +377,70 @@ describe("skills_for MCP tool — mixed embedding populations (impl-016 YELLOW)"
     expect(slugs).toContain("custom-error-subclass");
     const warnings = env.diagnostics.warnings ?? [];
     expect(warnings.some((w) => w.toLowerCase().includes("mixed"))).toBe(true);
+  });
+});
+
+describe("skills_for MCP tool — disk-truth body (impl-016 YELLOW)", () => {
+  it("returns the on-disk SKILL.md body when the file exists, not the SQLite snapshot", async () => {
+    // The §10 emitter writes SKILL.md to <lodestoneDir>/skills/<source>/<slug>/SKILL.md
+    // where source is seed|emerging|observed (per emit.ts EmitSource). The
+    // DB row stores a snapshot of the body for indexing, but disk is truth
+    // — friends edit cards in place.
+    const stale = "# STALE — do not return this\n\nThis is the SQLite snapshot, never the right answer.";
+    const fresh = "# Custom Error Subclass Pattern\n\nFRESH on-disk content the friend hand-edited.";
+
+    seedFixture(dbPath, [{ ...SEED_ERROR_SKILL, body: stale }]);
+
+    // Mirror what the §10 emitter would have written. Maturity
+    // deterministic_seed lands under "seed/" (frontmatter.ts:101).
+    const lodestoneDir = path.dirname(dbPath);
+    const skillDir = path.join(lodestoneDir, "skills", "seed", SEED_ERROR_SKILL.slug);
+    mkdirSync(skillDir, { recursive: true });
+    writeFileSync(path.join(skillDir, "SKILL.md"), fresh);
+
+    const handler = createSkillsForHandler(ctx());
+    const env = await handler({ task_description: "error handling pattern" });
+    expect(env.results).toHaveLength(1);
+    expect(env.results[0]!.body).toContain("FRESH on-disk");
+    expect(env.results[0]!.body).not.toContain("STALE");
+  });
+
+  it("falls back to the SQLite body when the on-disk SKILL.md is absent", async () => {
+    // No disk file present — the DB body is the only source. Must still
+    // return content (not throw, not strip body).
+    seedFixture(dbPath, [SEED_ERROR_SKILL]);
+    const handler = createSkillsForHandler(ctx());
+    const env = await handler({ task_description: "error handling pattern" });
+    expect(env.results).toHaveLength(1);
+    expect(env.results[0]!.body).toBe(SEED_ERROR_SKILL.body);
+  });
+
+  it("rejects path-traversal slugs by falling back to the DB body", async () => {
+    // A pathological slug that would escape the skills dir if naively
+    // joined. Even if such a row somehow lands in SQLite (the §10 emitter
+    // slugifies, but defense-in-depth: the read-side must NOT happily
+    // resolve a slug containing `..` to a path outside .lodestone/skills).
+    const evilSlug = "../../etc/skill";
+    seedFixture(dbPath, [{ ...SEED_ERROR_SKILL, slug: evilSlug }]);
+    const handler = createSkillsForHandler(ctx());
+    const env = await handler({ task_description: "error handling pattern" });
+    expect(env.results).toHaveLength(1);
+    // Must use DB body — never resolve the traversed path.
+    expect(env.results[0]!.body).toBe(SEED_ERROR_SKILL.body);
+  });
+
+  it("respects emerging/observed source dirs (not just seed)", async () => {
+    const fresh = "# Auth Handler Pattern\n\nFRESH emerging-source disk content.";
+    seedFixture(dbPath, [{ ...EMERGING_AUTH_SKILL, body: "stale db" }]);
+
+    const lodestoneDir = path.dirname(dbPath);
+    const skillDir = path.join(lodestoneDir, "skills", "emerging", EMERGING_AUTH_SKILL.slug);
+    mkdirSync(skillDir, { recursive: true });
+    writeFileSync(path.join(skillDir, "SKILL.md"), fresh);
+
+    const handler = createSkillsForHandler(ctx());
+    const env = await handler({ task_description: "auth handler session pattern" });
+    expect(env.results[0]!.body).toContain("FRESH emerging-source");
   });
 });
 
