@@ -4,10 +4,10 @@ import { reindex } from "../commands/reindex.js";
 import { doctor } from "../commands/doctor.js";
 import { seedSkills } from "../commands/seed-skills.js";
 import { upgrade } from "../commands/upgrade.js";
-import { uninstall, parseUninstallArgv } from "../commands/uninstall.js";
-
 // init() is no longer a stub — it does real install work in §04.
 // See commands.init.test.ts for its dedicated coverage.
+// uninstall() is no longer a stub — it does real reversal work in §19.
+// See commands.uninstall.test.ts for its dedicated coverage.
 
 describe("stub commands (return 0, warn, accept future flags)", () => {
   it("reindex() stub returns 0", async () => {
@@ -36,11 +36,4 @@ describe("stub commands (return 0, warn, accept future flags)", () => {
     err.mockRestore();
   });
 
-  it("uninstall() stub returns 0; parser accepts --dry-run", async () => {
-    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    expect(await uninstall(["--dry-run"])).toBe(0);
-    expect(parseUninstallArgv([])).toEqual({ dryRun: false });
-    expect(parseUninstallArgv(["--dry-run"])).toEqual({ dryRun: true });
-    err.mockRestore();
-  });
 });
