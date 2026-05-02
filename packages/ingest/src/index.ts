@@ -16,3 +16,11 @@ export type {
   EmbedderId,
   LoadOptions,
 } from "./embed/runtime.js";
+
+// Parser registry — section 06.
+export { parserForFile } from "./parsers/index.js";
+export type {
+  AbstractParser,
+  ParseResult,
+  ClassInheritance,
+} from "./parsers/base.js";
