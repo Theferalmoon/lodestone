@@ -243,12 +243,19 @@ interface FrameworkBodyContext {
 }
 
 function renderFrameworkBody(ctx: FrameworkBodyContext): string {
+  // Codex v0.1.1 §11 YELLOW: scope every claim to the files this card was
+  // derived from. Polyglot/multi-package monorepos can legitimately use
+  // multiple HTTP frameworks (Express in /api/, Fastify in /worker/);
+  // emitting a global "do not introduce a second framework" claim per card
+  // would contradict the sibling card. Phrase guidance as "in these files /
+  // packages" rather than as a codebase-wide law.
   const lines: string[] = [];
   lines.push(`# ${ctx.sig.name}`, "");
 
+  const scope = describeScope(ctx.samplePaths);
   lines.push("## What", "");
   lines.push(
-    `This codebase imports \`${ctx.sig.display}\` from ${ctx.importerCount} file(s). New HTTP routes / handlers should follow the same framework — do not introduce a second router framework alongside it without an explicit team decision.`,
+    `${scope.openingPhrase} use \`${ctx.sig.display}\` for HTTP routing across ${ctx.importerCount} file(s). New HTTP routes added under ${scope.scopeNoun} should follow the same framework so handler shapes and middleware stay consistent.`,
     "",
   );
 
@@ -261,11 +268,62 @@ function renderFrameworkBody(ctx: FrameworkBodyContext): string {
 
   lines.push("## How to follow it", "");
   lines.push(
-    `When adding a new endpoint, register it on the existing ${ctx.sig.display} router/app instance and use the canonical handler signature above. Pull request reviewers should reject net-new routes that bypass the framework.`,
+    `When adding a new endpoint inside ${scope.scopeNoun}, register it on the existing ${ctx.sig.display} router/app instance and use the canonical handler signature above. Other parts of the codebase may use a different framework — that is intentional in polyglot / multi-package repos. Pull request reviewers should reject net-new routes within these files that bypass ${ctx.sig.display}.`,
     "",
   );
 
   return lines.join("\n");
+}
+
+interface FrameworkScope {
+  /** "These N files" / "Files in packages/api/ and packages/foo/". */
+  openingPhrase: string;
+  /** "these files" / "the api package" — used in mid-sentence references. */
+  scopeNoun: string;
+}
+
+/**
+ * Phrase the card's "What" and "How to follow it" sections so they refer
+ * to the specific files / common-ancestor directory the card was derived
+ * from. When the sample paths share a meaningful prefix (e.g. all live
+ * under `packages/api/`), use that prefix as the scope noun. Otherwise
+ * fall back to a generic "these files" phrasing.
+ */
+function describeScope(samplePaths: readonly string[]): FrameworkScope {
+  if (samplePaths.length === 0) {
+    return { openingPhrase: "These files", scopeNoun: "these files" };
+  }
+  const prefix = commonDirPrefix(samplePaths);
+  if (prefix.length > 0 && prefix.includes("/")) {
+    // Trim trailing slash for prose readability.
+    const trimmed = prefix.replace(/\/+$/, "");
+    return {
+      openingPhrase: `Files under \`${trimmed}/\``,
+      scopeNoun: `\`${trimmed}/\``,
+    };
+  }
+  return {
+    openingPhrase: `These ${samplePaths.length} file(s)`,
+    scopeNoun: "these files",
+  };
+}
+
+/** Longest directory prefix shared by every path. */
+function commonDirPrefix(paths: readonly string[]): string {
+  if (paths.length === 0) return "";
+  if (paths.length === 1) {
+    const slash = paths[0]!.lastIndexOf("/");
+    return slash > 0 ? paths[0]!.slice(0, slash + 1) : "";
+  }
+  let prefix = paths[0]!;
+  for (let i = 1; i < paths.length; i++) {
+    while (prefix.length > 0 && !paths[i]!.startsWith(prefix)) {
+      const cut = prefix.lastIndexOf("/", prefix.length - 2);
+      prefix = cut > 0 ? prefix.slice(0, cut + 1) : "";
+    }
+    if (prefix.length === 0) break;
+  }
+  return prefix;
 }
 
 function stripQuotes(s: string): string {

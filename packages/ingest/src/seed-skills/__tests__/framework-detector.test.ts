@@ -23,6 +23,33 @@ describe("detectFrameworks", () => {
     expect(out).toEqual([]);
   });
 
+  it("Codex v0.1.1 §11 YELLOW — emits per-framework cards scoped to their files (no contradictory globals)", () => {
+    // Polyglot/multi-package monorepo: Express in /api/, Fastify in /worker/.
+    // Both cards must be emitted, each describing its OWN files, NOT making
+    // a global "do not use a second framework" claim.
+    const out = detectFrameworks({
+      parseResults: [
+        mkImportsParseResult("packages/api/src/server.ts", ["express"]),
+        mkImportsParseResult("packages/api/src/router.ts", ["express"]),
+        mkImportsParseResult("packages/worker/src/main.ts", ["fastify"]),
+        mkImportsParseResult("packages/worker/src/routes.ts", ["fastify"]),
+      ],
+    });
+    expect(out).toHaveLength(2);
+    const express = out.find((c) => c.slug === "framework-express")!;
+    const fastify = out.find((c) => c.slug === "framework-fastify")!;
+    expect(express).toBeDefined();
+    expect(fastify).toBeDefined();
+    // Each card's body must scope its guidance to ITS files, not the whole codebase.
+    // No card should claim "do not introduce a second router framework alongside it"
+    // because that contradicts the other card.
+    expect(express.body.toLowerCase()).not.toContain("do not introduce a second router framework");
+    expect(fastify.body.toLowerCase()).not.toContain("do not introduce a second router framework");
+    // Each card should reference its own importing paths in the body.
+    expect(express.body).toContain("packages/api/");
+    expect(fastify.body).toContain("packages/worker/");
+  });
+
   it("detects express when ≥2 files import it", () => {
     const out = detectFrameworks({
       parseResults: [
