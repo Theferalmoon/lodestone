@@ -38,6 +38,8 @@ interface ResolvedOptions {
 function resolveOptions(opts: WatcherOptions): ResolvedOptions {
   const polling = opts.usePolling ?? process.env.LODESTONE_WATCHER_POLLING === "1";
   return {
+    // cwd is validated as absolute by createWatcher() before reaching here,
+    // so path.resolve() is a no-op normaliser (collapses any "..").
     cwd: path.resolve(opts.cwd),
     debounceMs: opts.debounceMs ?? DEFAULT_DEBOUNCE_MS,
     inheritGitignore: opts.inheritGitignore ?? true,
@@ -215,6 +217,17 @@ class WatcherImpl extends EventEmitter implements Watcher {
 export function createWatcher(opts: WatcherOptions): Watcher {
   if (!opts.cwd || typeof opts.cwd !== "string") {
     throw new TypeError("createWatcher: opts.cwd is required and must be a string");
+  }
+  // Codex impl-012 YELLOW — silently resolving against ambient process.cwd
+  // is dangerous when the MCP server / CLI is launched from a different
+  // working dir than the user's repo. Force callers to supply absolute
+  // paths so the wrong-dir failure surfaces immediately instead of after
+  // a confused initial scan.
+  if (!path.isAbsolute(opts.cwd)) {
+    throw new TypeError(
+      `createWatcher: opts.cwd must be an absolute path, got ${JSON.stringify(opts.cwd)}. ` +
+        `Resolve via path.resolve() at the call site, not inside the watcher.`,
+    );
   }
   return new WatcherImpl(opts);
 }

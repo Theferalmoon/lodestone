@@ -47,6 +47,16 @@ describe("createWatcher (integration)", () => {
     expect(() => createWatcher({} as unknown as { cwd: string })).toThrow(TypeError);
   });
 
+  // Codex impl-012 YELLOW — silent path.resolve() against ambient process.cwd
+  // can watch the wrong directory when the MCP server is launched from a
+  // different working dir than the user's repo. Require absolute cwd at the
+  // public boundary; let the CLI / MCP shell normalise *before* calling.
+  it("rejects when cwd is a relative path (must be absolute)", () => {
+    expect(() => createWatcher({ cwd: "some/relative/path" })).toThrow(TypeError);
+    expect(() => createWatcher({ cwd: "./foo" })).toThrow(TypeError);
+    expect(() => createWatcher({ cwd: "" })).toThrow(TypeError);
+  });
+
   it("1. fires a `batch` event when a tracked file is modified", async () => {
     const file = path.join(tmp, "foo.ts");
     await writeFile(file, "export const a = 1;\n");
