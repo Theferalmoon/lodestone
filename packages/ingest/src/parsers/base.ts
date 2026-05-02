@@ -8,21 +8,29 @@
 // (ParseResult, ClassInheritance, helpers).
 
 import { createHash } from "node:crypto";
-import type { EdgeKind, Language, SymbolKind, Symbol as LodestoneSymbolType } from "@lodestone/shared";
+import type {
+  ClassInheritance,
+  EdgeKind,
+  Language,
+  Symbol as LodestoneSymbolType,
+  SymbolKind,
+} from "@lodestone/shared";
 
 /**
  * Class-inheritance triple emitted by parsers (POST-CODEX-001 amendment §1).
  *
- * - `class_id` — the canonical id of the deriving class symbol (matches `LodestoneSymbol.symbol`).
- * - `base_name` — the bare or qualified name of the base class / trait, as written in source.
- * - `base_path` — best-effort hint when the base lives in an importable module
- *   (e.g. resolved import target). Resolution to a real symbol id is §11's job.
+ * Re-exported from `@lodestone/shared` rather than redefined here — §02 owns
+ * the canonical shape and `seed-skills` / `store/writer` consume it from the
+ * same module. Keeping a parser-local duplicate (the previous design) would
+ * silently drift; this re-export keeps a single source of truth.
+ *
+ * Contract:
+ *   - `class_id` — canonical id of the deriving class symbol (matches `LodestoneSymbol.symbol`).
+ *   - `base_name` — bare or qualified name of the base class / trait, as written in source.
+ *   - `base_path` — best-effort hint when the base lives in an importable module
+ *     (e.g. resolved import target). Resolution to a real symbol id is §11's job.
  */
-export interface ClassInheritance {
-  class_id: string;
-  base_name: string;
-  base_path?: string;
-}
+export type { ClassInheritance };
 
 /**
  * Parser-level edge shape. Distinct from the SQLite `EdgeRow` (which has

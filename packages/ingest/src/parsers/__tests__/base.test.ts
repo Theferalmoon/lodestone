@@ -8,9 +8,31 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { qualifiedName, stripBom, symbolId, toString } from "../base.js";
+import type { ClassInheritance as SharedClassInheritance } from "@lodestone/shared";
+
+import {
+  type ClassInheritance as ParserClassInheritance,
+  qualifiedName,
+  stripBom,
+  symbolId,
+  toString,
+} from "../base.js";
 import { TypeScriptParser } from "../ts.js";
 import { PythonParser } from "../py.js";
+
+// §06 YELLOW (Codex impl-006-result.md): the parser layer must NOT redefine
+// ClassInheritance — it imports the shared type. This is a structural-typing
+// test: assignability in BOTH directions is the strongest assertion the type
+// system gives us about identity. If a future edit forks the shape, one of
+// the two assignments below stops compiling and the test won't even build.
+type _AssignsBothWays = [
+  // shared → parser
+  ParserClassInheritance extends SharedClassInheritance ? true : false,
+  // parser → shared
+  SharedClassInheritance extends ParserClassInheritance ? true : false,
+];
+const _bothWays: _AssignsBothWays = [true, true];
+void _bothWays;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.resolve(__dirname, "../__fixtures__");
