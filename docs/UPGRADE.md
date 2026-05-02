@@ -59,11 +59,43 @@ The numbered-migrations runner is the first thing on the v0.5 roadmap. It will l
 | v0.5 | Pro mode, numbered migration runner, embedder-dim swap option. | First version with proper migrations; from-scratch reindex no longer required for schema bumps that have a migration. |
 | v1.0 | Locked schema; semver-strict migration policy; backwards-compat guarantees. | Standard `npm install -g @lodestone/cli@latest`. |
 
+## Bigger embedder upgrade (opt-in fetch path)
+
+The default ship bundles both `nomic-embed-text-v1.5` int8 (~150 MB) and `snowflake-arctic-embed-s` int8 (~33 MB) inside the npm package — no runtime download needed for the privacy-first happy path.
+
+Friends who want to upgrade to a larger embedder (e.g. the future `nomic-fp16` weights, or who want to re-fetch a missing or corrupted file) can opt in to a one-shot, consent-gated fetch:
+
+```bash
+# Either set the env var once for the shell:
+export LODESTONE_ALLOW_MODEL_DOWNLOAD=1
+lodestone setup-models --embedder nomic-fp16
+
+# …or pass the flag per-invocation:
+lodestone setup-models --embedder nomic-fp16 --allow-download
+```
+
+The command will refuse to run unless one of these consent paths is taken. It also routes through `assertNetworkAllowed()` (the §18 chokepoint), so `LODESTONE_OFFLINE=1` blocks the fetch even with explicit consent — both gates must permit.
+
+Weights land at `<repoRoot>/.lodestone/models/<id>/`. Each project keeps its own copy; nothing leaks across friends or projects.
+
+Useful flags:
+
+| Flag | Effect |
+|---|---|
+| `--embedder <id>` | Fetch only the named embedder (repeatable). Default: every embedder in the manifest. |
+| `--target <path>` | Override the per-project model directory (`<repoRoot>/.lodestone/models/`). |
+| `--allow-download` | Per-invocation consent. Equivalent to setting `LODESTONE_ALLOW_MODEL_DOWNLOAD=1` for one run. |
+| `--force` | Re-download even when the file is present and the sha256 matches. |
+
+Each downloaded file is sha256-verified against a pinned manifest baked into the CLI binary. A mismatch causes the file to be quarantined (deleted) and `setup-models` exits non-zero.
+
+When the bundled weights are missing entirely, `lodestone init` and `lodestone reindex` print a hint pointing at this command rather than failing silently.
+
 ## Reserved env vars for upgrades
 
 | Variable | Effect |
 |---|---|
-| `LODESTONE_ALLOW_MODEL_DOWNLOAD=1` | Reserved for v0.5+. Will gate the larger `nomic-embed-code` weights opt-in (a multi-hundred-MB download). Currently a no-op on v0.1.0. |
+| `LODESTONE_ALLOW_MODEL_DOWNLOAD=1` | Operator consent gate for `lodestone setup-models`. Without this (or the `--allow-download` flag), the command refuses to touch the network. |
 
 ## Known breaking changes
 

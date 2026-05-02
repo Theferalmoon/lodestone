@@ -119,6 +119,26 @@ export async function reindex(argv: readonly string[]): Promise<number> {
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     output.error(`Reindex failed: ${detail}`);
+    if (isBundledModelMissing(err)) {
+      output.error("");
+      output.error(
+        "Hint: bundled embedder weights are missing. Run `lodestone setup-models --allow-download`"
+      );
+      output.error(
+        "to fetch them on demand (consent-gated, see docs/PRIVACY.md)."
+      );
+    }
     return 1;
   }
+}
+
+/**
+ * Detect the §05 EmbedderLoadError that signals "bundled weights are not
+ * on disk." We match by message content rather than instanceof so that the
+ * detection survives ESM dual-instance wrinkles between the cli and ingest
+ * package boundaries (each can import its own copy of the class).
+ */
+export function isBundledModelMissing(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  return /Bundled model not found/i.test(err.message);
 }

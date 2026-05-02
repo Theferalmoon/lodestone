@@ -11,6 +11,7 @@ import { doctor } from "../commands/doctor.js";
 import { seedSkills } from "../commands/seed-skills.js";
 import { upgrade } from "../commands/upgrade.js";
 import { uninstall } from "../commands/uninstall.js";
+import { setupModels } from "../commands/setup-models.js";
 
 type Handler = (argv: readonly string[]) => Promise<number>;
 
@@ -26,6 +27,7 @@ export const HANDLERS: Readonly<Record<string, Handler>> = Object.freeze({
   "seed-skills": seedSkills,
   upgrade,
   uninstall,
+  "setup-models": setupModels,
 });
 
 const KNOWN_COMMANDS: readonly string[] = Object.keys(HANDLERS);

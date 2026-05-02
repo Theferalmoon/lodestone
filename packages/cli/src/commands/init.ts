@@ -11,7 +11,7 @@ import { augmentClaudeMd, type AugmentClaudeMdResult } from "../install/claude-m
 import { updateGitignore, type UpdateGitignoreResult } from "../install/gitignore.js";
 import { writeMcpJson, type McpConfigResult } from "../install/mcp-config.js";
 import { printClaudeMdSnippet } from "../install/snippet.js";
-import { runReindex } from "./reindex.js";
+import { runReindex, isBundledModelMissing } from "./reindex.js";
 import { output } from "../ui/output.js";
 
 export interface InitOptions {
@@ -151,6 +151,15 @@ export async function init(argv: readonly string[]): Promise<number> {
     const detail = err instanceof Error ? err.message : String(err);
     output.error(`Reindex failed: ${detail}`);
     output.error("Install side-effects are intact; rerun `lodestone reindex` to retry.");
+    if (isBundledModelMissing(err)) {
+      output.error("");
+      output.error(
+        "Hint: bundled embedder weights are missing. Run `lodestone setup-models --allow-download`"
+      );
+      output.error(
+        "to fetch them on demand (consent-gated, see docs/PRIVACY.md)."
+      );
+    }
     return 1;
   }
 

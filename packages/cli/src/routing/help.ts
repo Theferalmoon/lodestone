@@ -17,6 +17,11 @@ export const SUBCOMMANDS: readonly SubcommandSummary[] = [
   { name: "seed-skills", description: "Pre-populate common-pattern skills from project structure." },
   { name: "upgrade", description: "Pull latest Lodestone and run any required schema migrations." },
   { name: "uninstall", description: "Cleanly reverse a Lodestone install (idempotent)." },
+  {
+    name: "setup-models",
+    description:
+      "Opt-in: download embedder weights to .lodestone/models/ (consent-gated).",
+  },
 ] as const;
 
 export function printVersionLine(): void {

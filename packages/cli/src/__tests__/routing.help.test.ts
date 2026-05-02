@@ -12,10 +12,11 @@ const EXPECTED_NAMES = [
   "seed-skills",
   "upgrade",
   "uninstall",
+  "setup-models",
 ] as const;
 
 describe("--help / no-args", () => {
-  it("--help lists all 7 subcommands", async () => {
+  it("--help lists all subcommands", async () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const code = await main(["--help"]);
     expect(code).toBe(0);
