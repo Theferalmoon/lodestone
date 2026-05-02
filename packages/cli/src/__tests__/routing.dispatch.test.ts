@@ -71,13 +71,17 @@ describe("dispatch", () => {
     log.mockRestore();
   });
 
-  it("`seed-skills` dispatches to the seed-skills stub", async () => {
+  it("`seed-skills` dispatches to the seed-skills handler (Codex v0.1.1 §11 RED #4)", async () => {
+    // The handler now does real work. Without a .lodestone/ in cwd it MUST
+    // exit non-zero with a clear "run lodestone init first" message.
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const code = await main(["seed-skills"]);
-    expect(code).toBe(0);
-    const printed = err.mock.calls.flat().join("\n");
-    expect(printed).toMatch(/seed-skills.*not yet implemented/i);
+    expect(code).not.toBe(0);
+    const printed = err.mock.calls.flat().join("\n").toLowerCase();
+    expect(printed).toMatch(/lodestone init|\.lodestone/);
     err.mockRestore();
+    log.mockRestore();
   });
 
   it("`uninstall --dry-run` is accepted by the parser (stub returns 0)", async () => {
