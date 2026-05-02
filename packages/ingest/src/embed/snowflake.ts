@@ -15,6 +15,8 @@
 import { mkdirSync, existsSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { assertNetworkAllowed, NetworkBlockedError } from "@lodestone/shared";
+
 import { loadFeatureExtractor, type FeatureExtractor } from "./pipeline-loader.js";
 import { EmbedderLoadError } from "./bundled-paths.js";
 import type { EmbedderHandle, EmbedderId } from "./types.js";
@@ -64,11 +66,22 @@ export async function ensureSnowflakeWeights(
   const allPresent = required.every((f) => existsSync(path.join(opts.cacheDir, f.name)));
   if (allPresent) return opts.cacheDir;
 
-  if (process.env.LODESTONE_OFFLINE === "1") {
-    throw new EmbedderLoadError(
-      `Snowflake fallback weights not cached at ${opts.cacheDir} and LODESTONE_OFFLINE=1`,
-      `Set LODESTONE_OFFLINE=0 (or unset) to allow the one-time download, or pre-populate the cache directory.`
-    );
+  // Section 18 / Codex impl-005 B2 — route through the shared chokepoint
+  // BEFORE we do anything that could touch the network. This is the single
+  // gate that honors LODESTONE_OFFLINE=1 across every Lodestone package.
+  // We also catch and rethrow as `EmbedderLoadError` so callers in the
+  // embedder layer continue to see the type they already handle, while the
+  // root cause (NetworkBlockedError) is preserved as `cause`.
+  try {
+    assertNetworkAllowed("snowflake fallback weights");
+  } catch (err: unknown) {
+    if (err instanceof NetworkBlockedError) {
+      throw new EmbedderLoadError(
+        `Snowflake fallback weights not cached at ${opts.cacheDir} and LODESTONE_OFFLINE=1`,
+        `Set LODESTONE_OFFLINE=0 (or unset) to allow the one-time download, or pre-populate the cache directory. Original: ${err.message}`
+      );
+    }
+    throw err;
   }
 
   mkdirSync(opts.cacheDir, { recursive: true });

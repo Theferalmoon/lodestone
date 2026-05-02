@@ -51,6 +51,13 @@ export {
 } from "./paths.js";
 export type { LodestoneSubpathKey } from "./paths.js";
 
+// Net — Section 18 privacy enforcement chokepoint
+export {
+  assertNetworkAllowed,
+  isOfflineMode,
+  NetworkBlockedError,
+} from "./net/fetch.js";
+
 // SQLite schema (canonical row types — single source of truth for §08+)
 export type {
   BoolInt,

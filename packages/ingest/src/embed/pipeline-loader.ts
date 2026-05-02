@@ -43,7 +43,22 @@ async function importTransformers(): Promise<{
     model: string,
     opts: { quantized: boolean; local_files_only: boolean; cache_dir: string }
   ) => Promise<FeatureExtractor>;
-  env: { allowLocalModels: boolean; localModelPath: string; backends?: { onnx?: { wasm?: { numThreads?: number } } } };
+  env: {
+    allowLocalModels: boolean;
+    /**
+     * transformers.js defaults `allowRemoteModels = true` — meaning a
+     * misconfigured local path silently falls through to a Hugging Face
+     * download. Section 18 mandates we override that to `false` BEFORE the
+     * first `pipeline()` call so the runtime cannot leak.
+     */
+    allowRemoteModels: boolean;
+    localModelPath: string;
+    /** transformers.js's HF cache dir; we pin it to the bundled model dir. */
+    cacheDir?: string;
+    /** transformers.js sets `useBrowserCache = true` by default; irrelevant in node but we pin it off. */
+    useBrowserCache?: boolean;
+    backends?: { onnx?: { wasm?: { numThreads?: number } } };
+  };
 }> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mod: any = await import("@xenova/transformers");
@@ -63,8 +78,22 @@ export async function loadFeatureExtractor(
 
   // Critical: keep transformers.js LOCAL-ONLY. No HF hub fetches. The
   // friend's privacy claim depends on this.
+  //
+  // Section 18 / Codex impl-005 B2: `env.allowRemoteModels` MUST be set to
+  // `false` BEFORE any `pipeline()` call. transformers.js ships with
+  // `allowRemoteModels = true`; if we don't override it, a misconfigured
+  // bundled-paths resolver silently falls through to a Hugging Face Hub
+  // download — which violates the friend-product promise that "your code
+  // never leaves your machine". `allowLocalModels` and `localModelPath`
+  // alone are NOT sufficient — `allowRemoteModels` is the kill switch.
   env.allowLocalModels = true;
+  env.allowRemoteModels = false;
   env.localModelPath = opts.modelDir;
+  // Pin cache + disable browser cache as defense in depth — even if a future
+  // transformers.js release adds a third resolver path, every fallback will
+  // resolve under our model dir, never `~/.cache/huggingface/`.
+  env.cacheDir = opts.modelDir;
+  env.useBrowserCache = false;
 
   const eps = opts.useCoreML
     ? preferredExecutionProviders()

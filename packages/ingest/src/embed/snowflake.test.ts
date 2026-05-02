@@ -212,6 +212,61 @@ describe("ensureSnowflakeWeights", () => {
     ).rejects.toBeInstanceOf(EmbedderLoadError);
   });
 
+  // Section 18 / Codex impl-005 B2 — closes the privacy hole flagged in
+  // the §05 review. The fetch path MUST be unreachable in offline mode.
+  it("LODESTONE_OFFLINE=1 routes through assertNetworkAllowed() and never invokes fetchImpl", async () => {
+    process.env.LODESTONE_OFFLINE = "1";
+    const cacheDir = path.join(tmp, "missing-offline");
+    const fetchImpl = vi.fn();
+    await expect(
+      ensureSnowflakeWeights({
+        cacheDir,
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      })
+    ).rejects.toBeInstanceOf(EmbedderLoadError);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("LODESTONE_OFFLINE=1 produces an actionable error message naming the offline env var", async () => {
+    process.env.LODESTONE_OFFLINE = "1";
+    const cacheDir = path.join(tmp, "missing-msg");
+    try {
+      await ensureSnowflakeWeights({
+        cacheDir,
+        fetchImpl: (() => {
+          throw new Error("must not be called");
+        }) as unknown as typeof fetch,
+      });
+      expect.unreachable("expected throw");
+    } catch (err) {
+      expect(err).toBeInstanceOf(EmbedderLoadError);
+      const msg = (err as EmbedderLoadError).message;
+      expect(msg).toContain("LODESTONE_OFFLINE");
+    }
+  });
+
+  // §18 privacy guarantee: when bundled weights are already present, the
+  // fetch path is never reached even outside of offline mode. This is the
+  // friend-mode steady state — no outbound calls, ever.
+  it("when all bundled weights are present, fetch path is unreachable even with LODESTONE_OFFLINE unset", async () => {
+    delete process.env.LODESTONE_OFFLINE;
+    const cacheDir = path.join(tmp, "bundled");
+    mkdirSync(cacheDir, { recursive: true });
+    writeFileSync(path.join(cacheDir, "model_quantized.onnx"), "x");
+    writeFileSync(path.join(cacheDir, "tokenizer.json"), "{}");
+    writeFileSync(path.join(cacheDir, "config.json"), "{}");
+
+    const fetchImpl = vi.fn(() => {
+      throw new Error("fetch should be unreachable when bundled weights present");
+    });
+    const out = await ensureSnowflakeWeights({
+      cacheDir,
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    expect(out).toBe(cacheDir);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("throws EmbedderLoadError when fetch returns non-OK", async () => {
     const cacheDir = path.join(tmp, "cache");
     const fetchImpl = vi.fn(async () => ({

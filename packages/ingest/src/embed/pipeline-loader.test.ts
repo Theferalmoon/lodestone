@@ -12,7 +12,11 @@ const transformersState = {
     | undefined,
   env: {
     allowLocalModels: false,
+    // transformers.js default — Section 18 forces this to false.
+    allowRemoteModels: true,
     localModelPath: "",
+    cacheDir: "",
+    useBrowserCache: true,
   },
 };
 
@@ -42,7 +46,11 @@ describe("loadFeatureExtractor", () => {
     transformersState.pipelineCalls = [];
     transformersState.pipelineImpl = undefined;
     transformersState.env.allowLocalModels = false;
+    // Reset to the transformers.js DEFAULT — the loader must override this.
+    transformersState.env.allowRemoteModels = true;
     transformersState.env.localModelPath = "";
+    transformersState.env.cacheDir = "";
+    transformersState.env.useBrowserCache = true;
     _resetCoreMLState();
   });
 
@@ -72,6 +80,37 @@ describe("loadFeatureExtractor", () => {
     });
     expect(transformersState.env.allowLocalModels).toBe(true);
     expect(transformersState.env.localModelPath).toBe("/path/to/nomic");
+  });
+
+  // Section 18 / Codex impl-005 B2 — privacy-critical regression guard.
+  // transformers.js defaults `allowRemoteModels = true`. If the loader does
+  // NOT explicitly override that to `false`, a misconfigured bundled-paths
+  // resolver silently falls through to a Hugging Face Hub download. The
+  // friend-product privacy promise depends on this kill switch.
+  it("overrides transformers.env.allowRemoteModels to false BEFORE pipeline() is called", async () => {
+    let envSnapshotAtPipelineCall: { allowRemoteModels: boolean } | undefined;
+    transformersState.pipelineImpl = async () => {
+      envSnapshotAtPipelineCall = {
+        allowRemoteModels: transformersState.env.allowRemoteModels,
+      };
+      const fx = async () => ({ data: new Float32Array(0), dims: [0] });
+      return Object.assign(fx, { dispose: async () => {} });
+    };
+    // Default state has allowRemoteModels=true (the dangerous default).
+    expect(transformersState.env.allowRemoteModels).toBe(true);
+    await loadFeatureExtractor({ modelDir: "/m", useCoreML: false });
+    expect(envSnapshotAtPipelineCall?.allowRemoteModels).toBe(false);
+    // And the post-call state is also false (no late re-enable).
+    expect(transformersState.env.allowRemoteModels).toBe(false);
+  });
+
+  it("pins env.cacheDir to the supplied modelDir and disables useBrowserCache (defense in depth)", async () => {
+    await loadFeatureExtractor({
+      modelDir: "/path/to/nomic",
+      useCoreML: false,
+    });
+    expect(transformersState.env.cacheDir).toBe("/path/to/nomic");
+    expect(transformersState.env.useBrowserCache).toBe(false);
   });
 
   it("on CPU-only hosts, marks CoreML unavailable after a successful CPU load", async () => {
