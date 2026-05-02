@@ -239,6 +239,40 @@ describe("emit", () => {
     expect(a.skill.id).not.toBe(b.skill.id);
   });
 
+  it("YELLOW — body is byte-stable when upstream member/bridge order shuffles among equal-pagerank entries", async () => {
+    const cfg = {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+      id: "fixed-id",
+    };
+    // Build two clusters whose members all share identical pagerank — only
+    // the order in the input array differs. The rendered body MUST be
+    // identical, otherwise downstream churn from upstream sort instability
+    // will rewrite SKILL.md unnecessarily.
+    const baseCluster = mkCluster({ id: "abcd", size: 5, bridges: 2 });
+    const memberPRs = baseCluster.members.map((m) => ({ ...m, pagerank: 0.42 }));
+    const orderA = {
+      ...baseCluster,
+      members: memberPRs,
+      bridges: [memberPRs[0]!, memberPRs[1]!],
+    };
+    const orderB = {
+      ...baseCluster,
+      members: [...memberPRs].reverse(),
+      bridges: [memberPRs[1]!, memberPRs[0]!],
+    };
+    const a = await emit(orderA, cfg);
+    if (!a.written) throw new Error("a must write");
+    rmSync(workdir, { recursive: true, force: true });
+    const b = await emit(orderB, {
+      ...cfg,
+      lodestoneDir: join(workdir, ".lodestone"),
+    });
+    if (!b.written) throw new Error("b must write");
+    expect(b.sha256).toBe(a.sha256);
+  });
+
   it("RED #1 — cfg.id (when supplied) takes precedence over derived id", async () => {
     const cfg = {
       lodestoneDir: join(workdir, ".lodestone"),
