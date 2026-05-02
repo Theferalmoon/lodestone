@@ -42,10 +42,26 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
 
   // 1. Read manifest. Missing/invalid → conservative mode (no CLAUDE.md or
   //    .gitignore reversal; only .mcp.json entry + .lodestone/ tree).
+  //    Future-schema → ABORT, never delete state we don't understand
+  //    (Codex §19 YELLOW: an older uninstaller would otherwise shred a
+  //    newer install's recovery info).
   const manifestResult = readInstallManifest(cwd);
   let manifest: InstallManifest | null = null;
   if (manifestResult.ok) {
     manifest = manifestResult.manifest;
+  } else if (manifestResult.reason === "future-schema") {
+    output.error(
+      `Install manifest is from a newer Lodestone build than this binary supports.${
+        manifestResult.detail ? ` ${manifestResult.detail}` : ""
+      }`
+    );
+    output.error(
+      "Refusing to uninstall — an older binary could shred state it does not understand."
+    );
+    output.error(
+      "Upgrade lodestone (`npm i -g @lodestone/cli`) and re-run `lodestone uninstall`."
+    );
+    return 3;
   } else if (manifestResult.reason === "missing") {
     output.warn(
       "No install manifest found — running in conservative mode (skipping CLAUDE.md and .gitignore reversal)."
@@ -91,12 +107,29 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
     // No exit-code escalation.
   }
 
-  const treeRes = await removeLodestoneTree(cwd, {
-    dryRun: opts.dryRun,
-    keepIndex: opts.keepIndex,
-  });
-  reportTree(treeRes, opts.dryRun, opts.keepIndex);
-  if (treeRes.action === "failed") exitCode = 1;
+  // Codex §19 RED: only delete `.lodestone/` (and the manifest inside it)
+  // AFTER every reversible surface confirmed clean. If anything above
+  // failed, keep the manifest so a re-run of `lodestone uninstall` can
+  // resume from the recorded provenance instead of falling into
+  // conservative mode and skipping CLAUDE.md/.gitignore on the retry.
+  let treeRes: Awaited<ReturnType<typeof removeLodestoneTree>>;
+  if (exitCode !== 0) {
+    treeRes = {
+      action: "noop",
+      path: cwd,
+      bytesFreed: 0,
+    };
+    output.warn(
+      "  .lodestone/:      preserved (prior surface failed; re-run uninstall after fixing the error above)"
+    );
+  } else {
+    treeRes = await removeLodestoneTree(cwd, {
+      dryRun: opts.dryRun,
+      keepIndex: opts.keepIndex,
+    });
+    reportTree(treeRes, opts.dryRun, opts.keepIndex);
+    if (treeRes.action === "failed") exitCode = 1;
+  }
 
   // 3. Summary line — friend reads this and knows whether to re-run.
   const noopFully =

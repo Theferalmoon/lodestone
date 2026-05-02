@@ -8,7 +8,7 @@
 // Safety: we resolve the tree path through `canonicalLodestoneDir` and assert
 // it lives under the resolved `repoRoot` before any rm. Never delete files
 // outside the friend's `.lodestone/`.
-import { existsSync, statSync, readdirSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import path from "node:path";
 import { canonicalLodestoneDir } from "@lodestone/shared";
@@ -83,6 +83,14 @@ export async function removeLodestoneTree(
  * followed — we report the link size, not the target. Errors mid-walk return
  * the partial total rather than throwing (the caller's view of "freed" is
  * informational, not load-bearing).
+ *
+ * Codex §19 YELLOW: `statSync()` follows symlinks, so a `.lodestone -> /etc`
+ * symlink would have caused dry-run to walk and size up the target tree
+ * (and potentially error mid-walk on permission denials). Use `lstatSync()`
+ * so a symbolic link is reported by its own metadata (small inode payload)
+ * rather than what it points at. The actual deletion path uses
+ * `fs.rm({ recursive: true, force: true })` which unlinks the top-level
+ * symlink without following it.
  */
 function computeTreeSize(dir: string): number {
   let total = 0;
@@ -92,8 +100,13 @@ function computeTreeSize(dir: string): number {
     if (current === undefined) break;
     let st;
     try {
-      st = statSync(current);
+      st = lstatSync(current);
     } catch {
+      continue;
+    }
+    if (st.isSymbolicLink()) {
+      // Count the link itself, never traverse into the target.
+      total += st.size;
       continue;
     }
     if (st.isDirectory()) {

@@ -4,6 +4,22 @@
 // manifest). The ingest/cluster/seed-skills pipeline is a §05+ concern;
 // this section wires only the install-step orchestration that runs after
 // that pipeline (or, in v0, after a no-op ingest).
+//
+// MANIFEST SCHEMA v2 (Codex §04 YELLOW — transactional install):
+//   v1 wrote the manifest LAST. If `.mcp.json`/CLAUDE.md/.gitignore writes
+//   succeeded but the manifest write failed, the repo had a partial install
+//   with no provenance for `lodestone uninstall` to use. Worse: if the
+//   process was killed mid-install, the same hole opened.
+//
+//   v2 fix: write the manifest FIRST with `install_state: "pending"` and a
+//   stub for each surface, then perform each side effect, updating the
+//   manifest after each step. On full success, promote `install_state` to
+//   `"complete"`. A `pending` manifest on disk tells uninstall it has a
+//   crashed-mid-install repo and should clean up best-effort.
+//
+//   v2 also tracks `reindex_state` so `lodestone init` can write a
+//   well-formed manifest even when the post-install ingest pipeline fails:
+//   install side effects are intact, friend re-runs `lodestone reindex`.
 import path from "node:path";
 import { lodestoneSubpath, canonicalLodestoneDir } from "@lodestone/shared";
 import { writeFileAtomic } from "../install/atomic.js";
@@ -27,9 +43,30 @@ export interface InitOptions {
   noReindex: boolean;
 }
 
+/**
+ * `install_state` semantics (schema v2):
+ *  - `"pending"`: manifest written up-front; one or more surfaces have not
+ *    yet been confirmed applied. A pending manifest left on disk signals a
+ *    crashed-mid-install repo. Uninstall treats this as "best-effort
+ *    cleanup".
+ *  - `"complete"`: every install surface succeeded. Uninstall reverses
+ *    cleanly using the recorded provenance.
+ *
+ * `reindex_state` semantics (schema v2, optional):
+ *  - `"complete"`: post-install ingest pipeline ran and produced
+ *    `ready.json`.
+ *  - `"failed"`: install side effects landed cleanly, but the ingest
+ *    pipeline failed. Friend can re-run `lodestone reindex` to retry. The
+ *    install manifest stays valid for uninstall.
+ *  - `"skipped"`: `--no-reindex` was passed.
+ *  - absent: `runInstallSteps()` was called directly (test path, or a
+ *    consumer that orchestrates reindex separately).
+ */
 export interface InstallManifest {
-  schema_version: 1;
+  schema_version: 2;
   installed_at: string;
+  install_state: "pending" | "complete";
+  reindex_state?: "complete" | "failed" | "skipped";
   mcp_json: McpConfigResult;
   claude_md: AugmentClaudeMdResult;
   gitignore: UpdateGitignoreResult;
@@ -48,33 +85,75 @@ export function parseInitArgv(argv: readonly string[]): InitOptions {
  * Runs the install side-effects against `repoRoot` and returns the manifest.
  * Exposed for testability — the CLI handler delegates to this so tests can
  * exercise idempotency without spawning the binary.
+ *
+ * Transactional install (schema v2):
+ *   1. Write a `pending` manifest with placeholder entries so even if
+ *      step 2 throws, uninstall sees a manifest and knows install was
+ *      attempted.
+ *   2. Run each surface (mcp.json → CLAUDE.md → .gitignore). After each
+ *      success, rewrite the manifest with the freshly recorded action.
+ *      On any thrown error, the partially-written manifest is left on
+ *      disk in `pending` state — uninstall reads it and reverses what it
+ *      can.
+ *   3. Promote `install_state` to `"complete"` once every surface has
+ *      been applied.
  */
 export function runInstallSteps(
   repoRoot: string,
   opts: { writeClaudeMd: boolean }
 ): InstallManifest {
-  const mcp = writeMcpJson(repoRoot);
-  const claudeMd = opts.writeClaudeMd
-    ? augmentClaudeMd({ write: true, repoRoot })
-    : (() => {
-        printClaudeMdSnippet();
-        return augmentClaudeMd({ write: false, repoRoot });
-      })();
-  const gitignore = updateGitignore(repoRoot);
-
-  const manifest: InstallManifest = {
-    schema_version: 1,
-    installed_at: new Date().toISOString(),
-    mcp_json: mcp,
-    claude_md: claudeMd,
-    gitignore,
-  };
   // Manifest lives inside .lodestone/ — make sure the dir exists before writing.
   // canonicalLodestoneDir creates the parent (cwd) but not .lodestone itself;
   // writeFileAtomic mkdir -p's the immediate parent, so this is safe.
   canonicalLodestoneDir(repoRoot);
   const manifestPath = lodestoneSubpath(repoRoot, "installManifest");
-  writeFileAtomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  // Stage a pending manifest BEFORE any side effect. Each surface field
+  // gets a placeholder action that uninstall reads as "not applied" so a
+  // crash mid-install doesn't trick uninstall into trying to reverse a
+  // step that never ran.
+  const stagingMcp: McpConfigResult = {
+    action: "merged",
+    path: path.join(repoRoot, ".mcp.json"),
+  };
+  const stagingClaude: AugmentClaudeMdResult = { action: "skipped" };
+  const stagingGitignore: UpdateGitignoreResult = {
+    action: "noop",
+    path: path.join(repoRoot, ".gitignore"),
+  };
+  const manifest: InstallManifest = {
+    schema_version: 2,
+    installed_at: new Date().toISOString(),
+    install_state: "pending",
+    mcp_json: stagingMcp,
+    claude_md: stagingClaude,
+    gitignore: stagingGitignore,
+  };
+  const writeManifest = (): void => {
+    writeFileAtomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  };
+  writeManifest();
+
+  // Each surface: do the work, update the manifest, persist. The interim
+  // writes are cheap (one small JSON file) and let uninstall reverse a
+  // partial install precisely.
+  manifest.mcp_json = writeMcpJson(repoRoot);
+  writeManifest();
+
+  manifest.claude_md = opts.writeClaudeMd
+    ? augmentClaudeMd({ write: true, repoRoot })
+    : (() => {
+        printClaudeMdSnippet();
+        return augmentClaudeMd({ write: false, repoRoot });
+      })();
+  writeManifest();
+
+  manifest.gitignore = updateGitignore(repoRoot);
+  writeManifest();
+
+  // All surfaces applied — promote to `complete`.
+  manifest.install_state = "complete";
+  writeManifest();
 
   return manifest;
 }
@@ -141,6 +220,7 @@ export async function init(argv: readonly string[]): Promise<number> {
   if (opts.noReindex) {
     output.info("");
     output.info("Skipping ingest (--no-reindex). Run `lodestone reindex` to build the index.");
+    recordReindexState(cwd, manifest, "skipped");
     return 0;
   }
 
@@ -148,6 +228,12 @@ export async function init(argv: readonly string[]): Promise<number> {
   try {
     await runReindex(cwd);
   } catch (err) {
+    // Codex §04 YELLOW: install side effects are intact and the manifest is
+    // already `complete` — the failure is post-install. Reflect that in the
+    // manifest (`reindex_state: "failed"`) so future tooling and the friend
+    // can see exactly which step did not finish, and exit with a distinct
+    // non-zero code so CI can distinguish install failure (exit 1, no
+    // manifest) from reindex failure (exit 2, manifest present + valid).
     const detail = err instanceof Error ? err.message : String(err);
     output.error(`Reindex failed: ${detail}`);
     output.error("Install side-effects are intact; rerun `lodestone reindex` to retry.");
@@ -160,10 +246,32 @@ export async function init(argv: readonly string[]): Promise<number> {
         "to fetch them on demand (consent-gated, see docs/PRIVACY.md)."
       );
     }
-    return 1;
+    recordReindexState(cwd, manifest, "failed");
+    return 2;
   }
 
+  recordReindexState(cwd, manifest, "complete");
   output.info("");
   output.info("Next: open Claude Code in this directory.");
   return 0;
+}
+
+/**
+ * Update the install manifest with a final `reindex_state`. This is a
+ * best-effort write — if the manifest can't be re-written, we swallow the
+ * error rather than mask the original outcome (success or reindex failure)
+ * with a manifest-write failure.
+ */
+function recordReindexState(
+  cwd: string,
+  manifest: InstallManifest,
+  state: NonNullable<InstallManifest["reindex_state"]>
+): void {
+  manifest.reindex_state = state;
+  try {
+    const manifestPath = lodestoneSubpath(cwd, "installManifest");
+    writeFileAtomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  } catch {
+    /* best-effort — do not mask the upstream outcome */
+  }
 }

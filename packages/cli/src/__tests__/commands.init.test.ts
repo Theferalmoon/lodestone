@@ -85,7 +85,7 @@ describe("runInstallSteps", () => {
   it("on a clean repo: writes .mcp.json, .gitignore, prints CLAUDE.md snippet, writes manifest", () => {
     const manifest = runInstallSteps(tmp, { writeClaudeMd: false });
 
-    expect(manifest.schema_version).toBe(1);
+    expect(manifest.schema_version).toBe(2);
     expect(manifest.mcp_json.action).toBe("created");
     expect(manifest.gitignore.action).toBe("created");
     expect(manifest.claude_md.action).toBe("skipped");
@@ -135,10 +135,16 @@ describe("runInstallSteps", () => {
     runInstallSteps(tmp, { writeClaudeMd: false });
     const manifestPath = path.join(tmp, ".lodestone", "install-manifest.json");
     const parsed = JSON.parse(readFileSync(manifestPath, "utf8")) as InstallManifest;
-    expect(parsed.schema_version).toBe(1);
+    expect(parsed.schema_version).toBe(2);
     expect(parsed.mcp_json).toBeDefined();
     expect(parsed.gitignore).toBeDefined();
     expect(parsed.claude_md).toBeDefined();
+  });
+
+  it("manifest is at schema_version=2 with install_state='complete' on success (Codex §04 YELLOW)", () => {
+    const manifest = runInstallSteps(tmp, { writeClaudeMd: false });
+    expect(manifest.schema_version).toBe(2);
+    expect(manifest.install_state).toBe("complete");
   });
 });
 

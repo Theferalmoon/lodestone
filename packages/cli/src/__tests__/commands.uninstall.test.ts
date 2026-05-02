@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -241,16 +242,46 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
   });
 
-  it("schema-mismatch manifest triggers conservative mode", async () => {
+  it("schema-mismatch (low/below-v1) manifest triggers conservative mode", async () => {
     runInstallSteps(tmp, { writeClaudeMd: false });
     writeFileSync(
       path.join(tmp, ".lodestone", "install-manifest.json"),
-      JSON.stringify({ schema_version: 99, installed_at: "x" })
+      JSON.stringify({ schema_version: 0, installed_at: "x" })
     );
 
     expect(await uninstall([])).toBe(0);
     const stderr = err.mock.calls.flat().join("\n");
     expect(stderr.toLowerCase()).toMatch(/conservative mode/);
+  });
+
+  it("future-schema manifest REFUSES uninstall (Codex §19 YELLOW: no destructive fall-through)", async () => {
+    runInstallSteps(tmp, { writeClaudeMd: false });
+    // Simulate a future binary's manifest landing in this older binary's
+    // tree. A v999 manifest may have additional required fields the older
+    // binary doesn't know about; deleting `.lodestone/` would shred state
+    // the future binary still depends on.
+    writeFileSync(
+      path.join(tmp, ".lodestone", "install-manifest.json"),
+      JSON.stringify({
+        schema_version: 999,
+        installed_at: "2099-01-01T00:00:00.000Z",
+        install_state: "complete",
+        mcp_json: { action: "created", path: "/x" },
+        claude_md: { action: "skipped" },
+        gitignore: { action: "created", path: "/y" },
+      })
+    );
+
+    // Distinct exit code (3) so CI/scripts can tell version-skew apart
+    // from a normal non-zero failure.
+    expect(await uninstall([])).toBe(3);
+    const stderr = err.mock.calls.flat().join("\n");
+    expect(stderr.toLowerCase()).toMatch(/refusing to uninstall|newer/);
+    // .lodestone/ tree still on disk — uninstall did NOT touch it.
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(true);
+    expect(
+      existsSync(path.join(tmp, ".lodestone", "install-manifest.json"))
+    ).toBe(true);
   });
 
   it("does not destroy an unparseable .mcp.json — warns and continues", async () => {
@@ -268,5 +299,37 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     expect(await uninstall([])).toBe(0);
     const stdout = log.mock.calls.flat().join("\n");
     expect(stdout.toLowerCase()).toContain("nothing to do");
+  });
+
+  it("preserves the manifest on partial failure so a re-run can resume (Codex §19 RED)", async () => {
+    // Stage an install with a friend-pre-existing CLAUDE.md (so manifest
+    // records `appended` and uninstall will try to read+rewrite). Then
+    // replace CLAUDE.md with a directory of the same name to force EISDIR
+    // on readFileSync — the uninstall helper turns that into `unreadable`.
+    // Pre-fix (§19 RED), .lodestone/ would still be removed even though
+    // the partial failure left CLAUDE.md unreversed; a second uninstall
+    // would lose all provenance and fall into conservative mode.
+    // Post-fix, the manifest is preserved so the friend can fix the
+    // underlying cause and re-run uninstall.
+    const claudeMdPath = path.join(tmp, "CLAUDE.md");
+    writeFileSync(claudeMdPath, "# friend body\n");
+    runInstallSteps(tmp, { writeClaudeMd: true });
+    expect(
+      existsSync(path.join(tmp, ".lodestone", "install-manifest.json"))
+    ).toBe(true);
+
+    // Force EISDIR on the next CLAUDE.md read.
+    rmSync(claudeMdPath, { force: true });
+    mkdirSync(claudeMdPath);
+
+    expect(await uninstall([])).toBe(1);
+
+    // Manifest must STILL exist for a re-run to resume.
+    expect(
+      existsSync(path.join(tmp, ".lodestone", "install-manifest.json"))
+    ).toBe(true);
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(true);
+    const stderr = err.mock.calls.flat().join("\n");
+    expect(stderr.toLowerCase()).toMatch(/unreadable|preserved/);
   });
 });

@@ -5,6 +5,7 @@ import {
   mkdirSync,
   mkdtempSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -82,5 +83,60 @@ describe("removeLodestoneTree", () => {
     seed();
     expect((await removeLodestoneTree(tmp)).action).toBe("removed");
     expect((await removeLodestoneTree(tmp)).action).toBe("noop");
+  });
+
+  it("dry-run does NOT follow symlinks when sizing the tree (Codex §19 YELLOW: lstat)", async () => {
+    // Set up a "decoy" target outside `.lodestone/` with a large file in
+    // it. Pre-fix, computeTreeSize used statSync which followed symlinks
+    // and added the decoy bytes to bytesFreed.
+    const decoy = mkdtempSync(path.join(tmpdir(), "lodestone-decoy-"));
+    const decoyBig = path.join(decoy, "big.bin");
+    writeFileSync(decoyBig, "X".repeat(50_000));
+
+    const treeDir = path.join(tmp, ".lodestone");
+    mkdirSync(treeDir, { recursive: true });
+    const realBytes = 100;
+    writeFileSync(path.join(treeDir, "real.txt"), "r".repeat(realBytes));
+    // Symlink inside .lodestone/ pointing at the decoy directory.
+    symlinkSync(decoy, path.join(treeDir, "outside-link"));
+
+    try {
+      const r = await removeLodestoneTree(tmp, { dryRun: true });
+      expect(r.action).toBe("removed");
+      // bytesFreed must NOT include the 50_000-byte decoy. The symlink
+      // contributes its own short path length only; the real file
+      // contributes 100. Pin "<<50_000" to encode the no-traversal
+      // invariant.
+      expect(r.bytesFreed).toBeLessThan(10_000);
+      expect(r.bytesFreed).toBeGreaterThanOrEqual(realBytes);
+      // Tree still on disk after dry-run.
+      expect(existsSync(treeDir)).toBe(true);
+      // Decoy untouched.
+      expect(existsSync(decoyBig)).toBe(true);
+    } finally {
+      rmSync(decoy, { recursive: true, force: true });
+    }
+  });
+
+  it("actual removal unlinks symlinks without touching their targets", async () => {
+    const decoy = mkdtempSync(path.join(tmpdir(), "lodestone-decoy-"));
+    const decoyBig = path.join(decoy, "big.bin");
+    writeFileSync(decoyBig, "X".repeat(50_000));
+
+    const treeDir = path.join(tmp, ".lodestone");
+    mkdirSync(treeDir, { recursive: true });
+    writeFileSync(path.join(treeDir, "real.txt"), "real");
+    symlinkSync(decoy, path.join(treeDir, "outside-link"));
+
+    try {
+      const r = await removeLodestoneTree(tmp);
+      expect(r.action).toBe("removed");
+      // .lodestone/ gone.
+      expect(existsSync(treeDir)).toBe(false);
+      // Symlink target sentinel intact.
+      expect(existsSync(decoyBig)).toBe(true);
+    } finally {
+      rmSync(decoy, { recursive: true, force: true });
+    }
   });
 });

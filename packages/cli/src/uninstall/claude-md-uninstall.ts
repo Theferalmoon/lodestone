@@ -8,6 +8,18 @@
 // uninstall does NOT touch the file. Only `created` (init wrote the file
 // fresh — uninstall deletes it) and `appended` (init added the block to a
 // pre-existing file — uninstall excises just that block) are reversed.
+//
+// TRAILING-NEWLINE POLICY (Codex §19 YELLOW, documented):
+//   When uninstall removes the appended block from a pre-existing
+//   CLAUDE.md, it normalizes the restored file to end with a single
+//   trailing newline. Reason: the install pass irreversibly drops the
+//   information needed to know whether the friend's pre-install body
+//   ended with `\n`. Most editors (vim, VS Code, Emacs, etc.) and POSIX
+//   text-file conventions ensure `\n` termination, so this is the
+//   friend-favoring default. Visible consequence: a CLAUDE.md that was
+//   deliberately authored without a trailing newline will gain one on
+//   uninstall. Byte-identity to the pre-install state is NOT a guarantee
+//   in this case — see PRIVACY.md for the full statement.
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import path from "node:path";
 import { writeFileAtomic } from "../install/atomic.js";
