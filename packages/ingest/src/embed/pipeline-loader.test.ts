@@ -119,13 +119,24 @@ describe("loadFeatureExtractor", () => {
   });
 
   it("on CPU-only hosts, marks CoreML unavailable after a successful CPU load", async () => {
-    // process.platform/arch are linux-x64 in CI — preferredExecutionProviders
-    // should yield ["cpu"] and the loader should record CoreML=false.
-    await loadFeatureExtractor({
-      modelDir: "/m",
-      useCoreML: true, // requested, but host can't honor it
-    });
-    expect(isCoreMLEnabled()).toBe(false);
+    // Force a CPU-only platform — CI matrix includes macos-14 (arm64) where
+    // CoreML IS available, so we can't rely on the runner's true platform.
+    const origPlatform = Object.getOwnPropertyDescriptor(process, "platform");
+    const origArch = Object.getOwnPropertyDescriptor(process, "arch");
+    try {
+      Object.defineProperty(process, "platform", { value: "linux", configurable: true });
+      Object.defineProperty(process, "arch", { value: "x64", configurable: true });
+      _resetCoreMLState();
+      await loadFeatureExtractor({
+        modelDir: "/m",
+        useCoreML: true, // requested, but host can't honor it
+      });
+      expect(isCoreMLEnabled()).toBe(false);
+    } finally {
+      if (origPlatform) Object.defineProperty(process, "platform", origPlatform);
+      if (origArch) Object.defineProperty(process, "arch", origArch);
+      _resetCoreMLState();
+    }
   });
 
   it("propagates a CPU-EP failure (no CoreML to retry) by throwing", async () => {
