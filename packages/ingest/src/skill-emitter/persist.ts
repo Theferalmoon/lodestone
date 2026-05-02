@@ -7,6 +7,8 @@ import type Database from "better-sqlite3";
 
 import type { Skill, SkillRow } from "@lodestone/shared";
 
+import type { EmbedderHandle } from "../embed/runtime.js";
+
 export interface PersistResult {
   written: number;
   unchanged: number;
@@ -17,14 +19,20 @@ export interface PersistResult {
  * the caller — the row's `body_sha256` is the conflict-detection hook the
  * emitter uses on disk; we record whatever value is supplied.
  *
- * `description_embedding` is left NULL — §10 does not embed; an embedder
- * pass (run separately) backfills the column for `skills_for()` cosine
- * search.
+ * If `description_embedding` is supplied, it is persisted as-is (a Buffer
+ * containing the Float32Array bytes). When omitted, the column is left NULL
+ * — preserves the pre-v0.1.1 behavior so callers (and tests) that don't
+ * have an embedder available pay no penalty.
  */
-export function writeSkill(db: Database.Database, skill: Skill, opts: {
-  body_sha256: string;
-  expires_at?: string | null;
-}): "inserted" | "updated" | "unchanged" {
+export function writeSkill(
+  db: Database.Database,
+  skill: Skill,
+  opts: {
+    body_sha256: string;
+    expires_at?: string | null;
+    description_embedding?: Buffer | null;
+  },
+): "inserted" | "updated" | "unchanged" {
   const existing = db
     .prepare("SELECT body_sha256 FROM skills WHERE id = ?")
     .get(skill.id) as { body_sha256: string } | undefined;
@@ -37,7 +45,7 @@ export function writeSkill(db: Database.Database, skill: Skill, opts: {
     slug: skill.slug,
     name: skill.name,
     description: skill.description,
-    description_embedding: null,
+    description_embedding: opts.description_embedding ?? null,
     body: skill.body,
     source_cluster_id: skill.source_cluster_id ?? null,
     maturity: skill.maturity,
@@ -63,6 +71,7 @@ export function writeSkill(db: Database.Database, skill: Skill, opts: {
        slug = excluded.slug,
        name = excluded.name,
        description = excluded.description,
+       description_embedding = excluded.description_embedding,
        body = excluded.body,
        source_cluster_id = excluded.source_cluster_id,
        maturity = excluded.maturity,
@@ -81,18 +90,37 @@ export function writeSkill(db: Database.Database, skill: Skill, opts: {
  * Bulk-write a batch of Skill rows in a single transaction. Returns counts
  * of skill rows that were newly written (insert+update) vs. left untouched
  * because their `body_sha256` matched the existing row.
+ *
+ * If `opts.embedder` is supplied, each skill's `description` is embedded in
+ * a single batched call up-front (outside the transaction so we don't hold
+ * a write lock during inference) and persisted as a BLOB in the
+ * `skills.description_embedding` column. §16's `skills_for` cosine search
+ * reads this column directly. When no embedder is supplied the column is
+ * left NULL and `skills_for` falls back to substring scoring.
  */
-export function writeSkills(
+export async function writeSkills(
   db: Database.Database,
   skills: ReadonlyArray<{ skill: Skill; body_sha256: string; expires_at?: string | null }>,
-): PersistResult {
+  opts: { embedder?: EmbedderHandle } = {},
+): Promise<PersistResult> {
+  let embeddings: (Buffer | null)[] = skills.map(() => null);
+  if (opts.embedder && skills.length > 0) {
+    const texts = skills.map((entry) => entry.skill.description);
+    const vectors = await opts.embedder.embed(texts);
+    embeddings = vectors.map((vec) =>
+      vec ? Buffer.from(vec.buffer, vec.byteOffset, vec.byteLength) : null,
+    );
+  }
+
   let written = 0;
   let unchanged = 0;
   const tx = db.transaction(() => {
-    for (const entry of skills) {
+    for (let i = 0; i < skills.length; i++) {
+      const entry = skills[i]!;
       const result = writeSkill(db, entry.skill, {
         body_sha256: entry.body_sha256,
         expires_at: entry.expires_at,
+        description_embedding: embeddings[i] ?? null,
       });
       if (result === "unchanged") unchanged++;
       else written++;

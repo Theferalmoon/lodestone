@@ -123,15 +123,28 @@ describe("cluster() — diagnostics + version", () => {
   });
 });
 
-describe("stableClusterId", () => {
-  it("is stable across re-orderings of the same member set", () => {
-    const a = stableClusterId(["x", "y", "z"], "louvain");
-    const b = stableClusterId(["z", "y", "x"], "louvain");
+describe("stableClusterId (anchor-based)", () => {
+  it("returns the same id for the same anchor + algorithm", () => {
+    const a = stableClusterId("src/auth.ts::login", "louvain");
+    const b = stableClusterId("src/auth.ts::login", "louvain");
     expect(a).toBe(b);
   });
-  it("changes when membership changes", () => {
-    const a = stableClusterId(["x", "y", "z"], "louvain");
-    const b = stableClusterId(["x", "y"], "louvain");
+  it("returns a different id when the anchor changes", () => {
+    const a = stableClusterId("src/auth.ts::login", "louvain");
+    const b = stableClusterId("src/auth.ts::logout", "louvain");
+    expect(a).not.toBe(b);
+  });
+  it("PRESERVES id across membership shifts (anchor unchanged) — closes daily SKILL.md churn", () => {
+    // The cluster's anchor is the highest-PageRank member; small membership
+    // churn (a member added or removed) leaves the anchor unchanged, so the
+    // ID is preserved and §10's SKILL.md doesn't get a fresh slug each day.
+    const before = stableClusterId("src/auth.ts::login", "louvain");
+    const after = stableClusterId("src/auth.ts::login", "louvain");
+    expect(before).toBe(after);
+  });
+  it("differs across algorithms even for the same anchor", () => {
+    const a = stableClusterId("src/auth.ts::login", "louvain");
+    const b = stableClusterId("src/auth.ts::login", "leiden");
     expect(a).not.toBe(b);
   });
 });

@@ -120,7 +120,15 @@ export function cluster(
     totalBridges += bridges.length;
 
     const members: SymbolRef[] = filtered.map((sym) => toRef(graph, sym, pagerank));
-    const id = stableClusterId(filtered, "louvain");
+    // Anchor-based ID: hash JUST the highest-PageRank member + algorithm.
+    // Membership shifts (members added/removed) PRESERVE the cluster ID so
+    // §10 SKILL.md emission doesn't churn daily as the codebase evolves.
+    // Only an anchor change creates a new ID. Trade-off: two clusters with
+    // entirely different members but coincidentally the same anchor would
+    // collide — accepted because anchor (top-PageRank symbol) is a strong
+    // signal AND the diagnostics.modularity/membership info still
+    // distinguishes them at read time.
+    const id = stableClusterId(anchor, "louvain");
 
     out.push({
       id,
@@ -168,16 +176,25 @@ function toRef(
   };
 }
 
-/** SHA256 truncated to 16 hex of sorted members + algorithm. Same membership -> same id. */
-export function stableClusterId(members: readonly string[], algorithm: string): string {
-  const sorted = [...members].sort();
+/**
+ * SHA256 truncated to 16 hex of `anchor + algorithm`. Same anchor -> same id,
+ * regardless of how the rest of the cluster's membership shifted.
+ *
+ * Anchor is the cluster's highest-PageRank member (computed in `cluster()`).
+ * Anchoring on that single symbol means small membership churn — a member
+ * added, removed, or renamed — does NOT create a new cluster ID, so the §10
+ * skill emitter doesn't write a fresh SKILL.md every reindex.
+ *
+ * Trade-off: two clusters with completely different members but coincidentally
+ * the same anchor would collide. Accepted because (a) the anchor is the
+ * strongest single signal of cluster identity and (b) `diagnostics.modularity`
+ * + the member list itself still distinguish the clusters at read time.
+ */
+export function stableClusterId(anchor: string, algorithm: string): string {
   const h = createHash("sha256");
   h.update(algorithm);
   h.update("|");
-  for (const m of sorted) {
-    h.update(m);
-    h.update("\n");
-  }
+  h.update(anchor);
   return h.digest("hex").slice(0, 16);
 }
 

@@ -6,36 +6,61 @@ import type Database from "better-sqlite3";
 
 import type { Cluster } from "@lodestone/shared";
 
+import type { EmbedderHandle } from "../embed/runtime.js";
+
 export interface PersistOptions {
   index_epoch: number;
   algorithm: string;
   algorithm_version: string;
+  /**
+   * Optional embedder. When supplied, `cluster.description` is embedded and
+   * stored in `clusters.description_embedding` (BLOB) so §16 `cluster()`'s
+   * semantic-fallback lane has data to match against. When omitted the
+   * column is left NULL — backwards-compat with callers (and tests) that
+   * don't have an embedder available at persist time.
+   */
+  embedder?: EmbedderHandle;
 }
 
 /**
  * Insert/update clusters + their member rows. Wraps everything in a single
  * transaction so a failure mid-batch leaves the DB in a coherent state.
  *
- * description_embedding is left NULL — the §10 skill emitter or a future
- * embedder pass will backfill it.
+ * If `opts.embedder` is provided, each cluster's `description` is embedded
+ * in a single batched call and the resulting Float32Array is persisted as a
+ * BLOB in `clusters.description_embedding`. If absent, the column is NULL
+ * (matches the pre-v0.1.1 behavior — `skills_for`/`cluster()` semantic
+ * lanes degrade to substring/LIKE fallback).
  */
-export function persistClusters(
+export async function persistClusters(
   db: Database.Database,
   clusters: readonly Cluster[],
   opts: PersistOptions,
-): { clustersWritten: number; membersWritten: number } {
+): Promise<{ clustersWritten: number; membersWritten: number }> {
+  // Backfill description embeddings up-front (single batched embedder call,
+  // outside the transaction so we don't hold a write lock during inference).
+  let embeddings: (Buffer | null)[] = clusters.map(() => null);
+  if (opts.embedder && clusters.length > 0) {
+    const texts = clusters.map((c) => c.description ?? "");
+    const vectors = await opts.embedder.embed(texts);
+    embeddings = vectors.map((vec) =>
+      vec ? Buffer.from(vec.buffer, vec.byteOffset, vec.byteLength) : null,
+    );
+  }
+
   const insertCluster = db.prepare(
     `INSERT INTO clusters (
        id, name, name_status, description, description_embedding,
        size, algorithm, algorithm_version, modularity, index_epoch
      ) VALUES (
-       @id, @name, @name_status, @description, NULL,
+       @id, @name, @name_status, @description, @description_embedding,
        @size, @algorithm, @algorithm_version, @modularity, @index_epoch
      )
      ON CONFLICT(id) DO UPDATE SET
        name = excluded.name,
        name_status = excluded.name_status,
        description = excluded.description,
+       description_embedding = excluded.description_embedding,
        size = excluded.size,
        algorithm = excluded.algorithm,
        algorithm_version = excluded.algorithm_version,
@@ -56,12 +81,14 @@ export function persistClusters(
   let membersWritten = 0;
 
   const tx = db.transaction((batch: readonly Cluster[]) => {
-    for (const c of batch) {
+    for (let i = 0; i < batch.length; i++) {
+      const c = batch[i]!;
       insertCluster.run({
         id: c.id,
         name: c.name,
         name_status: c.name_status,
         description: c.description ?? null,
+        description_embedding: embeddings[i] ?? null,
         size: c.size,
         algorithm: opts.algorithm,
         algorithm_version: opts.algorithm_version,

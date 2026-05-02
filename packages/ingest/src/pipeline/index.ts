@@ -227,25 +227,31 @@ export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSum
     );
     writeClassInheritance(w, internalInheritance);
 
-    // 4. Cluster + persist.
+    // 4. Cluster + persist. Pass the embedder so cluster.description gets
+    //    embedded into clusters.description_embedding (BLOB) — §16
+    //    `cluster()`'s semantic-fallback lane reads this column.
     progress("cluster");
     const clusters = runCluster(graph, pr, { seed: 42 });
-    persistClusters(w, clusters, {
+    await persistClusters(w, clusters, {
       index_epoch: indexEpoch,
       algorithm: "louvain",
       algorithm_version: "0.1.0",
+      embedder,
     });
 
-    // 5. Skills (seed) — deterministic v0 source.
+    // 5. Skills (seed) — deterministic v0 source. Embedder backfills
+    //    skills.description_embedding so §16 `skills_for` cosine search
+    //    has data to match against (otherwise it falls back to substring).
     progress("skills");
     const seedSkills: Skill[] = seedSkillsFor(parseResults);
-    writeSkills(
+    await writeSkills(
       w,
       seedSkills.map((skill) => ({
         skill,
         body_sha256: sha256Hex(skill.body),
         expires_at: null,
       })),
+      { embedder },
     );
 
     // 6. Embeddings — populate symbol_embeddings via the caller's embedder.
