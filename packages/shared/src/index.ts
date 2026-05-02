@@ -58,6 +58,9 @@ export {
   NetworkBlockedError,
 } from "./net/fetch.js";
 
+// Hash — Section 18 / impl-005 amendment, shared SHA256 helper
+export { sha256File } from "./hash/sha256.js";
+
 // SQLite schema (canonical row types — single source of truth for §08+)
 export type {
   BoolInt,

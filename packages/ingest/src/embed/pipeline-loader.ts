@@ -6,13 +6,41 @@
 // transformers.js (@xenova/transformers) is the JS port of HF Transformers
 // with the ONNX backend. We use it for the feature-extraction pipeline,
 // which loads the tokenizer + ONNX session, runs forward + mean-pools.
+//
+// CoreML EP — known no-op under @xenova/transformers v2.x.
+// ====================================================================
+// Codex impl-005 §05 review YELLOW: the previous version of this file
+// computed `preferredExecutionProviders()` and looped over the EP list
+// (`["coreml", "cpu"]` on Apple Silicon), but @xenova/transformers v2.17.x
+// EXPORTS `executionProviders` as a module-level constant from
+// `backends/onnx.js` and pins it to `["cpu", "wasm"]` in node — there is
+// NO public API on `pipeline()` to override it per call. The EP loop
+// silently fell through to CPU on every host AND `markCoreMLEnabled()`
+// fired on Apple Silicon's first successful call, falsely reporting
+// CoreML as enabled to the doctor / status surfaces.
+//
+// The fix:
+//   - We KEEP the `useCoreML` knob on the loader options because the
+//     dispatcher in runtime.ts already reads `detectCoreMLCapable()` and
+//     forwards the bit. Removing it would ripple through the public
+//     `LoadOptions` type, the bundled-paths resolver, and every test
+//     fixture for marginal gain.
+//   - We NEVER call `markCoreMLEnabled()` from this loader. The status
+//     surfaces will report CoreML as unavailable (consistent with the
+//     actual runtime behavior).
+//   - When @xenova/transformers v3 lands (which exposes per-call
+//     `executionProviders`) OR we move to onnxruntime-node directly,
+//     this is the file to upgrade — the loader is the single seam, so
+//     callers never know the EP is currently a no-op.
+//
+// Compliance: NIST 800-53 SI-7 (Software/Firmware Integrity — accurate
+// telemetry of running components), AU-12 (Audit Generation — doctor
+// surfaces must report true state); CMMC L2 SI.L2-3.14.1; SOC 2 CC7.2.
 
 import path from "node:path";
 
 import {
-  markCoreMLEnabled,
   markCoreMLUnavailable,
-  preferredExecutionProviders,
 } from "./coreml.js";
 
 /**
@@ -30,7 +58,13 @@ export interface FeatureExtractor {
 
 export interface LoadPipelineOptions {
   modelDir: string;
-  /** When true, attempt CoreML EP first then fall back to CPU on failure. */
+  /**
+   * Operator hint. Currently a no-op under @xenova/transformers v2.x — the
+   * lib does not expose a per-call EP override, so we always run on the
+   * default node EP set (cpu + wasm). The flag is preserved for v3
+   * upgrade and for forward-compatible callers; see the file header for
+   * the rationale.
+   */
   useCoreML: boolean;
 }
 
@@ -69,9 +103,10 @@ async function importTransformers(): Promise<{
 
 /**
  * Load a transformers.js feature-extraction pipeline against a local model
- * directory. Tries CoreML first when requested, falls back to CPU on EP
- * failure. Records the resolved CoreML state via the coreml module so
- * `isCoreMLEnabled()` reports correctly.
+ * directory. The `useCoreML` opt is currently a no-op under
+ * @xenova/transformers v2.x (see file header) — we always run on the lib's
+ * default node EPs and explicitly mark CoreML unavailable so doctor /
+ * status surfaces report accurately.
  */
 export async function loadFeatureExtractor(
   opts: LoadPipelineOptions
@@ -107,34 +142,19 @@ export async function loadFeatureExtractor(
   env.cacheDir = modelParent;
   env.useBrowserCache = false;
 
-  const eps = opts.useCoreML
-    ? preferredExecutionProviders()
-    : (["cpu"] as const);
+  // CoreML is a known no-op under @xenova/transformers v2.x — we cannot
+  // pass an EP override into pipeline(), so explicitly mark CoreML
+  // unavailable BEFORE the call so the status surface never shows a
+  // false positive even if the call succeeds. The `useCoreML` opt is
+  // preserved for the v3 upgrade path; intentionally referenced here
+  // (not destructured-and-discarded) so a `noUnusedParameters` build
+  // setting wouldn't accidentally remove it from the public type.
+  void opts.useCoreML;
+  markCoreMLUnavailable();
 
-  for (const ep of eps) {
-    try {
-      const fx = await pipeline("feature-extraction", modelId, {
-        quantized: true,
-        local_files_only: true,
-        cache_dir: modelParent,
-      });
-      if (ep === "coreml") {
-        markCoreMLEnabled();
-      } else {
-        markCoreMLUnavailable();
-      }
-      return fx;
-    } catch (err) {
-      // CoreML EP creation failed — try the next EP in the list.
-      if (ep === "coreml") {
-        markCoreMLUnavailable();
-        continue;
-      }
-      throw err;
-    }
-  }
-
-  throw new Error(
-    `Failed to load feature-extraction pipeline at ${opts.modelDir} on any EP`
-  );
+  return pipeline("feature-extraction", modelId, {
+    quantized: true,
+    local_files_only: true,
+    cache_dir: modelParent,
+  });
 }
