@@ -103,30 +103,57 @@ export function detectErrorHierarchy(input: SeedSkillInput): SeedSkillRecord | n
   }
   if (edges.length === 0) return null;
 
-  // 2. Index parents by their LOCAL name so transitive-children resolution
-  //    works even when no full path is given. Match a child whose base
-  //    equals either the parent's display name OR its full class id.
+  // 2. Index parents by every name a child might use to reference them.
+  //    A child like `class B extends A` writes base_name="A". A child like
+  //    `class B extends errors.AppError` writes base_name="errors.AppError"
+  //    while the parent class id ends in "AppError". Without indexing both
+  //    forms the BFS misses transitive chains where the qualifier flips
+  //    between hops (Codex r2 §11 PARTIAL: `NotFoundError extends
+  //    errors.AppError` after `AppError extends Error`).
   const childrenByParentName = new Map<string, Edge[]>();
+  const addParentKey = (key: string, edge: Edge) => {
+    const trimmed = key.trim();
+    if (!trimmed) return;
+    const bucket = childrenByParentName.get(trimmed) ?? [];
+    if (!bucket.some((b) => b.class_id === edge.class_id)) {
+      bucket.push(edge);
+    }
+    childrenByParentName.set(trimmed, bucket);
+  };
   for (const e of edges) {
-    const key = e.base_name.trim();
-    const bucket = childrenByParentName.get(key) ?? [];
-    bucket.push(e);
-    childrenByParentName.set(key, bucket);
+    // (a) Raw base_name as written ("errors.AppError").
+    addParentKey(e.base_name, e);
+    // (b) Last-segment / bare form ("AppError"). Lets a child written as
+    //     "errors.AppError" match a parent whose display_name is "AppError".
+    if (e.base_root && e.base_root !== e.base_name.trim()) {
+      addParentKey(e.base_root, e);
+    }
   }
 
   // 3. For each built-in error root, BFS over children and grandchildren etc.
   //    A child is identified by an edge whose `base_root` matches the seed
   //    root OR whose `base_name` matches the display name of any already-
-  //    discovered descendant.
+  //    discovered descendant. Codex r2 §11 PARTIAL: enqueue both the bare
+  //    display name AND any qualified forms a downstream child might use,
+  //    so chains that flip between qualifier styles are not lost.
   let dominant: { root: string; members: Edge[] } | null = null;
   for (const root of ERROR_ROOTS) {
     const collected = new Map<string, Edge>();
     const queue: string[] = [root];
+    const enqueued = new Set<string>([root]);
+    const enqueue = (name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed || enqueued.has(trimmed)) return;
+      enqueued.add(trimmed);
+      queue.push(trimmed);
+    };
     // Direct descendants — base_root matches the seed root.
     for (const e of edges) {
       if (e.base_root === root && !collected.has(e.class_id)) {
         collected.set(e.class_id, e);
-        queue.push(e.display_name);
+        enqueue(e.display_name);
+        // A descendant referenced as "ns.Display" elsewhere should match.
+        enqueue(`${root}.${e.display_name}`);
       }
     }
     // Transitive descendants — climb by display-name match.
@@ -135,10 +162,15 @@ export function detectErrorHierarchy(input: SeedSkillInput): SeedSkillRecord | n
       const kids = childrenByParentName.get(parentName) ?? [];
       for (const kid of kids) {
         if (collected.has(kid.class_id)) continue;
-        // Avoid double-counting: if the kid was already counted as a direct
-        // descendant of the seed root, skip.
         collected.set(kid.class_id, kid);
-        queue.push(kid.display_name);
+        enqueue(kid.display_name);
+        // Re-enqueue the parent's qualified prefix combined with the kid's
+        // display name (e.g. "errors.NotFoundError") so a grand-kid using
+        // "errors.NotFoundError extends ..." pattern still resolves.
+        const parentPrefix = parentName.includes(".")
+          ? parentName.slice(0, parentName.lastIndexOf("."))
+          : null;
+        if (parentPrefix) enqueue(`${parentPrefix}.${kid.display_name}`);
       }
     }
     if (collected.size < 2) continue;
@@ -253,27 +285,61 @@ function lastClassSegment(classId: string): string {
 }
 
 /**
- * Codex v0.1.1 §11 RED #3: map a parser-internal class id to a friendly
- * display name. Rust's parser emits `impl Trait for Type` as a synthetic
- * symbol whose last segment is `impl_<Trait>_for_<Type>`; the implementing
- * struct (`Type`) is the real error class. For all other languages the last
- * `::` segment IS the class name, so this falls through to lastClassSegment.
+ * Codex v0.1.1 §11 RED #3 + r2 PARTIAL: map a parser-internal class id to
+ * a friendly display name. Rust's parser emits `impl Trait for Type` as a
+ * synthetic symbol whose name starts with `impl_<Trait>_for_<Type>`. When
+ * the trait is fully scoped (`impl std::error::Error for MyErr`), the
+ * literal symbol name is `impl_std::error::Error_for_MyErr`, which gets
+ * `qualifiedName`-joined as `path::impl_std::error::Error_for_MyErr`.
+ *
+ * The pre-r2 implementation only inspected the last `::` segment, so it
+ * saw `Error_for_MyErr` and missed the `impl_` prefix entirely — returning
+ * `Error_for_MyErr` (the wrong friendly name) instead of `MyErr`.
+ *
+ * r2 fix: walk segments from the right looking for an `impl_` start, then
+ * recombine the trailing segments into the synthetic body and parse with
+ * the rightmost `_for_` to recover the implementing type. For all other
+ * languages the last `::` segment IS the class name, so this falls through
+ * to lastClassSegment.
  */
 function friendlyClassName(classId: string): string {
-  const last = lastClassSegment(classId);
-  // Rust synthetic shape: `impl_<Trait>_for_<Type>`. Match the rightmost
-  // `_for_` so trait/type names containing the substring "_for_" still
-  // resolve correctly.
-  const m = /^impl_(.+?)_for_(.+)$/.exec(last);
-  if (m) return m[2]!;
-  return last;
+  const segments = classId.split("::");
+  for (let i = 0; i < segments.length; i++) {
+    if (segments[i]!.startsWith("impl_")) {
+      // Recombine segments[i..] back into the full synthetic body. The
+      // first segment carries the `impl_` prefix; later segments lost
+      // their `::` separators when the parser built the literal id, so we
+      // rejoin them here. Rightmost `_for_` then splits trait from type.
+      const body = segments.slice(i).join("::").slice("impl_".length);
+      const cut = body.lastIndexOf("_for_");
+      if (cut >= 0) {
+        const target = body.slice(cut + "_for_".length);
+        // Strip trailing `::` segments off the recovered target — if the
+        // synthetic was `impl_..._for_some::Type`, the implementer is
+        // `Type`. Defensive against future parser changes.
+        const t = target.split("::");
+        return t[t.length - 1] ?? target;
+      }
+    }
+  }
+  return lastClassSegment(classId);
 }
 
-/** Last `.`-segment of a base name (handles `MyLib.Error` → `Error`). */
+/**
+ * Last name segment of a base name. Handles `MyLib.Error` → `Error` (TS/JS
+ * dotted style) AND `std::error::Error` → `Error` (Rust scoped style).
+ *
+ * Codex r2 §11 PARTIAL: Rust trait names like `std::error::Error` were
+ * passed through as a single token because the prior split was `.`-only,
+ * so they never matched the bare `"Error"` member of ERROR_ROOTS.
+ */
 function lastSegment(baseName: string): string {
   const trimmed = baseName.replace(/<.*$/, "").trim();
-  const parts = trimmed.split(".");
-  return parts[parts.length - 1] ?? trimmed;
+  // First peel off Rust scope (`::`); then peel off any dotted namespace
+  // qualifier that remains.
+  const lastScope = trimmed.split("::").pop() ?? trimmed;
+  const parts = lastScope.split(".");
+  return parts[parts.length - 1] ?? lastScope;
 }
 
 function uniquePaths(members: readonly ErrorClass[]): string[] {

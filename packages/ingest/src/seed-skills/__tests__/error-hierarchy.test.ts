@@ -169,6 +169,60 @@ describe("detectErrorHierarchy", () => {
     expect(result!.body).not.toContain("impl_Error_for_");
   });
 
+  it("Codex r2 §11 PARTIAL — qualified base name (errors.AppError) still chains transitively", () => {
+    // AppError extends Error (bare); NotFoundError + ValidationError extend
+    // `errors.AppError` (qualified). Pre-r2 the BFS queue searched for
+    // `AppError` while the qualified-form children were indexed under
+    // `errors.AppError`, so the chain broke and only AppError counted.
+    const result = detectErrorHierarchy({
+      parseResults: [
+        mkClassParseResult([
+          { id: "src/errors.ts::AppError", path: "src/errors.ts", base: "Error" },
+          { id: "src/api.ts::NotFoundError", path: "src/api.ts", base: "errors.AppError" },
+          { id: "src/api.ts::ValidationError", path: "src/api.ts", base: "errors.AppError" },
+        ]),
+      ],
+    });
+    expect(result).not.toBeNull();
+    expect(result!.evidence_count).toBe(3);
+    expect(result!.body).toContain("AppError");
+    expect(result!.body).toContain("NotFoundError");
+    expect(result!.body).toContain("ValidationError");
+  });
+
+  it("Codex r2 §11 PARTIAL — Rust impl scoped trait (impl std::error::Error for MyErr) recovers implementing struct", () => {
+    // The Rust parser builds the synthetic id literal
+    // `impl_std::error::Error_for_MyErr`, which after qualifiedName join
+    // becomes `src/e.rs::impl_std::error::Error_for_MyErr`. Pre-r2 the
+    // last `::` segment was `Error_for_MyErr`, missing the `impl_` prefix
+    // entirely → friendlyClassName returned the wrong literal. r2 walks
+    // segments to find the `impl_`-prefixed one and rejoins.
+    const result = detectErrorHierarchy({
+      parseResults: [
+        mkClassParseResult([
+          {
+            id: "src/e.rs::impl_std::error::Error_for_MyErr",
+            path: "src/e.rs",
+            base: "std::error::Error",
+            language: "rust",
+          },
+          {
+            id: "src/e.rs::impl_crate::Foo::Bar_for_Baz",
+            path: "src/e.rs",
+            base: "std::error::Error",
+            language: "rust",
+          },
+        ]),
+      ],
+    });
+    expect(result).not.toBeNull();
+    expect(result!.evidence_count).toBe(2);
+    expect(result!.body).toContain("MyErr");
+    expect(result!.body).toContain("Baz");
+    expect(result!.body).not.toContain("Error_for_MyErr");
+    expect(result!.body).not.toContain("Bar_for_Baz");
+  });
+
   it("recognises Python Exception family", () => {
     const result = detectErrorHierarchy({
       parseResults: [
