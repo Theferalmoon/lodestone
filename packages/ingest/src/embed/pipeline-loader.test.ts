@@ -58,7 +58,12 @@ describe("loadFeatureExtractor", () => {
     _resetCoreMLState();
   });
 
-  it("lazily imports @xenova/transformers and calls pipeline('feature-extraction', modelDir, ...)", async () => {
+  // transformers.js convention is `localModelPath = <BASE dir>` and the
+  // model id is the SUBDIR name (joined as `<localModelPath>/<modelId>`).
+  // The loader splits the supplied absolute modelDir into parent + basename
+  // to satisfy that — passing the full path as both was the v0.1.0 dogfood
+  // bug that caused transformers.js to double-prepend the path.
+  it("calls pipeline('feature-extraction', basename(modelDir), ...) — transformers.js needs basename, not full path", async () => {
     const fx = await loadFeatureExtractor({
       modelDir: "/some/model/dir",
       useCoreML: false,
@@ -67,19 +72,19 @@ describe("loadFeatureExtractor", () => {
     expect(transformersState.pipelineCalls).toHaveLength(1);
     const call = transformersState.pipelineCalls[0]!;
     expect(call.task).toBe("feature-extraction");
-    expect(call.model).toBe("/some/model/dir");
+    expect(call.model).toBe("dir");
     // local-only — no HF fetches
     expect((call.opts as { local_files_only: boolean }).local_files_only).toBe(true);
     expect((call.opts as { quantized: boolean }).quantized).toBe(true);
   });
 
-  it("forces transformers.env into local-only mode pointing at the supplied modelDir", async () => {
+  it("forces transformers.env.localModelPath to the PARENT of modelDir (transformers.js prepends modelId)", async () => {
     await loadFeatureExtractor({
       modelDir: "/path/to/nomic",
       useCoreML: false,
     });
     expect(transformersState.env.allowLocalModels).toBe(true);
-    expect(transformersState.env.localModelPath).toBe("/path/to/nomic");
+    expect(transformersState.env.localModelPath).toBe("/path/to");
   });
 
   // Section 18 / Codex impl-005 B2 — privacy-critical regression guard.
@@ -104,12 +109,12 @@ describe("loadFeatureExtractor", () => {
     expect(transformersState.env.allowRemoteModels).toBe(false);
   });
 
-  it("pins env.cacheDir to the supplied modelDir and disables useBrowserCache (defense in depth)", async () => {
+  it("pins env.cacheDir to the PARENT of modelDir and disables useBrowserCache (defense in depth)", async () => {
     await loadFeatureExtractor({
       modelDir: "/path/to/nomic",
       useCoreML: false,
     });
-    expect(transformersState.env.cacheDir).toBe("/path/to/nomic");
+    expect(transformersState.env.cacheDir).toBe("/path/to");
     expect(transformersState.env.useBrowserCache).toBe(false);
   });
 

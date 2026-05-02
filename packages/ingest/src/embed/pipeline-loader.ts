@@ -7,6 +7,8 @@
 // with the ONNX backend. We use it for the feature-extraction pipeline,
 // which loads the tokenizer + ONNX session, runs forward + mean-pools.
 
+import path from "node:path";
+
 import {
   markCoreMLEnabled,
   markCoreMLUnavailable,
@@ -86,13 +88,23 @@ export async function loadFeatureExtractor(
   // download — which violates the friend-product promise that "your code
   // never leaves your machine". `allowLocalModels` and `localModelPath`
   // alone are NOT sufficient — `allowRemoteModels` is the kill switch.
+  // transformers.js convention:
+  //   env.localModelPath = the BASE dir containing model subdirs
+  //   pipeline(task, modelId, ...) where modelId is the SUBDIR name
+  // So if our bundled model lives at /a/b/models/nomic/, we set
+  // localModelPath = "/a/b/models" and pass "nomic" as the model id.
+  // Passing the full absolute path as both was a v0.1.0 dogfood bug —
+  // transformers.js double-prepended the localModelPath to the modelId.
+  const modelParent = path.dirname(opts.modelDir);
+  const modelId = path.basename(opts.modelDir);
+
   env.allowLocalModels = true;
   env.allowRemoteModels = false;
-  env.localModelPath = opts.modelDir;
+  env.localModelPath = modelParent;
   // Pin cache + disable browser cache as defense in depth — even if a future
   // transformers.js release adds a third resolver path, every fallback will
   // resolve under our model dir, never `~/.cache/huggingface/`.
-  env.cacheDir = opts.modelDir;
+  env.cacheDir = modelParent;
   env.useBrowserCache = false;
 
   const eps = opts.useCoreML
@@ -101,10 +113,10 @@ export async function loadFeatureExtractor(
 
   for (const ep of eps) {
     try {
-      const fx = await pipeline("feature-extraction", opts.modelDir, {
+      const fx = await pipeline("feature-extraction", modelId, {
         quantized: true,
         local_files_only: true,
-        cache_dir: opts.modelDir,
+        cache_dir: modelParent,
       });
       if (ep === "coreml") {
         markCoreMLEnabled();

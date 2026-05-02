@@ -30,7 +30,9 @@ const ID_TO_DIR: Record<EmbedderId, string> = {
  * Required filenames for a model dir to count as "present." Tokenizer config
  * is optional (some bundles inline it into tokenizer.json).
  */
-const REQUIRED_FILES = ["model_quantized.onnx", "tokenizer.json"] as const;
+// transformers.js convention: ONNX weights live under `<modelDir>/onnx/`.
+// Bundler + setup-models both write to that subdir; loader reads from it.
+const REQUIRED_FILES = ["onnx/model_quantized.onnx", "tokenizer.json"] as const;
 
 export class EmbedderLoadError extends Error {
   constructor(message: string, public readonly hint?: string) {

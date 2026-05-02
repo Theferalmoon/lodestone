@@ -34,7 +34,7 @@ function mkEmbedder(): EmbedderHandle {
     return out;
   };
   return {
-    id: "test-deterministic",
+    id: "nomic-text-v1.5",
     dim: VECTOR_DIM,
     maxBatch: 64,
     async embed(texts: string[]): Promise<Float32Array[]> {

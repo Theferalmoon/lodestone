@@ -220,7 +220,7 @@ export function createDeterministicEmbedder(): EmbedderHandle {
     async embed(inputs: readonly string[]): Promise<Float32Array[]> {
       return inputs.map((input) => sample(input));
     },
-    async close(): Promise<void> {
+    async dispose(): Promise<void> {
       /* no-op */
     },
   } as unknown as EmbedderHandle;

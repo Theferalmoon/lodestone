@@ -88,7 +88,7 @@ const MODELS = [
     hfRepoId: "Xenova/nomic-embed-text-v1.5",
     hfRevision: "main",
     files: [
-      { filename: "model_quantized.onnx", remotePath: "onnx/model_quantized.onnx" },
+      { filename: "onnx/model_quantized.onnx", remotePath: "onnx/model_quantized.onnx" },
       { filename: "tokenizer.json", remotePath: "tokenizer.json" },
       { filename: "tokenizer_config.json", remotePath: "tokenizer_config.json" },
       { filename: "config.json", remotePath: "config.json" },
@@ -104,7 +104,7 @@ const MODELS = [
     hfRepoId: "Xenova/snowflake-arctic-embed-xs",
     hfRevision: "main",
     files: [
-      { filename: "model_quantized.onnx", remotePath: "onnx/model_quantized.onnx" },
+      { filename: "onnx/model_quantized.onnx", remotePath: "onnx/model_quantized.onnx" },
       { filename: "tokenizer.json", remotePath: "tokenizer.json" },
       { filename: "tokenizer_config.json", remotePath: "tokenizer_config.json" },
       { filename: "config.json", remotePath: "config.json" },
@@ -233,6 +233,8 @@ async function ensureFile(model, file, manifestEntry) {
   const destDir = path.join(MODELS_ROOT, model.dir);
   mkdirSync(destDir, { recursive: true });
   const destPath = path.join(destDir, file.filename);
+  // file.filename may include a subdir (`onnx/model_quantized.onnx`); ensure it.
+  mkdirSync(path.dirname(destPath), { recursive: true });
 
   const expectedHash = manifestEntry.files?.[file.filename]?.sha256 ?? null;
 

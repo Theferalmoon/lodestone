@@ -35,7 +35,16 @@ describe("resolveBundledModelDir", () => {
   it("throws EmbedderLoadError with a hint mentioning bundler when the model files don't exist", () => {
     // Both candidate paths (dist + dev) are empty in CI for an unbundled
     // model; resolution must fail loudly with a hint pointing at the
-    // bundler step.
+    // bundler step. On a maintainer machine where the bundler HAS run,
+    // this assertion would resolve a real path — skip in that case so the
+    // test reflects CI's empty-tree expectation.
+    const fs = require("node:fs") as typeof import("node:fs");
+    const here = fileURLToPath(import.meta.url);
+    const pkgRoot = path.resolve(path.dirname(here), "..", "..");
+    const bundlerRan =
+      fs.existsSync(path.join(pkgRoot, "models", "nomic", "onnx", "model_quantized.onnx")) ||
+      fs.existsSync(path.join(pkgRoot, "dist", "models", "nomic", "onnx", "model_quantized.onnx"));
+    if (bundlerRan) return; // Bundled-output check below validates this path.
     expect(() => resolveBundledModelDir("nomic-text-v1.5")).toThrow(EmbedderLoadError);
     try {
       resolveBundledModelDir("nomic-text-v1.5");
@@ -68,11 +77,11 @@ describe("(opportunistic) bundler output check", () => {
   for (const c of cases) {
     const modelDir = path.join(pkgRoot, "models", c.dir);
     const hasModel =
-      fs.existsSync(path.join(modelDir, "model_quantized.onnx")) &&
+      fs.existsSync(path.join(modelDir, "onnx", "model_quantized.onnx")) &&
       fs.existsSync(path.join(modelDir, "tokenizer.json"));
     const maybeIt = hasModel ? it : it.skip;
     maybeIt(`bundler populated models/${c.dir}/ for ${c.id}`, () => {
-      expect(fs.existsSync(path.join(modelDir, "model_quantized.onnx"))).toBe(true);
+      expect(fs.existsSync(path.join(modelDir, "onnx", "model_quantized.onnx"))).toBe(true);
       expect(fs.existsSync(path.join(modelDir, "tokenizer.json"))).toBe(true);
       // resolveBundledModelDir should now succeed for this id.
       const resolved = resolveBundledModelDir(c.id as never);

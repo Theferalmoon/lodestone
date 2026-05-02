@@ -101,7 +101,7 @@ export const MANIFEST: ReadonlyArray<ModelPin> = Object.freeze([
     description: "Nomic Embed Text v1.5 (int8 quantized, 768d, default)",
     files: [
       {
-        filename: "model_quantized.onnx",
+        filename: "onnx/model_quantized.onnx",
         url: "https://huggingface.co/Xenova/nomic-embed-text-v1.5/resolve/main/onnx/model_quantized.onnx",
         sha256: PLACEHOLDER_SHA256,
         approxBytes: 138 * 1024 * 1024,
@@ -125,7 +125,7 @@ export const MANIFEST: ReadonlyArray<ModelPin> = Object.freeze([
     description: "Snowflake Arctic Embed S (int8 quantized, 384d, low-RAM fallback)",
     files: [
       {
-        filename: "model_quantized.onnx",
+        filename: "onnx/model_quantized.onnx",
         url: "https://huggingface.co/Snowflake/snowflake-arctic-embed-s/resolve/main/onnx/model_quantized.onnx",
         sha256: PLACEHOLDER_SHA256,
         approxBytes: 33 * 1024 * 1024,
@@ -289,6 +289,7 @@ async function processModel(
 
   for (const file of pin.files) {
     const dest = path.join(opts.targetDir, file.filename);
+    mkdirSync(path.dirname(dest), { recursive: true });
     const expected = file.sha256;
 
     // Idempotency: if the file is already present and sha matches the pin,

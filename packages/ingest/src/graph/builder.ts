@@ -9,8 +9,21 @@
 // Edge attrs: `{ kind, weight }`. Weight aggregates when the same
 // (source, target, kind) triple appears more than once.
 
-import { MultiDirectedGraph } from "graphology";
+// graphology ships as CJS with named exports. Under NodeNext ESM at runtime,
+// `import { MultiDirectedGraph } from "graphology"` fails. Use namespace
+// import + .default access, mirroring graph/pagerank.ts's pattern. Types
+// come from a sibling type-only import so the generic parameters still work.
+import * as graphologyModule from "graphology";
+import type { MultiDirectedGraph as MultiDirectedGraphCls } from "graphology";
 import type { Edge, EdgeKind, LodestoneSymbol } from "@lodestone/shared";
+
+// At runtime, the namespace's `default` is the graphology module object that
+// holds Graph, MultiDirectedGraph, etc. (CJS interop). Fall back to the
+// namespace itself if the bundler already unwrapped it.
+const graphology = (
+  (graphologyModule as unknown as { default?: typeof graphologyModule }).default ?? graphologyModule
+) as typeof graphologyModule;
+const MultiDirectedGraphCtor = graphology.MultiDirectedGraph as unknown as typeof MultiDirectedGraphCls;
 
 /** Attributes on every node in the built graph. */
 export interface GraphNodeAttributes {
@@ -28,7 +41,7 @@ export interface GraphEdgeAttributes {
 }
 
 /** Public alias so consumers don't need to import `graphology` to spell the type. */
-export type LodestoneGraph = MultiDirectedGraph<GraphNodeAttributes, GraphEdgeAttributes>;
+export type LodestoneGraph = MultiDirectedGraphCls<GraphNodeAttributes, GraphEdgeAttributes>;
 
 export interface BuildGraphInput {
   symbols: readonly LodestoneSymbol[];
@@ -59,7 +72,7 @@ export function buildGraph(input: BuildGraphInput): LodestoneGraph {
   // both linking module A → module B. Matches §08's `EdgeRow` composite key
   // `(from_id, to_id, kind)`. Weight aggregation across same-(from,to,kind)
   // triples is still done explicitly via `edgeKey` lookup.
-  const graph: LodestoneGraph = new MultiDirectedGraph<
+  const graph: LodestoneGraph = new MultiDirectedGraphCtor<
     GraphNodeAttributes,
     GraphEdgeAttributes
   >({ allowSelfLoops: true });
