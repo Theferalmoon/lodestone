@@ -19,6 +19,7 @@ import { detectFrameworks } from "./framework-detector.js";
 import { detectTestPatterns } from "./test-patterns.js";
 import { detectLoggingPatterns } from "./logging-patterns.js";
 import { detectConfigEnvPatterns } from "./config-env-patterns.js";
+import { detectPersistencePatterns } from "./persistence-patterns.js";
 import type {
   SeedSkillInput,
   SeedSkillRecord,
@@ -66,6 +67,11 @@ export function seedSkillsFor(
     records.push({ source: "config-env-patterns", record: configRecord });
   }
 
+  const persistenceRecord = detectPersistencePatterns(input);
+  if (persistenceRecord) {
+    records.push({ source: "persistence-patterns", record: persistenceRecord });
+  }
+
   const frameworkRecords = detectFrameworks(input);
   for (const record of frameworkRecords) {
     records.push({ source: "framework-detector", record });
@@ -97,6 +103,7 @@ export { detectFrameworks } from "./framework-detector.js";
 export { detectTestPatterns } from "./test-patterns.js";
 export { detectLoggingPatterns } from "./logging-patterns.js";
 export { detectConfigEnvPatterns } from "./config-env-patterns.js";
+export { detectPersistencePatterns } from "./persistence-patterns.js";
 export type {
   SeedSkillInput,
   SeedSkillRecord,
