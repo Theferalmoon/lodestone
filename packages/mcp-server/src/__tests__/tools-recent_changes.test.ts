@@ -120,10 +120,29 @@ describe("recent_changes handler — input validation + clamping", () => {
     expect(res.diagnostics.clamped).toBe(true);
   });
 
-  it("`since` is accepted but adds a v0-limitation warning", async () => {
+  it("`since` is accepted as ISO timestamp without throwing", async () => {
     seed();
     const res = await handler({ since: "2026-01-01T00:00:00Z" });
-    expect(res.diagnostics.warnings?.some((w) => /best-effort/.test(w))).toBe(true);
+    // No malformed-since warning. The tempdir is not a git repo so we get
+    // the not_git_repo warning instead.
+    expect(
+      (res.diagnostics.warnings ?? []).some((w) => /Malformed `since`/.test(w)),
+    ).toBe(false);
+  });
+
+  it("rejects malformed `since` with a clear error envelope", async () => {
+    seed();
+    const res = await handler({ since: "yesterday-ish" });
+    expect(res.results).toEqual([]);
+    expect(res.diagnostics.warnings?.[0]).toMatch(/Malformed `since`/);
+  });
+
+  it("accepts a relative duration without throwing", async () => {
+    seed();
+    const res = await handler({ since: "1 week ago" });
+    expect(
+      (res.diagnostics.warnings ?? []).some((w) => /Malformed `since`/.test(w)),
+    ).toBe(false);
   });
 });
 
