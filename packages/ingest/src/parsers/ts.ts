@@ -10,6 +10,7 @@ import {
   type ClassInheritance,
   type ParseResult,
   type ParserEdge,
+  addFileAsModuleSymbolIfNeeded,
   qualifiedName,
   stripBom,
   symbolId,
@@ -331,6 +332,7 @@ export const TypeScriptParser: AbstractParser = {
     } catch (err) {
       ctx.warnings.push(`parser threw on ${filePath}: ${(err as Error).message}`);
     }
+    addFileAsModuleSymbolIfNeeded(ctx.symbols, ctx.edges, filePath, "typescript");
     return ctx;
   },
 };

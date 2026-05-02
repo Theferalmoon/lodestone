@@ -104,5 +104,37 @@ export function toRange(start: { row: number }, end: { row: number }): { start_l
   return { start_line: start.row + 1, end_line: end.row + 1 };
 }
 
+/**
+ * §07 RED #1 fix: emit a synthetic file-as-module `LodestoneSymbol` (id ==
+ * filePath) when the file produces at least one import edge with
+ * `from = filePath`. Without this symbol the pipeline's
+ * `internalParserEdges` filter drops every file-level imports edge as
+ * having no source-symbol, and §15 `context()` returns empty
+ * `imports_from` / `imported_by`. Emitting the file-as-module symbol makes
+ * the import edge first-class throughout resolveEdges → buildGraph →
+ * SQLite without changing the parser-emitted `from = filePath` convention.
+ *
+ * Mutates `symbols` in place. No-op if already present, or if the file
+ * emitted no `from = filePath` import edges (keeps the symbol table tidy
+ * for non-importing files).
+ */
+export function addFileAsModuleSymbolIfNeeded(
+  symbols: LodestoneSymbolType[],
+  edges: ParserEdge[],
+  filePath: string,
+  language: Language,
+): void {
+  const hasFileImports = edges.some((e) => e.kind === "imports" && e.from === filePath);
+  if (!hasFileImports) return;
+  if (symbols.some((s) => s.symbol === filePath)) return;
+  symbols.push({
+    symbol: filePath,
+    path: filePath,
+    range: { start_line: 1, end_line: 1 },
+    language,
+    kind: "module",
+  });
+}
+
 /** Type re-exports kept narrow so callers can import everything from `./base.js`. */
 export type { Language, SymbolKind, EdgeKind } from "@lodestone/shared";

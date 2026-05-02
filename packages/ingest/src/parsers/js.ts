@@ -9,6 +9,7 @@ import {
   type ClassInheritance,
   type ParseResult,
   type ParserEdge,
+  addFileAsModuleSymbolIfNeeded,
   qualifiedName,
   stripBom,
   symbolId,
@@ -270,6 +271,7 @@ export const JavaScriptParser: AbstractParser = {
     } catch (err) {
       ctx.warnings.push(`parser threw on ${filePath}: ${(err as Error).message}`);
     }
+    addFileAsModuleSymbolIfNeeded(ctx.symbols, ctx.edges, filePath, "javascript");
     return ctx;
   },
 };
