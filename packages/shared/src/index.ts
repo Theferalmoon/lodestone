@@ -40,6 +40,7 @@ export { FEEDBACK_SIGNALS } from "./types/feedback.js";
 
 // Config
 export type { LodestoneConfig } from "./types/config.js";
+export type { McpToolName } from "./config/schema.js";
 export { lodestoneConfigSchema, parseLodestoneConfig } from "./config/schema.js";
 
 // Paths
