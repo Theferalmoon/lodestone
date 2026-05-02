@@ -11,6 +11,8 @@ import type {
   ClassInheritanceRow,
   EdgeKind,
   EdgeRow,
+  FeedbackEvent,
+  FeedbackRow,
   LodestoneSymbol,
   SymbolRow,
 } from "@lodestone/shared";
@@ -262,4 +264,33 @@ function symbolToRow(s: LodestoneSymbol, ctx: SymbolWriteContext): SymbolRow {
 /** Type guard helper - useful in tests to discriminate edge kinds. */
 export function isEdgeKind(value: string): value is EdgeKind {
   return value === "calls" || value === "imports" || value === "extends" || value === "implements";
+}
+
+/**
+ * Insert a single agent-feedback event into the `feedback` table. The MCP
+ * `feedback` tool (§17) is the only write surface in v0; every other MCP tool
+ * uses a read-only handle. Returns the AUTOINCREMENT id assigned by SQLite —
+ * useful for callers that want to log/correlate the persisted row.
+ *
+ * The `recorded_at` field on FeedbackEvent is server-stamped (the agent never
+ * supplies it). Validation of `signal` against the FeedbackSignal union and
+ * truncation of oversized `note` happen in the MCP handler before reaching
+ * this helper — the writer trusts its inputs because the trust boundary lives
+ * in the handler. Keeping the writer dumb means other future write paths
+ * (e.g. CLI `lodestone feedback record`) can reuse it without re-validating.
+ */
+export function writeFeedback(db: Database.Database, event: FeedbackEvent): number {
+  const stmt = db.prepare(
+    `INSERT INTO feedback (recorded_at, tool, request_id, signal, note)
+     VALUES (@recorded_at, @tool, @request_id, @signal, @note)`,
+  );
+  const row: Omit<FeedbackRow, "id"> = {
+    recorded_at: event.recorded_at,
+    tool: event.tool,
+    request_id: event.request_id,
+    signal: event.signal,
+    note: event.note ?? null,
+  };
+  const result = stmt.run(row);
+  return Number(result.lastInsertRowid);
 }

@@ -21,6 +21,7 @@ export {
   writePagerank,
   writeClassInheritance,
   writeEmbeddings,
+  writeFeedback,
   ensureSymbolEmbeddingsTable,
   isEdgeKind,
 } from "./writer.js";
