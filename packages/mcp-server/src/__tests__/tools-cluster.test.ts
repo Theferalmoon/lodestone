@@ -316,6 +316,64 @@ describe("cluster MCP tool — semantic fallback", () => {
   });
 });
 
+describe("cluster MCP tool — emitted_skill_id determinism (impl-016 YELLOW)", () => {
+  it("picks the most recently emitted skill (then id ASC) when a cluster has multiple", async () => {
+    // Seed three skills against cluster-auth with deliberately out-of-order
+    // emitted_at timestamps and ids. The handler must pick the newest by
+    // emitted_at; ties broken by id ASC. SQLite's natural row order is
+    // insert-order, so we insert deliberately mis-ordered to expose any
+    // implicit reliance on it.
+    const w = openWriter(dbPath);
+    const insertSkill = w.prepare(
+      `INSERT INTO skills (id, slug, name, description, body, source_cluster_id,
+          maturity, confidence, evidence_count, observed_days, emitted_at, body_sha256)
+         VALUES (?, ?, ?, ?, ?, ?, 'emerging', 0.7, 5, 9, ?, ?)`,
+    );
+    insertSkill.run(
+      "skill-mid", "auth-mid", "auth mid", "older but inserted first",
+      "body", "cluster-auth", "2026-04-29T00:00:00Z", "a".repeat(64),
+    );
+    insertSkill.run(
+      "skill-newest", "auth-new", "auth new", "newest emitted_at",
+      "body", "cluster-auth", "2026-05-01T00:00:00Z", "b".repeat(64),
+    );
+    insertSkill.run(
+      "skill-old", "auth-old", "auth old", "oldest",
+      "body", "cluster-auth", "2026-04-28T00:00:00Z", "c".repeat(64),
+    );
+    closeDb(w);
+    _resetWriterRegistry();
+
+    const handler = createClusterHandler(ctx());
+    const env = await handler({ name_or_query: "auth" });
+    expect(env.results[0]!.emitted_skill_id).toBe("skill-newest");
+  });
+
+  it("breaks emitted_at ties by id ASC (deterministic across runs)", async () => {
+    const w = openWriter(dbPath);
+    const insertSkill = w.prepare(
+      `INSERT INTO skills (id, slug, name, description, body, source_cluster_id,
+          maturity, confidence, evidence_count, observed_days, emitted_at, body_sha256)
+         VALUES (?, ?, ?, ?, ?, ?, 'emerging', 0.7, 5, 9, ?, ?)`,
+    );
+    // Two skills, identical emitted_at — id ASC wins.
+    insertSkill.run(
+      "skill-zzz", "auth-zzz", "auth zzz", "tied",
+      "body", "cluster-auth", "2026-05-01T00:00:00Z", "z".repeat(64),
+    );
+    insertSkill.run(
+      "skill-aaa", "auth-aaa", "auth aaa", "tied",
+      "body", "cluster-auth", "2026-05-01T00:00:00Z", "y".repeat(64),
+    );
+    closeDb(w);
+    _resetWriterRegistry();
+
+    const handler = createClusterHandler(ctx());
+    const env = await handler({ name_or_query: "auth" });
+    expect(env.results[0]!.emitted_skill_id).toBe("skill-aaa");
+  });
+});
+
 describe("cluster MCP tool — empty + error paths", () => {
   it("returns empty results (not throw) when nothing matches", async () => {
     const handler = createClusterHandler(ctx());

@@ -308,8 +308,19 @@ function buildCluster(
   const bridges = bridgeMembers(reader, row.id, memberCap);
 
   // emitted_skill_id: lookup via skills.source_cluster_id JOIN.
+  // Codex impl-016 YELLOW: a cluster can have multiple emitted cards over
+  // its lifetime (emerging snapshot at day 7, observed snapshot at day 30,
+  // re-emit after a name change). The previous LIMIT 1 with no ORDER BY
+  // returned an arbitrary row (SQLite is free to choose insert order or
+  // index order). Pick the newest by emitted_at, with id ASC as the
+  // tiebreaker so the choice is stable across runs and across machines.
   const emittedSkill = reader.db
-    .prepare("SELECT id FROM skills WHERE source_cluster_id = ? LIMIT 1")
+    .prepare(
+      `SELECT id FROM skills
+        WHERE source_cluster_id = ?
+        ORDER BY emitted_at DESC, id ASC
+        LIMIT 1`,
+    )
     .get(row.id) as { id: string } | undefined;
 
   const nameStatus: NameStatus = (row.name_status ?? "heuristic") as NameStatus;
