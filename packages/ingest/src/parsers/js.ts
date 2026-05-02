@@ -74,11 +74,43 @@ function pushSymbol(
   return id;
 }
 
+/**
+ * Node types that carry their own `LodestoneSymbol`. Walking past them in
+ * `collectCalls` would double-attribute calls inside the inner symbol to
+ * the outer one (RED §06 #1). Inline `arrow_function` / `function_expression`
+ * are intentionally NOT in this set — they only become symbols when assigned
+ * to a top-level const (handled in `isSymbolEmittingDeclaration`).
+ */
+const JS_NESTED_SYMBOL_TYPES = new Set<string>([
+  "function_declaration",
+  "class_declaration",
+  "method_definition",
+]);
+
+function isSymbolEmittingDeclaration(n: Node): boolean {
+  if (n.type !== "lexical_declaration" && n.type !== "variable_declaration") {
+    return false;
+  }
+  for (const decl of n.namedChildren) {
+    if (decl.type !== "variable_declarator") continue;
+    const value = decl.childForFieldName("value");
+    if (!value) continue;
+    if (value.type === "arrow_function" || value.type === "function_expression") {
+      return true;
+    }
+  }
+  return false;
+}
+
 function collectCalls(ctx: Ctx, fromId: string, root: Node): void {
-  const stack: Node[] = [root];
+  const stack: Node[] = [];
+  for (const c of root.namedChildren) stack.push(c);
   while (stack.length > 0) {
     const n = stack.pop();
     if (!n) continue;
+    if (JS_NESTED_SYMBOL_TYPES.has(n.type) || isSymbolEmittingDeclaration(n)) {
+      continue;
+    }
     if (n.type === "call_expression") {
       const fn = n.childForFieldName("function");
       if (fn) {

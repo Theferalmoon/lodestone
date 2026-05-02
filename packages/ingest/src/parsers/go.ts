@@ -66,11 +66,24 @@ function pushSymbol(
   return id;
 }
 
+/**
+ * Go node types that introduce a separately-surfaced `LodestoneSymbol`.
+ * `func_literal` (Go closures) is intentionally NOT here — it is not
+ * surfaced as a separate symbol by this parser today, so calls inside an
+ * inline closure belong to the enclosing function/method.
+ */
+const GO_NESTED_SYMBOL_TYPES = new Set<string>([
+  "function_declaration",
+  "method_declaration",
+]);
+
 function collectCalls(ctx: Ctx, fromId: string, root: Node): void {
-  const stack: Node[] = [root];
+  const stack: Node[] = [];
+  for (const c of root.namedChildren) stack.push(c);
   while (stack.length > 0) {
     const n = stack.pop();
     if (!n) continue;
+    if (GO_NESTED_SYMBOL_TYPES.has(n.type)) continue;
     if (n.type === "call_expression") {
       const fn = n.childForFieldName("function");
       if (fn) {

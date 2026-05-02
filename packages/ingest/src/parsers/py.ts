@@ -73,11 +73,26 @@ function pushSymbol(
   return id;
 }
 
+/**
+ * Python node types that own a `LodestoneSymbol` and are re-entered by the
+ * outer `walk()` driver with their own `collectCalls` invocation. Skip them
+ * inside `collectCalls` to avoid double-attribution (RED §06 #1).
+ *
+ * `decorated_definition` wraps a function/class definition; we descend into
+ * it normally because the inner def IS in this skip set.
+ */
+const PY_NESTED_SYMBOL_TYPES = new Set<string>([
+  "function_definition",
+  "class_definition",
+]);
+
 function collectCalls(ctx: Ctx, fromId: string, root: Node): void {
-  const stack: Node[] = [root];
+  const stack: Node[] = [];
+  for (const c of root.namedChildren) stack.push(c);
   while (stack.length > 0) {
     const n = stack.pop();
     if (!n) continue;
+    if (PY_NESTED_SYMBOL_TYPES.has(n.type)) continue;
     if (n.type === "call") {
       const fn = n.childForFieldName("function");
       if (fn) {

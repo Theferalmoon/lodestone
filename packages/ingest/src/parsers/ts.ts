@@ -91,11 +91,63 @@ function pushSymbol(
   return { id, qname };
 }
 
+/**
+ * Tree-sitter node types that introduce a NEW lexical scope owning its own
+ * `LodestoneSymbol`. Walking past them inside `collectCalls` would
+ * double-attribute calls inside the inner symbol to the outer one (RED §06
+ * #1). The outer-walk re-enters these via `walk()` and emits its own
+ * `collectCalls` call against the inner body with the inner id.
+ *
+ * NOT in this set:
+ *   - `arrow_function` / `function_expression` — only the top-level-const
+ *     form is surfaced as a separate symbol; inline callbacks like
+ *     `arr.map(x => doThing(x))` MUST keep attributing `doThing` to the
+ *     surrounding function. The lexical_declaration check below handles the
+ *     surfaced form.
+ */
+const TS_NESTED_SYMBOL_TYPES = new Set<string>([
+  "function_declaration",
+  "class_declaration",
+  "method_definition",
+  "interface_declaration",
+  "type_alias_declaration",
+  "enum_declaration",
+]);
+
+/**
+ * `lexical_declaration` / `variable_declaration` only become symbol boundaries
+ * when the initializer is an arrow_function or function_expression assigned
+ * to a name (matches the surfacing logic in `walk()`'s switch case).
+ * Otherwise they are ordinary statements like `const x = useState(0)` whose
+ * call expressions belong to the enclosing function.
+ */
+function isSymbolEmittingDeclaration(n: Node): boolean {
+  if (n.type !== "lexical_declaration" && n.type !== "variable_declaration") {
+    return false;
+  }
+  for (const decl of n.namedChildren) {
+    if (decl.type !== "variable_declarator") continue;
+    const value = decl.childForFieldName("value");
+    if (!value) continue;
+    if (value.type === "arrow_function" || value.type === "function_expression") {
+      return true;
+    }
+  }
+  return false;
+}
+
 function collectCalls(ctx: WalkContext, fromId: string, root: Node): void {
-  const stack: Node[] = [root];
+  const stack: Node[] = [];
+  // Seed with root's children so a `function_declaration` body root doesn't
+  // trigger the skip on the root itself.
+  for (const c of root.namedChildren) stack.push(c);
   while (stack.length > 0) {
     const n = stack.pop();
     if (!n) continue;
+    if (TS_NESTED_SYMBOL_TYPES.has(n.type) || isSymbolEmittingDeclaration(n)) {
+      // Boundary: nested declaration owns its own calls. Don't descend.
+      continue;
+    }
     if (n.type === "call_expression") {
       const fn = n.childForFieldName("function");
       if (fn) {

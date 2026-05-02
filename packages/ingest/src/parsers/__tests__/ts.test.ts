@@ -97,6 +97,59 @@ enum E { A, B }
     expect(fn?.symbol).toBe("src/u.ts::adder");
   });
 
+  it("attributes nested call expressions to the immediate enclosing function, not the outer one (RED §06 #1)", async () => {
+    // outer { inner() { foo() } bar() } — `foo` belongs to inner, NOT outer.
+    // The previous walk recursed `collectCalls(outerBody)` over the entire
+    // subtree including nested decls, double-attributing inner calls to outer.
+    const src = `export function outer() {
+  function inner() {
+    foo();
+  }
+  bar();
+}
+`;
+    const r = await TypeScriptParser.parse("src/nest.ts", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const outerId = "src/nest.ts::outer";
+    const innerId = "src/nest.ts::outer::inner";
+    // outer should call only `bar`, not `foo`.
+    const outerCalls = calls.filter((c) => c.from === outerId).map((c) => c.to_name).sort();
+    expect(outerCalls).toEqual(["bar"]);
+    // inner should own the `foo` call.
+    const innerCalls = calls.filter((c) => c.from === innerId).map((c) => c.to_name).sort();
+    expect(innerCalls).toEqual(["foo"]);
+  });
+
+  it("attributes calls inside class methods to the method, not into a nested function inside the body (RED §06 #1)", async () => {
+    const src = `class C {
+  greet() {
+    hello();
+    function nested() { inside(); }
+  }
+}
+`;
+    const r = await TypeScriptParser.parse("src/c.ts", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const methodId = "src/c.ts::C::greet";
+    const greetCalls = calls.filter((c) => c.from === methodId).map((c) => c.to_name).sort();
+    // `inside` is inside a function nested inside the method body — must not
+    // bleed into greet.
+    expect(greetCalls).toEqual(["hello"]);
+  });
+
+  it("keeps inline arrow callbacks attributing calls to the surrounding function (RED §06 #1 regression guard)", async () => {
+    // `arr.map(x => doThing(x))` — `doThing` is inside an inline arrow that
+    // is NOT surfaced as a separate symbol, so it stays attributed to outer.
+    const src = `export function outer() {
+  [1,2,3].map(x => doThing(x));
+}
+`;
+    const r = await TypeScriptParser.parse("src/inline.ts", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const outerCalls = calls.filter((c) => c.from === "src/inline.ts::outer").map((c) => c.to_name).sort();
+    expect(outerCalls).toEqual(["doThing", "map"]);
+  });
+
   it("emits ParserEdge.from as the source symbol's qname (POST-§20 Issue A)", async () => {
     // calls/extends/implements edges' `from` MUST equal a `LodestoneSymbol.symbol`
     // qname so resolveEdges + buildGraph see a single source of truth. Imports

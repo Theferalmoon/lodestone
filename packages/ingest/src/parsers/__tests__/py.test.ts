@@ -54,6 +54,33 @@ describe("PythonParser", () => {
     expect(calls.some((c) => c.to_name === "getcwd")).toBe(true);
   });
 
+  it("attributes nested-function calls to the inner def, not the outer (RED §06 #1)", async () => {
+    const src = `def outer():
+    def inner():
+        foo()
+    bar()
+`;
+    const r = await PythonParser.parse("src/nest.py", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const outerCalls = calls.filter((c) => c.from === "src/nest.py::outer").map((c) => c.to_name).sort();
+    const innerCalls = calls.filter((c) => c.from === "src/nest.py::outer::inner").map((c) => c.to_name).sort();
+    expect(outerCalls).toEqual(["bar"]);
+    expect(innerCalls).toEqual(["foo"]);
+  });
+
+  it("attributes class-method calls to the method, not into nested-def calls inside the method body (RED §06 #1)", async () => {
+    const src = `class C:
+    def greet(self):
+        hello()
+        def nested():
+            inside()
+`;
+    const r = await PythonParser.parse("src/c.py", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const greetCalls = calls.filter((c) => c.from === "src/c.py::C::greet").map((c) => c.to_name).sort();
+    expect(greetCalls).toEqual(["hello"]);
+  });
+
   it("handles multiple base classes — `class C(A, B)` produces two triples", async () => {
     const src = `class C(A, B):
     pass

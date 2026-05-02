@@ -67,11 +67,28 @@ function pushSymbol(
   return id;
 }
 
+/**
+ * Rust node types that own a separately-surfaced `LodestoneSymbol`. Skip
+ * inside `collectCalls` so calls in nested fn/impl/etc. don't get attributed
+ * to the outer fn body (RED §06 #1). Closures (`closure_expression`) stay in
+ * scope — they're inline and not surfaced as separate symbols today.
+ */
+const RS_NESTED_SYMBOL_TYPES = new Set<string>([
+  "function_item",
+  "impl_item",
+  "struct_item",
+  "enum_item",
+  "trait_item",
+  "type_item",
+]);
+
 function collectCalls(ctx: Ctx, fromId: string, root: Node): void {
-  const stack: Node[] = [root];
+  const stack: Node[] = [];
+  for (const c of root.namedChildren) stack.push(c);
   while (stack.length > 0) {
     const n = stack.pop();
     if (!n) continue;
+    if (RS_NESTED_SYMBOL_TYPES.has(n.type)) continue;
     if (n.type === "call_expression") {
       const fn = n.childForFieldName("function");
       if (fn) {
