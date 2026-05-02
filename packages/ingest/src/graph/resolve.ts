@@ -97,14 +97,28 @@ function resolveOne(
   if (!candidates || candidates.length === 0) return null;
 
   // (2) path-hint match — caller said "this came from ./y" and we have a
-  // candidate whose path matches that hint.
+  // candidate whose path matches that hint, resolved relative to fromPath's
+  // directory. Bare-name hints like "lodash" never match here because they
+  // don't disambiguate between same-basename internal candidates.
+  const hasRelativeHint = edge.to_path !== undefined &&
+    (edge.to_path.startsWith("./") || edge.to_path.startsWith("../") || edge.to_path.startsWith("/"));
   if (edge.to_path) {
     const hintMatches = candidates.filter((id) => {
       const sym = symbolsById.get(id);
-      return sym !== undefined && pathHintMatches(sym.path, edge.to_path!);
+      return sym !== undefined && pathHintMatches(sym.path, edge.to_path!, fromPath);
     });
     if (hintMatches.length === 1) return hintMatches[0]!;
+    // Multiple matches that resolve to the same file is also OK — the
+    // graph treats them as parallel edges and aggregates weight.
+    if (hintMatches.length > 1) return hintMatches[0]!;
   }
+
+  // §07 RED #2: a relative path hint that DIDN'T resolve to any candidate
+  // expresses positive intent ("the symbol lives in this specific file
+  // relative to me"). Falling through to same-file or unique-tail
+  // heuristics would silently match an unrelated same-basename file, which
+  // is exactly the bug the brief flagged. Bail out as unresolved.
+  if (hasRelativeHint) return null;
 
   // (3) same-file fallback — the source symbol's file is the most likely
   // home for the called name when no other hint is available.
@@ -124,32 +138,82 @@ function resolveOne(
 }
 
 /**
- * Loose path-hint match. Parsers emit `to_path` as it appears in the import
- * statement (e.g. "./y", "../auth", "lodash") — not as a resolved filesystem
- * path. We accept a candidate when:
- *   - candidate.path equals the hint (rare, but possible for absolute hints), or
- *   - candidate.path's basename (without extension) matches the hint's tail
- *     segment after stripping leading "./" / "../" segments.
+ * Path-hint match (RED §07 #2 fix). Parsers emit `to_path` as it appears
+ * in the import statement (e.g. "./y", "../auth", "lodash"). We resolve
+ * the hint **against `dirname(fromPath)`** when it is relative, then
+ * compare against the candidate's full repo-relative path (with extension
+ * + `/index.<ext>` variants stripped). This prevents the previous
+ * basename-only compare from silently matching a same-basename file in a
+ * different directory.
+ *
+ * Bare-name hints (no slash, no leading `./` or `../`) like `lodash` or
+ * `react` are external module names; they don't disambiguate between
+ * internal symbols, so this returns `false` for them. The caller falls
+ * through to the same-file / unique-tail branches.
  */
-function pathHintMatches(candidatePath: string, hint: string): boolean {
+function pathHintMatches(candidatePath: string, hint: string, fromPath: string | undefined): boolean {
+  // Exact full-path match — covers absolute hints + already-canonical paths.
   if (candidatePath === hint) return true;
-  // Strip leading ./ and ../ segments from the hint.
-  let normalized = hint;
-  while (normalized.startsWith("./") || normalized.startsWith("../")) {
-    normalized = normalized.slice(normalized.indexOf("/") + 1);
+
+  const isRelative = hint.startsWith("./") || hint.startsWith("../") || hint.startsWith("/");
+  if (!isRelative) {
+    // Bare module specifier — never disambiguates between internal symbols.
+    return false;
   }
-  // Strip extension from the candidate path's basename.
-  const slash = candidatePath.lastIndexOf("/");
-  const base = slash >= 0 ? candidatePath.slice(slash + 1) : candidatePath;
+
+  // Resolve the hint against fromPath's directory using POSIX-style
+  // segments (parsers emit POSIX-relative paths). Without fromPath we
+  // can't resolve a relative hint, so refuse to match.
+  if (!fromPath) return false;
+  const resolved = posixResolveRelative(fromPath, hint);
+  if (!resolved) return false;
+
+  // Strip extension from the candidate's path.
+  const candNoExt = stripExt(candidatePath);
+  const resolvedNoExt = stripExt(resolved);
+
+  // Match either exact path or `<resolved>/index` (Node-style index resolution).
+  if (candNoExt === resolvedNoExt) return true;
+  if (candNoExt === `${resolvedNoExt}/index`) return true;
+
+  return false;
+}
+
+/**
+ * Resolve `hint` (which starts with `./`, `../`, or `/`) against the
+ * directory of `fromPath`, returning a normalized POSIX path. Returns
+ * `null` if the hint escapes the root (too many `..` segments).
+ */
+function posixResolveRelative(fromPath: string, hint: string): string | null {
+  let baseDir: string[];
+  if (hint.startsWith("/")) {
+    // Absolute hint: ignore fromPath dir, normalize hint segments alone.
+    baseDir = [];
+  } else {
+    const slash = fromPath.lastIndexOf("/");
+    baseDir = slash >= 0 ? fromPath.slice(0, slash).split("/").filter((s) => s.length > 0) : [];
+  }
+  const hintSegs = hint.split("/").filter((s) => s.length > 0);
+  const out = [...baseDir];
+  for (const seg of hintSegs) {
+    if (seg === ".") continue;
+    if (seg === "..") {
+      if (out.length === 0) return null;
+      out.pop();
+      continue;
+    }
+    out.push(seg);
+  }
+  return out.join("/");
+}
+
+function stripExt(p: string): string {
+  const slash = p.lastIndexOf("/");
+  const base = slash >= 0 ? p.slice(slash + 1) : p;
   const dot = base.lastIndexOf(".");
-  const baseNoExt = dot >= 0 ? base.slice(0, dot) : base;
-  // Compare the hint's last path segment (also without extension) against
-  // the candidate basename.
-  const normSlash = normalized.lastIndexOf("/");
-  const normBase = normSlash >= 0 ? normalized.slice(normSlash + 1) : normalized;
-  const normDot = normBase.lastIndexOf(".");
-  const normBaseNoExt = normDot >= 0 ? normBase.slice(0, normDot) : normBase;
-  return baseNoExt === normBaseNoExt;
+  if (dot <= 0) return p; // no extension or leading dot only
+  const dirPart = slash >= 0 ? p.slice(0, slash + 1) : "";
+  return dirPart + base.slice(0, dot);
 }
 
 /**

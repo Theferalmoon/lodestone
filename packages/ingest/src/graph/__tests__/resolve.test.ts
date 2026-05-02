@@ -102,6 +102,54 @@ describe("resolveEdges", () => {
     expect(resolved[0]!.weight).toBe(3);
   });
 
+  it("does NOT silently match a file with the same basename in a different directory (RED §07 #2)", () => {
+    // src/features/a.ts imports `../shared` — i.e. src/shared.
+    // The previous resolver compared only basenames, so a same-named
+    // candidate in test/shared.ts could match if it was the only `shared.ts`
+    // around or even ambiguously when both existed.
+    const symbols = [
+      sym("src/features/a.ts", "caller"),
+      sym("test/shared.ts", "shared"), // wrong-directory same-basename trap
+    ];
+    const edges: ParserEdge[] = [
+      // hint says relative-up-one to "shared", from inside src/features/
+      { from: "src/features/a.ts::caller", to_name: "shared", to_path: "../shared", kind: "imports" },
+    ];
+    const { edges: resolved, unresolved } = resolveEdges({ symbols, edges });
+    // The resolver MUST NOT pick test/shared.ts — its directory doesn't
+    // match the relative hint resolved from src/features/.
+    expect(resolved[0]!.resolved).toBe(false);
+    expect(unresolved).toContain("shared");
+  });
+
+  it("uses to_path resolved against fromPath dir to disambiguate (RED §07 #2)", () => {
+    const symbols = [
+      sym("src/features/a.ts", "caller"),
+      sym("src/shared.ts", "shared"),
+      sym("test/shared.ts", "shared"),
+    ];
+    const edges: ParserEdge[] = [
+      { from: "src/features/a.ts::caller", to_name: "shared", to_path: "../shared", kind: "imports" },
+    ];
+    const { edges: resolved } = resolveEdges({ symbols, edges });
+    // Should resolve to src/shared.ts (sibling-up dir of src/features/),
+    // not test/shared.ts.
+    expect(resolved[0]!.resolved).toBe(true);
+    expect(resolved[0]!.to).toBe("src/shared.ts::shared");
+  });
+
+  it("matches a candidate whose path is the resolved hint with an extension or /index (RED §07 #2)", () => {
+    const symbols = [
+      sym("src/features/a.ts", "caller"),
+      sym("src/shared.ts", "shared"),
+    ];
+    const edges: ParserEdge[] = [
+      { from: "src/features/a.ts::caller", to_name: "shared", to_path: "../shared", kind: "imports" },
+    ];
+    const { edges: resolved } = resolveEdges({ symbols, edges });
+    expect(resolved[0]!.to).toBe("src/shared.ts::shared");
+  });
+
   it("returns sorted distinct unresolved names", () => {
     const symbols = [sym("a.ts", "x")];
     const edges: ParserEdge[] = [
