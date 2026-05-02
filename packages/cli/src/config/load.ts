@@ -18,9 +18,15 @@ import { lodestoneSubpath, parseLodestoneConfig, type LodestoneConfig } from "@l
  *  - Present + parseable → parses + validates against the canonical zod schema.
  *  - Present + malformed → throws (the friend should know their config is bad).
  *
- * Env overrides (informational, not yet schema-bound):
- *  - `LODESTONE_OFFLINE=1` — §18 owns the canonical offline-mode policy.
- *  - `LODESTONE_LOG_LEVEL` — informational; not part of the schema yet.
+ * Env overrides — DEFERRED to §18 (privacy enforcement).
+ *
+ * Codex impl-003 B5 flagged the spec/implementation mismatch: the original
+ * §03 spec said "apply env overrides" but `LodestoneConfig` has no fields
+ * for `offline` or `log_level`, so smuggling them through this loader would
+ * widen `LodestoneConfig` in a way that conflicts with §18's policy ownership.
+ * Decision: §18 introduces a separate `RuntimeEnvOptions` type and reads
+ * `LODESTONE_OFFLINE` / `LODESTONE_LOG_LEVEL` there. This loader stays
+ * config-file-only.
  *
  * Implementation note: builds a fresh object instead of mutating the parsed
  * TOML in place. Callers can safely keep their own reference to the raw value.

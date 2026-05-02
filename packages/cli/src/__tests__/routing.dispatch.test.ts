@@ -20,6 +20,46 @@ describe("dispatch", () => {
     err.mockRestore();
   });
 
+  // Codex impl-003 B3: prefix-aware ranking. Without it, `uninst` mis-suggests
+  // `init` because the Levenshtein distance to a much shorter command wins.
+  // The fix is the prefix-match-first rule in suggestClosest. These cases
+  // codify the dangerous misdirects we must NOT regress on.
+  it("`uninst` suggests `uninstall` (prefix match wins over short Levenshtein-near `init`)", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const code = await main(["uninst"]);
+    expect(code).toBe(2);
+    const printed = err.mock.calls.flat().join("\n");
+    expect(printed).toContain("Did you mean: uninstall?");
+    expect(printed).not.toContain("Did you mean: init?");
+    err.mockRestore();
+  });
+
+  it("`stat` suggests `status` (prefix match)", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const code = await main(["stat"]);
+    expect(code).toBe(2);
+    expect(err.mock.calls.flat().join("\n")).toContain("Did you mean: status?");
+    err.mockRestore();
+  });
+
+  it("`seedskills` (no hyphen) suggests `seed-skills` via Levenshtein", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const code = await main(["seedskills"]);
+    expect(code).toBe(2);
+    expect(err.mock.calls.flat().join("\n")).toContain("Did you mean: seed-skills?");
+    err.mockRestore();
+  });
+
+  it("`xyz` (garbage) returns no suggestion (clean error only)", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const code = await main(["xyz"]);
+    expect(code).toBe(2);
+    const printed = err.mock.calls.flat().join("\n");
+    expect(printed).toContain("Unknown command:");
+    expect(printed).not.toContain("Did you mean");
+    err.mockRestore();
+  });
+
   it("`init --dry-run` dispatches to init() and returns 0 without filesystem side-effects", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);

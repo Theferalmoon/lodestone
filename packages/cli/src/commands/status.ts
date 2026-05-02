@@ -10,7 +10,12 @@
 // uses a structural type that only requires the fields it actually reads.
 
 import { existsSync, readFileSync } from "node:fs";
-import { canonicalLodestoneDir, lodestoneSubpath } from "@lodestone/shared";
+import {
+  canonicalLodestoneDir,
+  lodestoneSubpath,
+  parseReadyJson,
+  type ReadyJson,
+} from "@lodestone/shared";
 import { VERSION } from "../version.js";
 import { output } from "../ui/output.js";
 
@@ -20,28 +25,23 @@ interface StatusOptions {
 
 interface StatusReport {
   lodestone_version: string;
-  schema_version: number | null;
-  ready: boolean | null;
-  embedder: { id: string; dim: number; quant: string } | null;
+  schema_version: number;
+  ready: boolean;
+  embedder: { id: string; dim: number; quant: string };
   languages_indexed: string[];
-  indexed_at: string | null;
+  indexed_at: string;
   indexed_at_human: string | null;
-  staleness_seconds: number | null;
+  staleness_seconds: number;
   commit_at_index: string | null;
-  dirty_at_index: boolean | null;
-  index_epoch: number | null;
+  dirty_at_index: boolean;
+  index_epoch: number;
   coverage: number | null;
-}
-
-interface ReadyMarkerLike {
-  schema_version?: number;
-  ready?: boolean;
-  embedder?: { id?: string; dim?: number; quant?: string };
-  languages_indexed?: string[];
-  indexed_at?: string;
-  commit_at_index?: string | null;
-  dirty_at_index?: boolean;
-  index_epoch?: number;
+  /**
+   * Codex impl-003 B1: surface clock-skew when indexed_at is in the future
+   * (negative staleness clamped to 0). Set when (Date.now() - indexed_at) is
+   * more than 5 seconds negative.
+   */
+  clock_skew_detected: boolean;
 }
 
 function parseStatusArgv(argv: readonly string[]): StatusOptions {
@@ -61,12 +61,12 @@ function humanizeAge(iso: string): string | null {
   return `${days}d ago`;
 }
 
-function buildReport(cwd: string, marker: ReadyMarkerLike): StatusReport {
-  const indexed_at = marker.indexed_at ?? null;
-  const staleness_seconds =
-    indexed_at !== null
-      ? Math.max(0, Math.floor((Date.now() - new Date(indexed_at).getTime()) / 1000))
-      : null;
+function buildReport(cwd: string, marker: ReadyJson): StatusReport {
+  const indexedMs = new Date(marker.indexed_at).getTime();
+  const ageSeconds = Math.floor((Date.now() - indexedMs) / 1000);
+  const staleness_seconds = Math.max(0, ageSeconds);
+  // 5-second tolerance below zero so a couple of clock ticks don't trigger.
+  const clock_skew_detected = ageSeconds < -5;
 
   // Coverage is written by later sections (§08 ingest produces it).
   // TODO(§08): pin the coverage.json schema in @lodestone/shared. Today we
@@ -85,24 +85,18 @@ function buildReport(cwd: string, marker: ReadyMarkerLike): StatusReport {
 
   return {
     lodestone_version: VERSION,
-    schema_version: marker.schema_version ?? null,
-    ready: marker.ready ?? null,
-    embedder:
-      marker.embedder?.id && typeof marker.embedder.dim === "number" && marker.embedder.quant
-        ? {
-            id: marker.embedder.id,
-            dim: marker.embedder.dim,
-            quant: marker.embedder.quant,
-          }
-        : null,
-    languages_indexed: marker.languages_indexed ?? [],
-    indexed_at,
-    indexed_at_human: indexed_at !== null ? humanizeAge(indexed_at) : null,
+    schema_version: marker.schema_version,
+    ready: marker.ready,
+    embedder: marker.embedder,
+    languages_indexed: marker.languages_indexed,
+    indexed_at: marker.indexed_at,
+    indexed_at_human: humanizeAge(marker.indexed_at),
     staleness_seconds,
-    commit_at_index: marker.commit_at_index ?? null,
-    dirty_at_index: marker.dirty_at_index ?? null,
-    index_epoch: marker.index_epoch ?? null,
+    commit_at_index: marker.commit_at_index,
+    dirty_at_index: marker.dirty_at_index,
+    index_epoch: marker.index_epoch,
     coverage,
+    clock_skew_detected,
   };
 }
 
@@ -110,19 +104,12 @@ function printReport(report: StatusReport): void {
   const fmt = (label: string, value: string): string => `  ${label.padEnd(18)} ${value}`;
   output.info("lodestone status");
   output.info(fmt("lodestone version", report.lodestone_version));
-  output.info(
-    fmt(
-      "schema version",
-      report.schema_version === null ? "unknown" : String(report.schema_version)
-    )
-  );
-  output.info(fmt("ready", report.ready === null ? "unknown" : String(report.ready)));
+  output.info(fmt("schema version", String(report.schema_version)));
+  output.info(fmt("ready", String(report.ready)));
   output.info(
     fmt(
       "embedder",
-      report.embedder
-        ? `${report.embedder.id} (dim=${report.embedder.dim}, ${report.embedder.quant})`
-        : "unknown"
+      `${report.embedder.id} (dim=${report.embedder.dim}, ${report.embedder.quant})`
     )
   );
   output.info(
@@ -134,30 +121,23 @@ function printReport(report: StatusReport): void {
   output.info(
     fmt(
       "indexed at",
-      report.indexed_at && report.indexed_at_human
+      report.indexed_at_human
         ? `${report.indexed_at} (${report.indexed_at_human})`
-        : "never"
+        : `${report.indexed_at} (invalid)`
     )
   );
-  output.info(
-    fmt(
-      "staleness",
-      report.staleness_seconds === null ? "unknown" : `${report.staleness_seconds}s`
-    )
-  );
-  output.info(fmt("commit at index", report.commit_at_index ?? "unknown"));
-  output.info(
-    fmt(
-      "dirty at index",
-      report.dirty_at_index === null ? "unknown" : String(report.dirty_at_index)
-    )
-  );
-  output.info(
-    fmt("index epoch", report.index_epoch === null ? "unknown" : String(report.index_epoch))
-  );
+  output.info(fmt("staleness", `${report.staleness_seconds}s`));
+  output.info(fmt("commit at index", report.commit_at_index ?? "(non-git)"));
+  output.info(fmt("dirty at index", String(report.dirty_at_index)));
+  output.info(fmt("index epoch", String(report.index_epoch)));
   output.info(
     fmt("coverage", report.coverage === null ? "unknown" : `${(report.coverage * 100).toFixed(0)}%`)
   );
+  if (report.clock_skew_detected) {
+    output.warn(
+      "indexed_at is in the future — clock skew detected; staleness clamped to 0."
+    );
+  }
 }
 
 export async function status(argv: readonly string[]): Promise<number> {
@@ -176,12 +156,24 @@ export async function status(argv: readonly string[]): Promise<number> {
     return 1;
   }
 
-  let marker: ReadyMarkerLike;
+  let raw: unknown;
   try {
-    marker = JSON.parse(readFileSync(readyPath, "utf8")) as ReadyMarkerLike;
+    raw = JSON.parse(readFileSync(readyPath, "utf8"));
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     output.error(`Failed to read \`ready.json\`: ${detail}`);
+    return 1;
+  }
+
+  // Codex impl-003 B1/D1: validate via the canonical shared schema BEFORE
+  // building the report. This rejects wrong-typed fields up-front so we
+  // never emit partial stdout followed by an "internal error".
+  let marker: ReadyJson;
+  try {
+    marker = parseReadyJson(raw);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    output.error(`Invalid \`ready.json\` shape: ${detail}`);
     return 1;
   }
 
@@ -192,5 +184,6 @@ export async function status(argv: readonly string[]): Promise<number> {
   } else {
     printReport(report);
   }
-  return 0;
+  // Codex impl-003 B1: ready=false ⇒ degraded; surface to scripts via exit 1.
+  return marker.ready ? 0 : 1;
 }

@@ -31,8 +31,27 @@ export const HANDLERS: Readonly<Record<string, Handler>> = Object.freeze({
 const KNOWN_COMMANDS: readonly string[] = Object.keys(HANDLERS);
 
 function suggestClosest(input: string): string | null {
+  // Codex impl-003 B3: prefix matches outrank pure Levenshtein. Without this,
+  // `uninst` (a clear truncation of `uninstall`) wins `init` because the
+  // edit distance to `init` is shorter than to `uninstall`. That's a dangerous
+  // misdirect — `init` and `uninstall` are different command families.
+  // Step 1: prefer any KNOWN_COMMAND whose name starts with `input`. Among
+  // ties, the shortest candidate wins (so `uninst` -> `uninstall` not a
+  // hypothetical longer name).
+  const prefixHits = KNOWN_COMMANDS.filter((name) =>
+    name.startsWith(input) && name !== input
+  ).sort((a, b) => a.length - b.length);
+  if (prefixHits.length > 0 && prefixHits[0] !== undefined) {
+    return prefixHits[0];
+  }
+
+  // Step 2: Levenshtein, but reject candidates much shorter than the input.
+  // If the candidate is more than 50% shorter, the "match" is probably the
+  // empty-prefix illusion (e.g., distance("uninst","init") = 5 because of
+  // shared `in...t` letters). A length-aware threshold avoids the misdirect.
   let best: { name: string; d: number } | null = null;
   for (const name of KNOWN_COMMANDS) {
+    if (name.length * 2 < input.length) continue;
     const d = distance(input, name);
     if (best === null || d < best.d) {
       best = { name, d };
