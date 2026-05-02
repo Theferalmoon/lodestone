@@ -144,6 +144,12 @@ function walk(ctx: Ctx, node: Node): void {
       const id = pushSymbol(ctx, node, name, "function");
       const body = node.childForFieldName("body");
       if (body) collectCalls(ctx, id, body);
+      // Codex r2 §06 PARTIAL: re-enter body so nested declarations are walked
+      // as their own symbols (with their own collectCalls). Mirrors TS pattern
+      // — the boundary in collectCalls() prevents double-attribution; this
+      // re-walk recovers the dropped inner symbols.
+      const inner: Ctx = { ...ctx, parents: [...ctx.parents, name] };
+      if (body) for (const c of body.namedChildren) walk(inner, c);
       return;
     }
     case "class_declaration": {
@@ -178,6 +184,13 @@ function walk(ctx: Ctx, node: Node): void {
           });
           const mBody = member.childForFieldName("body");
           if (mBody) collectCalls(ctx, mId, mBody);
+          // Codex r2 §06 PARTIAL: re-walk the method body so nested function
+          // declarations inside the method get their own symbol + call edges.
+          const methodInner: Ctx = {
+            ...ctx,
+            parents: [...ctx.parents, name, mName],
+          };
+          if (mBody) for (const c of mBody.namedChildren) walk(methodInner, c);
         }
       }
       return;
@@ -225,6 +238,10 @@ function walk(ctx: Ctx, node: Node): void {
           });
           const body = value.childForFieldName("body");
           if (body) collectCalls(ctx, id, body);
+          // Codex r2 §06 PARTIAL: re-walk the arrow/function-expression body
+          // so nested declarations inside it surface as their own symbols.
+          const inner: Ctx = { ...ctx, parents: [...ctx.parents, name] };
+          if (body) for (const c of body.namedChildren) walk(inner, c);
         }
       }
       return;

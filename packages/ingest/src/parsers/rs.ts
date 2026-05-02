@@ -131,6 +131,12 @@ function walk(ctx: Ctx, node: Node): void {
       const id = pushSymbol(ctx, node, name, "function");
       const body = node.childForFieldName("body");
       if (body) collectCalls(ctx, id, body);
+      // Codex r2 §06 PARTIAL: re-enter so nested fn / impl / etc. inside the
+      // body are surfaced as their own symbols and their internal calls are
+      // attributed correctly. The collectCalls() boundary stops the outer
+      // attribution; this re-walk recovers the nested-symbol pass.
+      const inner: Ctx = { ...ctx, parents: [...ctx.parents, name] };
+      if (body) for (const c of body.namedChildren) walk(inner, c);
       return;
     }
     case "struct_item": {
@@ -206,6 +212,14 @@ function walk(ctx: Ctx, node: Node): void {
             });
             const mBody = member.childForFieldName("body");
             if (mBody) collectCalls(ctx, mId, mBody);
+            // Codex r2 §06 PARTIAL: re-enter the method body so nested fn
+            // declarations (e.g. local helper fns inside an impl method) are
+            // surfaced and their calls are attributed to them, not lost.
+            const methodInner: Ctx = {
+              ...ctx,
+              parents: [...inner.parents, mName],
+            };
+            if (mBody) for (const c of mBody.namedChildren) walk(methodInner, c);
           }
         }
       }

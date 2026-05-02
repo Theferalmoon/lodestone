@@ -50,4 +50,58 @@ describe("JavaScriptParser", () => {
     const r = await JavaScriptParser.parse("src/c.js", src);
     expect(r.edges.some((e) => e.kind === "calls" && e.to_name === "foo")).toBe(true);
   });
+
+  it("attributes nested function calls to the inner fn, not the outer (RED §06 r2)", async () => {
+    // Pre-r2 the nested `function_declaration` was skipped without re-entry,
+    // so `foo()` was lost entirely.
+    const src = `function outer() {
+  function inner() {
+    foo();
+  }
+  bar();
+}
+`;
+    const r = await JavaScriptParser.parse("src/nest.js", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const outerId = "src/nest.js::outer";
+    const innerId = "src/nest.js::outer::inner";
+    const outerCalls = calls.filter((c) => c.from === outerId).map((c) => c.to_name).sort();
+    expect(outerCalls).toEqual(["bar"]);
+    const innerCalls = calls.filter((c) => c.from === innerId).map((c) => c.to_name).sort();
+    expect(innerCalls).toEqual(["foo"]);
+    expect(r.symbols.find((s) => s.kind === "function" && s.symbol === innerId)).toBeTruthy();
+  });
+
+  it("attributes calls inside class methods to the method, not into a nested function inside the body (RED §06 r2)", async () => {
+    const src = `class C {
+  greet() {
+    hello();
+    function nested() { inside(); }
+  }
+}
+`;
+    const r = await JavaScriptParser.parse("src/cm.js", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const methodId = "src/cm.js::C::greet";
+    const nestedId = "src/cm.js::C::greet::nested";
+    const methodCalls = calls.filter((c) => c.from === methodId).map((c) => c.to_name).sort();
+    expect(methodCalls).toEqual(["hello"]);
+    const nestedCalls = calls.filter((c) => c.from === nestedId).map((c) => c.to_name).sort();
+    expect(nestedCalls).toEqual(["inside"]);
+    expect(r.symbols.find((s) => s.kind === "function" && s.symbol === nestedId)).toBeTruthy();
+  });
+
+  it("keeps inline arrow callbacks attributing calls to the surrounding function (RED §06 r2 regression guard)", async () => {
+    const src = `function outer() {
+  [1,2,3].map(x => doThing(x));
+}
+`;
+    const r = await JavaScriptParser.parse("src/inline.js", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const outerCalls = calls
+      .filter((c) => c.from === "src/inline.js::outer")
+      .map((c) => c.to_name)
+      .sort();
+    expect(outerCalls).toEqual(["doThing", "map"]);
+  });
 });

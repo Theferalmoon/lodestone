@@ -78,4 +78,49 @@ impl S { fn m(&self) {} }
     const r = await RustParser.parse("src/t.rs", src);
     expect(r.symbols.find((s) => s.kind === "type" && s.symbol.endsWith("::Alias"))).toBeTruthy();
   });
+
+  it("attributes nested fn calls to the inner fn, not the outer (RED §06 r2)", async () => {
+    // outer { inner() { foo() } bar() } — `foo` belongs to inner, NOT outer.
+    // Pre-r2 the nested `function_item` was skipped without re-entry, so
+    // `foo()` was simply lost (not just misattributed).
+    const src = `fn outer() {
+  fn inner() {
+    foo();
+  }
+  bar();
+}
+`;
+    const r = await RustParser.parse("src/nest.rs", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const outerId = "src/nest.rs::outer";
+    const innerId = "src/nest.rs::outer::inner";
+    const outerCalls = calls.filter((c) => c.from === outerId).map((c) => c.to_name).sort();
+    expect(outerCalls).toEqual(["bar"]);
+    const innerCalls = calls.filter((c) => c.from === innerId).map((c) => c.to_name).sort();
+    expect(innerCalls).toEqual(["foo"]);
+    // The nested fn must also be surfaced as its own symbol.
+    expect(r.symbols.find((s) => s.kind === "function" && s.symbol === innerId)).toBeTruthy();
+  });
+
+  it("attributes calls inside an impl method's nested fn to the nested fn, not the method (RED §06 r2)", async () => {
+    const src = `struct S;
+impl S {
+  fn m(&self) {
+    hello();
+    fn nested() { inside(); }
+  }
+}
+`;
+    const r = await RustParser.parse("src/im.rs", src);
+    const calls = r.edges.filter((e) => e.kind === "calls");
+    const methodId = "src/im.rs::S::m";
+    const nestedId = "src/im.rs::S::m::nested";
+    const methodCalls = calls.filter((c) => c.from === methodId).map((c) => c.to_name).sort();
+    expect(methodCalls).toEqual(["hello"]);
+    const nestedCalls = calls.filter((c) => c.from === nestedId).map((c) => c.to_name).sort();
+    expect(nestedCalls).toEqual(["inside"]);
+    expect(
+      r.symbols.find((s) => s.kind === "function" && s.symbol === nestedId),
+    ).toBeTruthy();
+  });
 });
