@@ -20,6 +20,7 @@ import {
   bootstrap,
   closeDb,
   openWriter,
+  writeReady,
   writeSymbols,
 } from "@lodestone/ingest/store";
 import type { LodestoneSymbol } from "@lodestone/shared";
@@ -55,6 +56,18 @@ beforeEach(() => {
   mkdirSync(lodestoneDir, { recursive: true });
   dbPath = path.join(lodestoneDir, "lodestone.sqlite");
   seedFixture(dbPath);
+  writeReady(path.dirname(dbPath), {
+    schema_version: 2,
+    lodestone_version: "0.1.1",
+    ready: true,
+    embedder: { id: "nomic-text-v1.5", dim: 768, quant: "fp32" },
+    languages_indexed: ["typescript"],
+    indexed_at: "2026-05-02T00:00:00Z",
+    commit_at_index: null,
+    dirty_at_index: false,
+    index_epoch: 1,
+    writer_pid: process.pid,
+  });
   _resetWriterRegistry();
   _setTestDbPath(dbPath);
   // Open the gate for the duration of a test; afterEach closes it.

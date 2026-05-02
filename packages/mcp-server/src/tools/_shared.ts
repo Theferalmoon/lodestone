@@ -19,7 +19,7 @@ import {
   type Provenance,
 } from "@lodestone/shared";
 
-import type { ReadyMarker } from "@lodestone/ingest/store";
+import { assertReaderReady as ingestAssertReaderReady, type ReadyMarker } from "@lodestone/ingest/store";
 
 import { openReader, type ReaderHandle } from "../client/sqlite.js";
 
@@ -138,6 +138,51 @@ export function resolveDbPath(): string {
  */
 export function openProjectReader(): ReaderHandle {
   return openReader(resolveDbPath());
+}
+
+/**
+ * Resolve the `.lodestone/` dir that the active reader handle's DB lives
+ * inside. Lodestone-on-disk convention is `<lodestone>/lodestone.sqlite`,
+ * so the parent of the DB path is the lodestone dir. Centralised so the
+ * cross-cut ready-gate helper has one canonical resolution path that
+ * matches what the §08 `assertReaderReady` expects.
+ */
+export function readerLodestoneDir(handle: ReaderHandle): string {
+  return path.dirname(handle.dbPath);
+}
+
+/**
+ * Cross-cut ready-gate helper (Codex impl-008 RED #4 fixup, also covers
+ * §15 RED #1 + §16 RED #1). Every MCP tool that opens a reader MUST call
+ * this before issuing any read — otherwise we serve from a half-written
+ * index, violating the §08 per-request consistency promise.
+ *
+ * Calls into `assertReaderReady` from @lodestone/ingest/store, which
+ * validates BOTH:
+ *   1. ready.json present + ready=true
+ *   2. ready.json.index_epoch matches index_meta.current_epoch
+ *
+ * Caller pattern is always:
+ *   ```
+ *   const handle = openProjectReader();
+ *   try {
+ *     try {
+ *       assertReady(handle);
+ *     } catch {
+ *       return wrapNotReady(...);
+ *     }
+ *     // ...do reads...
+ *   } finally {
+ *     handle.close();
+ *   }
+ *   ```
+ *
+ * Returns the validated marker so callers can build a Provenance envelope
+ * from it without re-reading the file.
+ */
+export function assertReady(handle: ReaderHandle): ReadyMarker {
+  const lodestoneDir = readerLodestoneDir(handle);
+  return ingestAssertReaderReady(handle.db, lodestoneDir);
 }
 
 /**

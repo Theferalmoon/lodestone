@@ -32,11 +32,12 @@ import {
   LODESTONE_CHANNEL_V0,
   emptyDiagnostics,
   wrapErr,
+  wrapNotReady,
   wrapOk,
   type LodestoneToolResponseV13,
 } from "../envelope.js";
 import { openReader, type ReaderHandle } from "../client/sqlite.js";
-import { toMcpInputSchema } from "./_shared.js";
+import { assertReady, toMcpInputSchema } from "./_shared.js";
 
 export const description =
   "Return the most relevant skill cards for a coding task. Skill cards are codebase-specific patterns Lodestone learned from the project — error-handling conventions, dependency-injection style, testing idioms, naming conventions, lint-preferred imports — surfaced as concise, actionable summaries with example symbol references and a maturity tag (seed | emerging | mature). The agent should consult these BEFORE writing code so its output matches the project's house style. Top_k defaults to 5; semantic match against a task description.";
@@ -120,6 +121,13 @@ export function createHandler(
     }
 
     try {
+      // impl-008 RED #4 cross-cut.
+      try {
+        assertReady(reader);
+      } catch {
+        return wrapNotReady<Skill>(LODESTONE_CHANNEL_V0);
+      }
+
       const allRows = reader.db
         .prepare("SELECT * FROM skills")
         .all() as SkillRow[];

@@ -27,10 +27,11 @@ import type { SymbolRow } from "@lodestone/shared";
 import {
   LODESTONE_CHANNEL_V0,
   wrapErr,
+  wrapNotReady,
   wrapOk,
   type LodestoneToolResponseV13,
 } from "../envelope.js";
-import { openProjectReader, toMcpInputSchema } from "./_shared.js";
+import { assertReady, openProjectReader, toMcpInputSchema } from "./_shared.js";
 
 export const description =
   "Return the architectural context surrounding a specific symbol: its callers, callees, the cluster it belongs to, the cluster's purpose, sibling symbols inside the same cluster, and any skill cards that mention it. Use this when the agent has a candidate symbol (from `query` or from a stack trace) and needs to understand how it fits into the codebase before editing. Pulls from SQLite edges, clusters, and skills tables in a single bounded read pass.";
@@ -115,6 +116,16 @@ export async function handler(
   }
 
   try {
+    // impl-008 RED #4 cross-cut: every reader-tool MUST verify the index is
+    // ready (ready.json present + ready=true + matches DB epoch) before
+    // serving. Without this, a half-written index would be queried and
+    // return inconsistent rows.
+    try {
+      assertReady(handle);
+    } catch {
+      return wrapNotReady<SymbolContext | SymbolMatches>(LODESTONE_CHANNEL_V0);
+    }
+
     if (kind === "fully_qualified") {
       const row = getSymbol(handle.db, symbol);
       if (!row) {

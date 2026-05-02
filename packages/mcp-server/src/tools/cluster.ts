@@ -39,11 +39,12 @@ import {
   LODESTONE_CHANNEL_V0,
   emptyDiagnostics,
   wrapErr,
+  wrapNotReady,
   wrapOk,
   type LodestoneToolResponseV13,
 } from "../envelope.js";
 import { openReader, type ReaderHandle } from "../client/sqlite.js";
-import { toMcpInputSchema } from "./_shared.js";
+import { assertReady, toMcpInputSchema } from "./_shared.js";
 
 export const description =
   "Return the architectural cluster (community) matching a name or natural-language query. Each cluster is a Louvain-detected group of symbols representing an emergent module — auth, payments, ingest, etc. The response carries the cluster's heuristic name, its name_status (heuristic vs human-confirmed), an agent_instruction string telling the calling agent how to interact with the cluster, naming_evidence (top tokens / files / signature snippets that drove the name), and the member symbol IDs. Granularity selects between Louvain resolution levels (fine | medium | coarse). This is the core moat surface for code-aware agents.";
@@ -128,6 +129,13 @@ export function createHandler(
     }
 
     try {
+      // impl-008 RED #4 cross-cut.
+      try {
+        assertReady(reader);
+      } catch {
+        return wrapNotReady<Cluster>(LODESTONE_CHANNEL_V0);
+      }
+
       // 1. Name-substring match (case-insensitive).
       let rows = nameMatchRows(reader, parsed.name_or_query);
       const usedSemantic = rows.length === 0;

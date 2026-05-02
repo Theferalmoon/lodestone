@@ -47,6 +47,7 @@ import {
 } from "../envelope.js";
 import { openReader, type SqliteReadonlyDb } from "../client/sqlite.js";
 import {
+  assertReady as assertReaderGated,
   matchesAnyGlob,
   provenanceFromReady,
   resolveCwd,
@@ -188,12 +189,17 @@ export async function handler(input: unknown): Promise<LodestoneToolResponseV13<
 
   let provenance: Provenance | undefined;
   try {
+    // impl-008 RED #4 cross-cut: cross-store ready check (ready.json AND
+    // index_meta.current_epoch in lockstep). Replaces the prior single-file
+    // handle.ensureReady() which couldn\'t catch the SQLite-vs-ready.json
+    // crash window.
     let marker;
     try {
-      marker = handle.ensureReady(lodestoneDir);
+      marker = assertReaderGated(handle);
     } catch {
       return wrapNotReady<QueryHit>(LODESTONE_CHANNEL_V0);
     }
+    void lodestoneDir; // retained for diagnostic-message clarity in test fixtures
     provenance = provenanceFromReady(marker);
 
     // 3) Run lexical lane (filter-aware SQL) FIRST so we know which symbol_ids

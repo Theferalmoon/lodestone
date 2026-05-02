@@ -19,10 +19,11 @@ import type { SymbolRow } from "@lodestone/shared";
 import {
   LODESTONE_CHANNEL_V0,
   wrapErr,
+  wrapNotReady,
   wrapOk,
   type LodestoneToolResponseV13,
 } from "../envelope.js";
-import { openProjectReader, toMcpInputSchema } from "./_shared.js";
+import { assertReady, openProjectReader, toMcpInputSchema } from "./_shared.js";
 
 export const description =
   "Return the reverse-reachability set for a file or symbol: all callers, all transitive importers, the clusters they live in, and a rough blast-radius score. Use this BEFORE editing a function to understand what might break, or AFTER seeing a test fail to find related call sites. Backed by a recursive CTE over the SQLite `edges` table — bounded by depth and result count to keep response size sane.";
@@ -83,6 +84,13 @@ export async function handler(
   }
 
   try {
+    // impl-008 RED #4 cross-cut.
+    try {
+      assertReady(handle);
+    } catch {
+      return wrapNotReady<ImpactNode>(LODESTONE_CHANNEL_V0);
+    }
+
     const startingIds = resolveStartingSymbols(handle.db, file_or_symbol);
     if (startingIds.length === 0) {
       return wrapOk<ImpactNode>([], LODESTONE_CHANNEL_V0);

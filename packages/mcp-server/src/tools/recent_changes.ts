@@ -31,6 +31,7 @@ import {
 } from "../envelope.js";
 import { openReader, type SqliteReadonlyDb } from "../client/sqlite.js";
 import {
+  assertReady as assertReaderGated,
   provenanceFromReady,
   resolveCwd,
   resolveDbPath,
@@ -130,13 +131,15 @@ export async function handler(
   }
 
   try {
+    // impl-008 RED #4 cross-cut.
     let provenance: Provenance | undefined;
     try {
-      const marker = handle.ensureReady(lodestoneDir);
+      const marker = assertReaderGated(handle);
       provenance = provenanceFromReady(marker);
     } catch {
       return wrapNotReady<RecentChangedSymbol>(LODESTONE_CHANNEL_V0);
     }
+    void lodestoneDir;
 
     const rows = fetchRecentSymbols(handle.db, topK);
     const results: RecentChangedSymbol[] = rows.map((r) => ({

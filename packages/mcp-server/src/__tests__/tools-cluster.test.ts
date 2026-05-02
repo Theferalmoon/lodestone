@@ -14,6 +14,7 @@ import {
   bootstrap,
   closeDb,
   openWriter,
+  writeReady,
   _resetWriterRegistry,
 } from "@lodestone/ingest/store";
 import type { EmbedderHandle } from "@lodestone/ingest/embed";
@@ -113,6 +114,20 @@ function seedFixture(dbPath: string): void {
   tx();
   closeDb(w);
   _resetWriterRegistry();
+  // impl-008 RED #4 cross-cut: every reader-tool now requires a ready.json
+  // marker. Fixture writes one so the cluster handler doesn\'t short-circuit.
+  writeReady(path.dirname(dbPath), {
+    schema_version: 2,
+    lodestone_version: "0.1.1",
+    ready: true,
+    embedder: { id: "nomic-text-v1.5", dim: 768, quant: "fp32" },
+    languages_indexed: ["typescript"],
+    indexed_at: "2026-05-02T00:00:00Z",
+    commit_at_index: null,
+    dirty_at_index: false,
+    index_epoch: 1,
+    writer_pid: process.pid,
+  });
 }
 
 let tmp: string;
