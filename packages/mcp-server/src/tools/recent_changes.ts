@@ -30,7 +30,7 @@ import {
   type LodestoneToolResponseV13,
 } from "../envelope.js";
 import { openReader, type SqliteReadonlyDb } from "../client/sqlite.js";
-import { provenanceFromReady, resolveCwd, resolveSqlitePath } from "./_shared.js";
+import { provenanceFromReady, resolveCwd, resolveDbPath } from "./_shared.js";
 
 export const description =
   "List symbols (functions, methods, classes) most recently touched by git commits in the project. Optional ISO-8601 `since` filter narrows to a time window; default top_k=20 returns the freshest changes. Useful when the agent needs to orient on what just changed before answering a question, debugging a regression, or summarizing the day's work. Reads from the SQLite `symbols.updated_at_commit` index — no shell-out to git on the request path.";
@@ -105,9 +105,12 @@ export async function handler(
     clamped = true;
   }
 
+  // POST-§20 Issue B: `resolveDbPath` honors LODESTONE_DB_PATH > LODESTONE_CWD
+  // > process.cwd(). The lodestone dir continues to track resolveCwd() since
+  // ready.json lives under <cwd>/.lodestone/ alongside the DB by convention.
   const cwd = resolveCwd();
   const lodestoneDir = `${cwd.replace(/\/$/, "")}/.lodestone`;
-  const dbPath = resolveSqlitePath(cwd);
+  const dbPath = resolveDbPath();
 
   let handle: ReturnType<typeof openReader>;
   try {

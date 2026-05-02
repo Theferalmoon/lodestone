@@ -56,7 +56,11 @@ function pushSymbol(
 ): string {
   const range = toRange(node.startPosition, node.endPosition);
   const qname = qualifiedName(ctx.filePath, ctx.parents, name);
-  const id = symbolId(ctx.filePath, qname, range.start_line);
+  // POST-§20 fix (Issue A): emit qname as the canonical id so ParserEdge.from
+  // matches `LodestoneSymbol.symbol` everywhere downstream (resolveEdges,
+  // buildGraph, SQLite). `symbolId` (SHA1) is retained for back-compat.
+  const id = qname;
+  void symbolId;
   const sig = firstLine(node.text);
   ctx.symbols.push({
     symbol: qname,
@@ -127,7 +131,8 @@ function walk(ctx: Ctx, node: Node): void {
           const mName = member.childForFieldName("name")?.text ?? "<anonymous>";
           const range = toRange(member.startPosition, member.endPosition);
           const mQname = qualifiedName(ctx.filePath, [name], mName);
-          const mId = symbolId(ctx.filePath, mQname, range.start_line);
+          // POST-§20 fix (Issue A): canonical id is the qname.
+          const mId = mQname;
           const sig = firstLine(member.text);
           ctx.symbols.push({
             symbol: mQname,
@@ -173,7 +178,8 @@ function walk(ctx: Ctx, node: Node): void {
           if (!name) continue;
           const range = toRange(decl.startPosition, decl.endPosition);
           const qname = qualifiedName(ctx.filePath, ctx.parents, name);
-          const id = symbolId(ctx.filePath, qname, range.start_line);
+          // POST-§20 fix (Issue A): canonical id is the qname.
+          const id = qname;
           const sig = firstLine(decl.text);
           ctx.symbols.push({
             symbol: qname,

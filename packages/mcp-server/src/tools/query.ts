@@ -50,7 +50,7 @@ import {
   matchesAnyGlob,
   provenanceFromReady,
   resolveCwd,
-  resolveSqlitePath,
+  resolveDbPath,
 } from "./_shared.js";
 
 export const description =
@@ -165,9 +165,13 @@ export async function handler(input: unknown): Promise<LodestoneToolResponseV13<
   }
 
   // 2) Resolve project paths + verify readiness.
+  // POST-§20 Issue B: `resolveDbPath` honors LODESTONE_DB_PATH > LODESTONE_CWD
+  // > process.cwd() — a single helper across §14 + §15 surfaces. The lodestone
+  // dir we compute for the readiness marker still tracks `resolveCwd()` because
+  // ready.json lives under `<cwd>/.lodestone/`, not next to the DB.
   const cwd = resolveCwd();
   const lodestoneDir = `${cwd.replace(/\/$/, "")}/.lodestone`;
-  const dbPath = resolveSqlitePath(cwd);
+  const dbPath = resolveDbPath();
 
   let handle: ReturnType<typeof openReader>;
   try {

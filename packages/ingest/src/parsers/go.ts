@@ -50,7 +50,9 @@ function pushSymbol(
 ): string {
   const range = toRange(node.startPosition, node.endPosition);
   const qname = qualifiedName(ctx.filePath, ctx.parents, name);
-  const id = symbolId(ctx.filePath, qname, range.start_line);
+  // POST-§20 fix (Issue A): canonical id is the qname.
+  const id = qname;
+  void symbolId;
   const sig = firstLine(node.text);
   ctx.symbols.push({
     symbol: qname,
@@ -145,7 +147,8 @@ function walk(ctx: Ctx, node: Node): void {
       const name = node.childForFieldName("name")?.text ?? "<anonymous>";
       const range = toRange(node.startPosition, node.endPosition);
       const qname = qualifiedName(ctx.filePath, [receiverName], name);
-      const id = symbolId(ctx.filePath, qname, range.start_line);
+      // POST-§20 fix (Issue A): canonical id is the qname.
+      const id = qname;
       const sig = firstLine(node.text);
       ctx.symbols.push({
         symbol: qname,

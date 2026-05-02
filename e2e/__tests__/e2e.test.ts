@@ -77,9 +77,14 @@ beforeAll(async () => {
 
   tmpRepo = cloneFixtureToTmp();
 
-  // 1. Run `lodestone init` against the cloned fixture.
+  // 1. Run `lodestone init --no-reindex` against the cloned fixture. POST-§20
+  // Issue C: init now runs the ingest pipeline by default, but the e2e injects
+  // a deterministic embedder via `runIngest` below — passing --no-reindex
+  // keeps init focused on install side-effects so the e2e ingest path remains
+  // hermetic (no nomic weight load, no network).
   const initResult = await runLodestoneCli([
     "init",
+    "--no-reindex",
   ], tmpRepo, { timeoutMs: 60_000 });
   if (initResult.exitCode !== 0) {
     throw new Error(
@@ -421,7 +426,7 @@ describe("§20 :: uninstall reversibility (§19)", () => {
   it("`lodestone uninstall` removes .lodestone/ and the lodestone-mcp entry", async () => {
     const cloneTmp = cloneFixtureToTmp();
     try {
-      const init = await runLodestoneCli(["init"], cloneTmp, { timeoutMs: 60_000 });
+      const init = await runLodestoneCli(["init", "--no-reindex"], cloneTmp, { timeoutMs: 60_000 });
       expect(init.exitCode).toBe(0);
       expect(existsSync(path.join(cloneTmp, ".lodestone"))).toBe(true);
       expect(existsSync(path.join(cloneTmp, ".mcp.json"))).toBe(true);

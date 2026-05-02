@@ -22,7 +22,7 @@ import {
   wrapOk,
   type LodestoneToolResponseV13,
 } from "../envelope.js";
-import { openProjectReader } from "./db.js";
+import { openProjectReader } from "./_shared.js";
 
 export const description =
   "Return the reverse-reachability set for a file or symbol: all callers, all transitive importers, the clusters they live in, and a rough blast-radius score. Use this BEFORE editing a function to understand what might break, or AFTER seeing a test fail to find related call sites. Backed by a recursive CTE over the SQLite `edges` table — bounded by depth and result count to keep response size sane.";

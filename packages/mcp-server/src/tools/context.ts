@@ -30,7 +30,7 @@ import {
   wrapOk,
   type LodestoneToolResponseV13,
 } from "../envelope.js";
-import { openProjectReader } from "./db.js";
+import { openProjectReader } from "./_shared.js";
 
 export const description =
   "Return the architectural context surrounding a specific symbol: its callers, callees, the cluster it belongs to, the cluster's purpose, sibling symbols inside the same cluster, and any skill cards that mention it. Use this when the agent has a candidate symbol (from `query` or from a stack trace) and needs to understand how it fits into the codebase before editing. Pulls from SQLite edges, clusters, and skills tables in a single bounded read pass.";

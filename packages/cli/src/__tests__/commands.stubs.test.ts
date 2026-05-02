@@ -8,12 +8,16 @@ import { upgrade } from "../commands/upgrade.js";
 // See commands.init.test.ts for its dedicated coverage.
 // uninstall() is no longer a stub — it does real reversal work in §19.
 // See commands.uninstall.test.ts for its dedicated coverage.
+// reindex() is no longer a stub — it runs the full ingest pipeline
+// (POST-§20 Issue C). See commands.reindex.test.ts for dedicated coverage.
 
 describe("stub commands (return 0, warn, accept future flags)", () => {
-  it("reindex() stub returns 0", async () => {
+  it("reindex() --dry-run returns 0 without touching the filesystem", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    expect(await reindex([])).toBe(0);
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    expect(await reindex(["--dry-run"])).toBe(0);
     err.mockRestore();
+    log.mockRestore();
   });
 
   it("doctor() stub returns 0 and warns about future probes", async () => {

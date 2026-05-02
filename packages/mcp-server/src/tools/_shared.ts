@@ -18,6 +18,8 @@ import {
 
 import type { ReadyMarker } from "@lodestone/ingest/store";
 
+import { openReader, type ReaderHandle } from "../client/sqlite.js";
+
 /**
  * Project cwd resolution. The MCP server is launched per-project (the CLI cd's
  * into the repo root before spawning the bin), so `process.cwd()` is the right
@@ -38,6 +40,62 @@ export function resolveLodestoneDir(cwd: string = resolveCwd()): string {
 /** `<cwd>/.lodestone/lodestone.sqlite`. */
 export function resolveSqlitePath(cwd: string = resolveCwd()): string {
   return lodestoneSubpath(cwd, "sqlite");
+}
+
+// ── DB-path resolver (consolidated POST-§20, Issue B) ────────────────────────
+// Originally split: §14 search tools used `resolveSqlitePath(resolveCwd())`
+// (LODESTONE_CWD-driven), §15 graph tools used a separate `tools/db.ts`
+// resolver (LODESTONE_DB_PATH-driven). The §20 e2e had to set BOTH env vars
+// to point at the same tmp DB — a footgun. This helper consolidates both
+// surfaces into one precedence chain so every tool reaches the same SQLite.
+
+/**
+ * Module-level override for unit tests. Setting this short-circuits all other
+ * resolution. Cleared by tests in afterEach via `_setTestDbPath(null)`.
+ *
+ * The hook lives on `_shared` (not in a per-tool module) so a single test
+ * harness toggle works for §14 + §15 tools alike.
+ */
+let testOverridePath: string | null = null;
+
+/**
+ * Test-only: pin the resolver to a specific db path. Production code never
+ * calls this — only the §15 handler unit tests do.
+ */
+export function _setTestDbPath(p: string | null): void {
+  testOverridePath = p;
+}
+
+/**
+ * Resolve the project SQLite DB path. Documented precedence:
+ *   1. test override (set via `_setTestDbPath`)
+ *   2. `LODESTONE_DB_PATH` env var (explicit override; set by the §13 server
+ *      main entrypoint, by the §20 e2e harness, and accepted from any
+ *      operator who wants to point an MCP tool at a non-default DB)
+ *   3. `<LODESTONE_CWD>/.lodestone/lodestone.sqlite` (cwd-derived; the
+ *      §14 surface used this implicitly via `resolveSqlitePath(resolveCwd())`)
+ *   4. `<process.cwd()>/.lodestone/lodestone.sqlite` (production default)
+ *
+ * The two env vars previously diverged across §14 (`LODESTONE_CWD`) and §15
+ * (`LODESTONE_DB_PATH`). Both are now honored by the same helper so callers
+ * can use either knob and get the same answer.
+ */
+export function resolveDbPath(): string {
+  if (testOverridePath !== null) return testOverridePath;
+  const envPath = process.env.LODESTONE_DB_PATH;
+  if (envPath && envPath.length > 0) return envPath;
+  // Falls through to LODESTONE_CWD-based resolution (resolveCwd defaults to
+  // process.cwd() when the env var is unset).
+  return lodestoneSubpath(resolveCwd(), "sqlite");
+}
+
+/**
+ * Open a read-only handle to the project SQLite index. Wraps `openReader`
+ * from `client/sqlite.ts`; centralised so every tool shares one resolver and
+ * one error surface. Caller MUST close the handle (use try/finally).
+ */
+export function openProjectReader(): ReaderHandle {
+  return openReader(resolveDbPath());
 }
 
 /**

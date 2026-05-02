@@ -56,7 +56,10 @@ function pushSymbol(
 ): string {
   const range = toRange(node.startPosition, node.endPosition);
   const qname = qualifiedName(ctx.filePath, ctx.parents, name);
-  const id = symbolId(ctx.filePath, qname, range.start_line);
+  // POST-§20 fix (Issue A): canonical id is the qname so ParserEdge.from
+  // matches `LodestoneSymbol.symbol`. `symbolId` retained for back-compat.
+  const id = qname;
+  void symbolId;
   const sig = firstLine(node.text);
   ctx.symbols.push({
     symbol: qname,

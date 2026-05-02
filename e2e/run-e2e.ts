@@ -6,25 +6,21 @@
 //
 //   1. Clone the synthetic demo repo to a fresh tmp dir (committed fixture
 //      stays immutable).
-//   2. Spawn the real `lodestone init` binary against the tmp dir; assert
-//      install side effects (.mcp.json + .gitignore + install-manifest.json).
+//   2. Spawn the real `lodestone init --no-reindex` binary against the tmp
+//      dir; assert install side effects (.mcp.json + .gitignore +
+//      install-manifest.json). `--no-reindex` keeps the spawn focused on
+//      install behaviour so the e2e ingest path (step 3) can use a
+//      deterministic embedder; production callers omit the flag and get a
+//      single-command install + index per POST-§20 Issue C.
 //   3. Programmatically drive the §05–§11 ingest pipeline against the tmp
-//      dir using the in-process @lodestone/ingest exports. Reason: the
-//      §04 init command does NOT yet run ingestion (that wires up later);
-//      §20's job is to prove the pipeline produces a queryable index, not
-//      to wait for §04 to grow new behaviour.
-//        a. Walk the tree, parse each supported file via parserForFile().
-//        b. Build LodestoneGraph + resolve edges + compute PageRank.
-//        c. Run cluster() → persistClusters() → write a deterministic
-//           random-vector embedding per symbol (production uses nomic; for
-//           the e2e we only need the vec0 table populated so query() runs).
-//        d. Run seedSkillsFor() → writeSkills() to populate the skills table.
-//        e. Write the canonical ready.json marker so MCP tools see "ready".
+//      dir using `@lodestone/ingest`'s `runPipeline` helper. POST-§20
+//      Issue A: the inline parser-edge sha→qname remap is gone — §06
+//      parsers now emit qname directly. POST-§20 Issue C: the pipeline
+//      driver is the same one production `lodestone reindex` uses; the e2e
+//      injects a deterministic embedder via createDeterministicEmbedder().
 //   4. Exercise every MCP tool handler in-process against the tmp dir,
-//      using LODESTONE_CWD (every tool except `cluster` resolves cwd at
-//      handler-call time). For `cluster`, whose `defaultContext()` captures
-//      `process.cwd()` at module load, we `process.chdir(tmp)` and import
-//      the module dynamically so its dbPath binds to the right project.
+//      using LODESTONE_CWD only — POST-§20 Issue B consolidated §14 + §15
+//      DB-path resolution behind a single env var precedence chain.
 //   5. Assert results against FIXTURE_MANIFEST.json predictions.
 //   6. Cleanup tmp dir.
 //
@@ -37,43 +33,11 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 
-import { createHash } from "node:crypto";
+import { parserForFile } from "@lodestone/ingest/parsers";
+import { runPipeline, type PipelineSummary } from "@lodestone/ingest";
+import { _resetWriterRegistry, VECTOR_DIM } from "@lodestone/ingest/store";
 
-import {
-  parserForFile,
-  type ParseResult,
-  type ParserEdge,
-} from "@lodestone/ingest/parsers";
-import {
-  buildGraph,
-  pageRank,
-  resolveEdges,
-} from "@lodestone/ingest/graph";
-import {
-  bootstrap,
-  closeDb,
-  ensureSymbolEmbeddingsTable,
-  openWriter,
-  writeClassInheritance,
-  writeEdges,
-  writeEmbeddings,
-  writePagerank,
-  writeReady,
-  writeSymbols,
-  type EmbeddingRow,
-  VECTOR_DIM,
-  _resetWriterRegistry,
-} from "@lodestone/ingest/store";
-import { cluster as runCluster, persistClusters } from "@lodestone/ingest/clusterer";
-import { seedSkillsFor, writeSkills, sha256Hex } from "@lodestone/ingest";
-
-import {
-  CURRENT_SCHEMA_VERSION,
-  lodestoneSubpath,
-  type LodestoneSymbol,
-  type Edge as ResolvedEdgeShape,
-  type Skill,
-} from "@lodestone/shared";
+import { lodestoneSubpath } from "@lodestone/shared";
 
 import type { EmbedderHandle } from "@lodestone/ingest/embed";
 
@@ -262,189 +226,29 @@ export function createDeterministicEmbedder(): EmbedderHandle {
   } as unknown as EmbedderHandle;
 }
 
-/** Output of the in-process ingest pipeline driver. */
-export interface IngestSummary {
-  filesParsed: number;
-  symbolCount: number;
-  edgeCount: number;
-  classInheritanceCount: number;
-  clusterCount: number;
-  skillCount: number;
-  embeddingCount: number;
-}
+/**
+ * Output of the in-process ingest pipeline driver. Re-exports the upstream
+ * `PipelineSummary` shape so existing callers keep their imports valid.
+ */
+export type IngestSummary = PipelineSummary;
 
 /** Drive the full §05–§11 pipeline against `repoRoot`, populating
- * `<repoRoot>/.lodestone/lodestone.sqlite` + writing ready.json. */
+ * `<repoRoot>/.lodestone/lodestone.sqlite` + writing ready.json. POST-§20:
+ * delegates to the canonical `runPipeline` driver in `@lodestone/ingest` —
+ * the inline parser/edge-remap workaround is gone now that §06 parsers emit
+ * qname directly (Issue A). */
 export async function runIngest(repoRoot: string): Promise<IngestSummary> {
-  const dbPath = lodestoneSubpath(repoRoot, "sqlite");
-
-  // 1. Parse everything.
-  const files = listSourceFiles(repoRoot);
-  const parseResults: ParseResult[] = [];
-  const allSymbols: LodestoneSymbol[] = [];
-  const allClassInheritance: { class_id: string; base_name: string; base_path?: string }[] = [];
-
-  for (const file of files) {
-    const parser = parserForFile(file);
-    if (!parser) continue;
-    const source = readFileSync(file, "utf8");
-    // Make the path stored in symbols repo-relative so `path` columns are
-    // portable across machines.
-    const rel = path.relative(repoRoot, file);
-    let result;
-    try {
-      result = await parser.parse(rel, source);
-    } catch {
-      // §06 contract: parsers don't throw — but defensive try anyway.
-      continue;
-    }
-    parseResults.push(result);
-    for (const sym of result.symbols) {
-      // Enforce repo-relative paths on every symbol. The parser
-      // generally returns the path it was given, so this is a sanity belt.
-      allSymbols.push({ ...sym, path: rel });
-    }
-    for (const ci of result.class_inheritance) {
-      allClassInheritance.push(ci);
-    }
-  }
-
-  // 2. Resolve edges + build graph + PageRank.
-  //
-  // POST-CODEX-001 e2e workaround / follow-on FOR §06+§07:
-  // The §06 parsers emit ParserEdge records whose `from` field is a SHA-derived
-  // symbol id (`symbolId(filePath, qname, startLine).slice(0,16)`), but they
-  // emit LodestoneSymbol records whose `symbol` field is the qualified name
-  // (e.g. `src/auth.ts::login`). §07 `resolveEdges` builds its index off the
-  // qname-keyed symbol surface, so the `from` ids never match a graph node →
-  // `buildGraph` stubs them as external, and graphology pageRank then chokes
-  // when iterating outbound edges from those external nodes (TypeError:
-  // Cannot read properties of undefined). We rewrite parser-emitted edge
-  // `from` (sha id) → qname here so the resolved-edge graph is consistent.
-  // Long-term fix belongs in §06 (have parsers emit qname as `from`) OR §07
-  // (have resolveEdges build a sha→qname index alongside qname→qname).
-  const idToQname = new Map<string, string>();
-  for (const sym of allSymbols) {
-    const sha = createHash("sha1")
-      .update(`${sym.path}|${sym.symbol}|${sym.range.start_line}`)
-      .digest("hex")
-      .slice(0, 16);
-    idToQname.set(sha, sym.symbol);
-    // Also map the bare path → file-level barrel symbol for `imports` edges
-    // whose `from` is a filePath (parsers' import emit pattern).
-    if (!idToQname.has(sym.path)) {
-      idToQname.set(sym.path, sym.symbol);
-    }
-  }
-  const remappedEdges: ParserEdge[] = [];
-  for (const r of parseResults) {
-    for (const e of r.edges) {
-      const from = idToQname.get(e.from) ?? e.from;
-      // Drop edges whose `from` still doesn't map to any symbol — those would
-      // become external stubs and trip up pageRank. This is a strictly
-      // tighter graph than production; the follow-on noted above will let us
-      // restore parity.
-      if (!allSymbols.some((s) => s.symbol === from)) continue;
-      remappedEdges.push({ ...e, from });
-    }
-  }
-  const resolved = resolveEdges({ symbols: allSymbols, edges: remappedEdges });
-  // Drop unresolved edges entirely for the e2e — buildGraph would stub them
-  // as external nodes, and graphology pageRank chokes on those (same
-  // outbound-edge iteration bug noted above). The resolved set is a strict
-  // subset of production behaviour; the dropped count is logged via the
-  // ResolveResult.unresolved field for diagnostics. Follow-on §07 work
-  // should make pageRank robust to external-node stubs.
-  const internalEdges = resolved.edges.filter((e) => e.resolved);
-  const graph = buildGraph({ symbols: allSymbols, edges: internalEdges as ResolvedEdgeShape[] });
-  const pr = pageRank(graph);
-
-  // 3. Open writer + bootstrap schema.
-  const w = openWriter(dbPath);
-  let summary: IngestSummary;
+  const embedder = createDeterministicEmbedder();
   try {
-    bootstrap(w);
-    const indexEpoch = 1;
-    writeSymbols(w, allSymbols, { index_epoch: indexEpoch, commit: null });
-    writeEdges(w, graph);
-    writePagerank(w, pr, graph);
-    // Same parser/qname mismatch as for edges: §06 emits class_inheritance
-    // triples whose `class_id` is the sha-derived id, but the symbols table
-    // PK is the qname. Remap (or drop unmappable triples) before write so
-    // the FK holds. Tracked as the same §06/§07 follow-on.
-    const remappedInheritance = allClassInheritance
-      .map((ci) => ({ ...ci, class_id: idToQname.get(ci.class_id) ?? ci.class_id }))
-      .filter((ci) => allSymbols.some((s) => s.symbol === ci.class_id));
-    writeClassInheritance(w, remappedInheritance);
-
-    // 4. Cluster + persist.
-    const clusters = runCluster(graph, pr, { seed: 42 });
-    persistClusters(w, clusters, {
-      index_epoch: indexEpoch,
-      algorithm: "louvain",
-      algorithm_version: "0.1.0",
+    return await runPipeline({
+      repoRoot,
+      embedder,
+      embedderIdentity: { id: "e2e-deterministic", dim: VECTOR_DIM, quant: "fp32" },
+      indexEpoch: 1,
     });
-
-    // 5. Skills (seed) — the only deterministic source we have at v0.
-    const seedSkills: Skill[] = seedSkillsFor(parseResults);
-    writeSkills(
-      w,
-      seedSkills.map((skill) => ({
-        skill,
-        body_sha256: sha256Hex(skill.body),
-        expires_at: null,
-      })),
-    );
-
-    // 6. Embeddings — populate symbol_embeddings via a deterministic embedder
-    //    so query() exercises the vector lane against real vec0 rows.
-    ensureSymbolEmbeddingsTable(w);
-    const embedder = createDeterministicEmbedder();
-    const embeddingRows: EmbeddingRow[] = [];
-    // Embed in batches of 16 for parity with production usage.
-    for (let i = 0; i < allSymbols.length; i += 16) {
-      const batch = allSymbols.slice(i, i + 16);
-      const ids = batch.map((s) => s.symbol);
-      const vectors = await embedder.embed(ids);
-      for (let j = 0; j < batch.length; j++) {
-        const sym = batch[j];
-        const vec = vectors[j];
-        if (!sym || !vec) continue;
-        embeddingRows.push({ symbol_id: sym.symbol, vector: vec });
-      }
-    }
-    writeEmbeddings(w, embeddingRows);
-
-    // 7. ready.json — atomic marker the MCP tools gate on.
-    writeReady(repoRoot, {
-      schema_version: CURRENT_SCHEMA_VERSION,
-      lodestone_version: "0.1.0-e2e",
-      ready: true,
-      embedder: { id: "e2e-deterministic", dim: VECTOR_DIM, quant: "fp32" },
-      languages_indexed: Array.from(
-        new Set(allSymbols.map((s) => s.language)),
-      ).sort(),
-      indexed_at: new Date().toISOString(),
-      commit_at_index: null,
-      dirty_at_index: false,
-      index_epoch: indexEpoch,
-      writer_pid: process.pid,
-    });
-
-    summary = {
-      filesParsed: parseResults.length,
-      symbolCount: allSymbols.length,
-      edgeCount: resolved.edges.length,
-      classInheritanceCount: allClassInheritance.length,
-      clusterCount: clusters.length,
-      skillCount: seedSkills.length,
-      embeddingCount: embeddingRows.length,
-    };
   } finally {
-    closeDb(w);
     _resetWriterRegistry();
   }
-  return summary;
 }
 
 /** Best-effort cleanup. Swallows ENOTEMPTY etc. — caller decides whether
@@ -470,25 +274,23 @@ export function cleanupTmp(dir: string): void {
 // dynamic import (vitest spec sets up & tears down chdir per test).
 // ─────────────────────────────────────────────────────────────────────────
 
-/** Set both LODESTONE_CWD (consumed by §14 _shared.resolveCwd) AND
- * LODESTONE_DB_PATH (consumed by the §15 graph tools' db.ts resolver) around
- * `fn` then restore. The two surfaces evolved separately — both env vars are
- * mandatory for §15+ tools to point at our tmp DB. */
+/**
+ * Set `LODESTONE_CWD` around `fn` then restore. POST-§20 Issue B: the §14 +
+ * §15 surfaces now share one resolver (`_shared.resolveDbPath`) that honors
+ * `LODESTONE_DB_PATH > LODESTONE_CWD > process.cwd()` — setting `LODESTONE_CWD`
+ * alone is enough to point every MCP tool at the same tmp DB.
+ */
 export async function withLodestoneCwd<T>(
   cwd: string,
   fn: () => Promise<T>,
 ): Promise<T> {
   const prevCwd = process.env.LODESTONE_CWD;
-  const prevDb = process.env.LODESTONE_DB_PATH;
   process.env.LODESTONE_CWD = cwd;
-  process.env.LODESTONE_DB_PATH = lodestoneSubpath(cwd, "sqlite");
   try {
     return await fn();
   } finally {
     if (prevCwd === undefined) delete process.env.LODESTONE_CWD;
     else process.env.LODESTONE_CWD = prevCwd;
-    if (prevDb === undefined) delete process.env.LODESTONE_DB_PATH;
-    else process.env.LODESTONE_DB_PATH = prevDb;
   }
 }
 

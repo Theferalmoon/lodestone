@@ -17,13 +17,19 @@ import {
 
 describe("parseInitArgv", () => {
   it("default flags are all false", () => {
-    expect(parseInitArgv([])).toEqual({ writeClaudeMd: false, pro: false, dryRun: false });
+    expect(parseInitArgv([])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      noReindex: false,
+    });
   });
   it("--write-claude-md", () => {
     expect(parseInitArgv(["--write-claude-md"])).toEqual({
       writeClaudeMd: true,
       pro: false,
       dryRun: false,
+      noReindex: false,
     });
   });
   it("--pro", () => {
@@ -31,6 +37,7 @@ describe("parseInitArgv", () => {
       writeClaudeMd: false,
       pro: true,
       dryRun: false,
+      noReindex: false,
     });
   });
   it("--dry-run", () => {
@@ -38,13 +45,23 @@ describe("parseInitArgv", () => {
       writeClaudeMd: false,
       pro: false,
       dryRun: true,
+      noReindex: false,
+    });
+  });
+  it("--no-reindex (POST-§20 Issue C)", () => {
+    expect(parseInitArgv(["--no-reindex"])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      noReindex: true,
     });
   });
   it("all flags together", () => {
-    expect(parseInitArgv(["--write-claude-md", "--pro", "--dry-run"])).toEqual({
+    expect(parseInitArgv(["--write-claude-md", "--pro", "--dry-run", "--no-reindex"])).toEqual({
       writeClaudeMd: true,
       pro: true,
       dryRun: true,
+      noReindex: true,
     });
   });
 });
@@ -146,7 +163,7 @@ describe("init() handler", () => {
   });
 
   it("returns 0 on success and writes the expected files", async () => {
-    expect(await init([])).toBe(0);
+    expect(await init(["--no-reindex"])).toBe(0);
     expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(true);
     expect(existsSync(path.join(tmp, ".gitignore"))).toBe(true);
     expect(existsSync(path.join(tmp, ".lodestone", "install-manifest.json"))).toBe(true);
@@ -160,26 +177,35 @@ describe("init() handler", () => {
   });
 
   it("--pro warns (not yet implemented) but still completes successfully", async () => {
-    expect(await init(["--pro"])).toBe(0);
+    expect(await init(["--pro", "--no-reindex"])).toBe(0);
     const stderr = err.mock.calls.flat().join("\n");
     expect(stderr).toMatch(/--pro/);
   });
 
   it("--write-claude-md augments CLAUDE.md", async () => {
-    expect(await init(["--write-claude-md"])).toBe(0);
+    expect(await init(["--write-claude-md", "--no-reindex"])).toBe(0);
     expect(existsSync(path.join(tmp, "CLAUDE.md"))).toBe(true);
     const body = readFileSync(path.join(tmp, "CLAUDE.md"), "utf8");
     expect(body).toContain("BEGIN LODESTONE");
   });
 
   it("on second --write-claude-md run, prints a refresh hint (RED #5: stale-snippet visibility)", async () => {
-    await init(["--write-claude-md"]); // first run — created
+    await init(["--write-claude-md", "--no-reindex"]); // first run — created
     log.mockClear();
-    await init(["--write-claude-md"]); // second run — already_present
+    await init(["--write-claude-md", "--no-reindex"]); // second run — already_present
     const stdout = log.mock.calls.flat().join("\n");
     expect(stdout).toMatch(/already_present/);
     // Friend-facing refresh instructions must mention how to re-apply.
     expect(stdout).toMatch(/BEGIN.*END LODESTONE/i);
     expect(stdout).toMatch(/--write-claude-md/);
+  });
+
+  it("--no-reindex (POST-§20 Issue C): skips ingest, prints reindex hint", async () => {
+    expect(await init(["--no-reindex"])).toBe(0);
+    const stdout = log.mock.calls.flat().join("\n");
+    expect(stdout).toMatch(/Skipping ingest/);
+    expect(stdout).toMatch(/lodestone reindex/);
+    // No ready.json should exist when ingest is skipped.
+    expect(existsSync(path.join(tmp, ".lodestone", "ready.json"))).toBe(false);
   });
 });

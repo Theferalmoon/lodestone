@@ -38,14 +38,11 @@ describe("PythonParser", () => {
     const r = await PythonParser.parse("src/sample.py", src);
     expect(r.class_inheritance.length).toBe(1);
     expect(r.class_inheritance[0]!.base_name).toBe("Foo");
-    // The class_id should match an actual class symbol's deterministic id.
+    // POST-§20 fix (Issue A): class_id is the canonical qname, matching
+    // `LodestoneSymbol.symbol`. Previously SHA1-derived; now qname-equal so
+    // resolveEdges + buildGraph see a single source of truth.
     const cls = r.symbols.find((s) => s.kind === "class")!;
-    const expectedId = (await import("../base.js")).symbolId(
-      "src/sample.py",
-      cls.symbol,
-      cls.range.start_line
-    );
-    expect(r.class_inheritance[0]!.class_id).toBe(expectedId);
+    expect(r.class_inheritance[0]!.class_id).toBe(cls.symbol);
   });
 
   it("emits a calls edge from method bodies", async () => {

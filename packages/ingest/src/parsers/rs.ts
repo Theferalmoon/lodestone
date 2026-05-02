@@ -51,7 +51,9 @@ function pushSymbol(
 ): string {
   const range = toRange(node.startPosition, node.endPosition);
   const qname = qualifiedName(ctx.filePath, ctx.parents, name);
-  const id = symbolId(ctx.filePath, qname, range.start_line);
+  // POST-§20 fix (Issue A): canonical id is the qname.
+  const id = qname;
+  void symbolId;
   const sig = firstLine(node.text);
   ctx.symbols.push({
     symbol: qname,
@@ -147,7 +149,8 @@ function walk(ctx: Ctx, node: Node): void {
         const traitName = traitNode.text;
         const implName = `impl_${traitName}_for_${targetType}`;
         const qname = qualifiedName(ctx.filePath, ctx.parents, implName);
-        const implId = symbolId(ctx.filePath, qname, range.start_line);
+        // POST-§20 fix (Issue A): canonical id is the qname.
+        const implId = qname;
         const sig = firstLine(node.text);
         ctx.symbols.push({
           symbol: qname,
@@ -171,7 +174,8 @@ function walk(ctx: Ctx, node: Node): void {
             const mName = member.childForFieldName("name")?.text ?? "<anonymous>";
             const mRange = toRange(member.startPosition, member.endPosition);
             const mQname = qualifiedName(ctx.filePath, [...inner.parents], mName);
-            const mId = symbolId(ctx.filePath, mQname, mRange.start_line);
+            // POST-§20 fix (Issue A): canonical id is the qname.
+            const mId = mQname;
             const sig = firstLine(member.text);
             ctx.symbols.push({
               symbol: mQname,

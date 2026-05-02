@@ -47,6 +47,10 @@
     "./seed-skills": {
       "types": "./dist/seed-skills/index.d.ts",
       "default": "./dist/seed-skills/index.js"
+    },
+    "./pipeline": {
+      "types": "./dist/pipeline/index.d.ts",
+      "default": "./dist/pipeline/index.js"
     }
   },
   "scripts": {

@@ -96,4 +96,23 @@ enum E { A, B }
     const fn = r.symbols.find((s) => s.kind === "function");
     expect(fn?.symbol).toBe("src/u.ts::adder");
   });
+
+  it("emits ParserEdge.from as the source symbol's qname (POST-§20 Issue A)", async () => {
+    // calls/extends/implements edges' `from` MUST equal a `LodestoneSymbol.symbol`
+    // qname so resolveEdges + buildGraph see a single source of truth. Imports
+    // edges keep `from = filePath` (they have no source symbol); the pipeline
+    // driver drops those before graph build.
+    const src = readFileSync(path.join(FIXTURES, "sample.ts"), "utf8");
+    const r = await TypeScriptParser.parse("src/sample.ts", src);
+    const symbolIds = new Set(r.symbols.map((s) => s.symbol));
+    for (const edge of r.edges) {
+      if (edge.kind === "imports") continue; // file-level, from = filePath
+      expect(symbolIds.has(edge.from)).toBe(true);
+    }
+    // class_inheritance triples must reference a real class symbol id.
+    const classInheritanceClassIds = new Set(r.class_inheritance.map((c) => c.class_id));
+    for (const ci of classInheritanceClassIds) {
+      expect(symbolIds.has(ci)).toBe(true);
+    }
+  });
 });

@@ -14,3 +14,7 @@
 2026-05-02T05:50:20Z  Theferalmoon            graphology-communities-louvain 2.0.2 for §09 clusterer — MIT, by graphology maintainer Yomguithereal, mature implementation of Louvain community detection
 2026-05-02T05:56:34Z  Theferalmoon            --help
 2026-05-02T06:03:35Z  Theferalmoon            @modelcontextprotocol/sdk + zod + uuid for §13 MCP scaffold — all mandate-approved (Anthropic + Colin McDonnell zod + uuidjs/Robert Kieffer)
+2026-05-02T06:12:31Z  Theferalmoon            yaml 2.8.3 for §10 skill-emitter frontmatter rendering — MIT, by Eemeli Aro/Ingy döt Net (eemeli/yaml), pure JS YAML 1.1/1.2 parser+stringifier, mature (since 2017), already a root devDep — promoted to @lodestone/ingest dep, no new transitive additions
+2026-05-02T06:20:51Z  Theferalmoon            no new dependencies — added ./seed-skills exports subpath only (purely path entry for new internal module)
+2026-05-02T06:49:29Z  Theferalmoon            section 20 e2e: package.json deps are workspace links (no new external) + synthetic fixture declares express/axios as parser bait but is never installed (no node_modules under e2e/synthetic-demo-repo)
+2026-05-02T07:28:44Z  Theferalmoon            POST-§20 fixes: package.json edits are workspace-internal — packages/cli adds workspace link @lodestone/ingest (no new external dep), packages/ingest adds ./pipeline exports subpath (no new external dep). pnpm-lock.yaml change is the workspace symlink only.

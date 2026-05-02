@@ -69,7 +69,14 @@ function pushSymbol(
 ): { id: string; qname: string } {
   const range = toRange(node.startPosition, node.endPosition);
   const qname = qualifiedName(ctx.filePath, ctx.parents, name);
-  const id = symbolId(ctx.filePath, qname, range.start_line);
+  // POST-§20 fix (Issue A): `id` is intentionally the qname, not the SHA1.
+  // `LodestoneSymbol.symbol` is the canonical id everywhere downstream
+  // (resolveEdges, buildGraph, SQLite symbols.id, §15 graph tools); emitting
+  // qname here keeps ParserEdge.from in lock-step with that canonical id so
+  // edges resolve without a sha→qname remap. `symbolId` is retained only for
+  // back-compat with any caller that still wants the SHA-derived form.
+  const id = qname;
+  void symbolId;
   const sig = firstLine(node.text);
   const docstring = leadingDocstring(node);
   ctx.symbols.push({
@@ -159,7 +166,8 @@ function walk(ctx: WalkContext, node: Node): void {
             const mName = nameOf(member) ?? "<anonymous>";
             const range = toRange(member.startPosition, member.endPosition);
             const mQname = qualifiedName(ctx.filePath, [...ctx.parents, name], mName);
-            const mId = symbolId(ctx.filePath, mQname, range.start_line);
+            // POST-§20 fix (Issue A): canonical id is the qname.
+            const mId = mQname;
             const sig = firstLine(member.text);
             ctx.symbols.push({
               symbol: mQname,
@@ -208,7 +216,8 @@ function walk(ctx: WalkContext, node: Node): void {
           const name = nameNode.text;
           const range = toRange(decl.startPosition, decl.endPosition);
           const qname = qualifiedName(ctx.filePath, ctx.parents, name);
-          const id = symbolId(ctx.filePath, qname, range.start_line);
+          // POST-§20 fix (Issue A): canonical id is the qname.
+          const id = qname;
           const sig = firstLine(decl.text);
           ctx.symbols.push({
             symbol: qname,

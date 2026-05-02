@@ -136,6 +136,13 @@ export type {
   PersistResult,
 } from "./skill-emitter/index.js";
 
+// End-to-end pipeline driver — POST-§20 Issue C. Single entry point used
+// by `lodestone init` / `lodestone reindex` and by the e2e harness. Combines
+// walk → parse → resolve → graph → pagerank → cluster → seed-skills →
+// embeddings → ready.json into one async call.
+export { runPipeline, listSourceFiles } from "./pipeline/index.js";
+export type { PipelineSummary, RunPipelineOptions } from "./pipeline/index.js";
+
 // Seed skills — section 11. Deterministic high-confidence Skills derived
 // from §06 ParseResults (class_inheritance triples + import edges). Each
 // emitted Skill carries `maturity: "deterministic_seed"` and is ready for

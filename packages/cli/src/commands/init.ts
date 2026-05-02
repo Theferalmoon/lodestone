@@ -11,12 +11,20 @@ import { augmentClaudeMd, type AugmentClaudeMdResult } from "../install/claude-m
 import { updateGitignore, type UpdateGitignoreResult } from "../install/gitignore.js";
 import { writeMcpJson, type McpConfigResult } from "../install/mcp-config.js";
 import { printClaudeMdSnippet } from "../install/snippet.js";
+import { runReindex } from "./reindex.js";
 import { output } from "../ui/output.js";
 
 export interface InitOptions {
   writeClaudeMd: boolean;
   pro: boolean;
   dryRun: boolean;
+  /**
+   * POST-§20 Issue C: `init` runs the ingest pipeline by default so a friend
+   * gets a fully-indexed project from a single command. `--no-reindex` skips
+   * the heavy step for tests, dry-runs, and operators who want to chain a
+   * custom embedder loader into a follow-up `lodestone reindex`.
+   */
+  noReindex: boolean;
 }
 
 export interface InstallManifest {
@@ -32,6 +40,7 @@ export function parseInitArgv(argv: readonly string[]): InitOptions {
     writeClaudeMd: argv.includes("--write-claude-md"),
     pro: argv.includes("--pro"),
     dryRun: argv.includes("--dry-run"),
+    noReindex: argv.includes("--no-reindex"),
   };
 }
 
@@ -86,6 +95,9 @@ export async function init(argv: readonly string[]): Promise<number> {
       output.info(`would augment: ${path.join(cwd, "CLAUDE.md")}`);
     }
     output.info(`would write: ${lodestoneSubpath(cwd, "installManifest")}`);
+    if (!opts.noReindex) {
+      output.info("would run: ingest pipeline (reindex). Pass --no-reindex to skip.");
+    }
     return 0;
   }
 
@@ -121,6 +133,27 @@ export async function init(argv: readonly string[]): Promise<number> {
     );
     output.info("        and re-run `lodestone init --write-claude-md`.");
   }
+
+  // POST-§20 Issue C: run the ingest pipeline so a friend gets a queryable
+  // index from a single command. Suppress with `--no-reindex` for tests,
+  // CI dry-runs, or operators chaining a custom embedder via `lodestone
+  // reindex` afterwards.
+  if (opts.noReindex) {
+    output.info("");
+    output.info("Skipping ingest (--no-reindex). Run `lodestone reindex` to build the index.");
+    return 0;
+  }
+
+  output.info("");
+  try {
+    await runReindex(cwd);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    output.error(`Reindex failed: ${detail}`);
+    output.error("Install side-effects are intact; rerun `lodestone reindex` to retry.");
+    return 1;
+  }
+
   output.info("");
   output.info("Next: open Claude Code in this directory.");
   return 0;
