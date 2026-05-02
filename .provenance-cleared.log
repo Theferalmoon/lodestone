@@ -21,3 +21,4 @@
 2026-05-02T07:33:56Z  Theferalmoon            root package.json version bump 0.0.0 → 0.1.0 to align with workspace packages — no dependency changes, just the version field
 2026-05-02T07:52:12Z  Theferalmoon            package.json edits are scripts-only (added bundle-models script + extended build to copy models/ to dist/models/); no dependency adds/removes/version bumps
 2026-05-02T08:30:04Z  Theferalmoon            zod-to-json-schema for §13 inputSchema fix — MIT, mandate-approved adapter
+2026-05-02T15:16:02Z  Theferalmoon            v0.1.2 version bump only — no new deps; pure version field changes

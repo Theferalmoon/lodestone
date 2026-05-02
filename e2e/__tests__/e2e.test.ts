@@ -130,7 +130,10 @@ describe("§20 :: install side effects (proxy for §04 acceptance)", () => {
     const manifestPath = path.join(tmpRepo, ".lodestone", "install-manifest.json");
     expect(existsSync(manifestPath)).toBe(true);
     const m = JSON.parse(readFileSync(manifestPath, "utf8")) as { schema_version: number };
-    expect(m.schema_version).toBe(1);
+    // v0.1.2: schema_version bumped 1→2 per §04/§19 transactional install +
+    // future-schema refusal (commit 6319783). v1 manifests are still readable
+    // via normalize-on-read; new writes use v2.
+    expect(m.schema_version).toBe(2);
   });
 });
 
