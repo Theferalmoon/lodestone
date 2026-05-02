@@ -10,6 +10,32 @@ import Database from "better-sqlite3";
 import { emitClusterSkills, emitSeedSkillFiles } from "../pipeline-emit.js";
 import { mkCluster } from "./fixtures.js";
 import type { Skill } from "@lodestone/shared";
+import type { EmbedderHandle } from "../../embed/runtime.js";
+
+/**
+ * Codex r2 §10 NEW RED: a tiny in-test embedder. Returns a deterministic,
+ * non-zero Float32Array per text so a populated `description_embedding`
+ * BLOB is distinguishable from the pre-fix NULL.
+ */
+function makeFakeEmbedder(dim = 4): EmbedderHandle {
+  return {
+    id: "nomic-text-v1.5",
+    dim,
+    maxBatch: 16,
+    async embed(texts: string[]): Promise<Float32Array[]> {
+      return texts.map((t) => {
+        const v = new Float32Array(dim);
+        let h = 0;
+        for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
+        for (let i = 0; i < dim; i++) v[i] = ((h ^ (i * 17)) % 1000) / 1000 + 0.1;
+        return v;
+      });
+    },
+    async dispose() {
+      // no-op
+    },
+  };
+}
 
 let workdir: string;
 
@@ -141,6 +167,61 @@ describe("emitClusterSkills (§10 YELLOW pipeline wiring)", () => {
       expect(a.written).toBe(1);
       expect(b.written).toBe(0);
       expect(b.unchanged).toBe(1);
+    } finally {
+      db.close();
+    }
+  });
+
+  it("populates skills.description_embedding when an embedder is supplied (Codex r2 §10 NEW RED)", async () => {
+    const db = makeDb();
+    try {
+      const c = mkCluster({ id: "cluster-emb", name: "Embedded", size: 5 });
+      insertClusterStub(db, c.id, c.name);
+
+      const embedder = makeFakeEmbedder(4);
+
+      const result = await emitClusterSkills([c], {
+        lodestoneDir: join(workdir, ".lodestone"),
+        db,
+        now: new Date("2026-05-01T00:00:00Z"),
+        embedder,
+      });
+      expect(result.written).toBe(1);
+
+      const row = db
+        .prepare(
+          "SELECT description_embedding FROM skills WHERE source_cluster_id = ?",
+        )
+        .get(c.id) as { description_embedding: Buffer | null } | undefined;
+      expect(row).toBeDefined();
+      expect(row!.description_embedding).not.toBeNull();
+      expect(Buffer.isBuffer(row!.description_embedding)).toBe(true);
+      // Float32Array(4) → 16 bytes.
+      expect(row!.description_embedding!.byteLength).toBe(4 * 4);
+    } finally {
+      db.close();
+    }
+  });
+
+  it("leaves skills.description_embedding NULL when no embedder is supplied (back-compat)", async () => {
+    const db = makeDb();
+    try {
+      const c = mkCluster({ id: "cluster-noemb", name: "NoEmb", size: 5 });
+      insertClusterStub(db, c.id, c.name);
+
+      await emitClusterSkills([c], {
+        lodestoneDir: join(workdir, ".lodestone"),
+        db,
+        now: new Date("2026-05-01T00:00:00Z"),
+      });
+
+      const row = db
+        .prepare(
+          "SELECT description_embedding FROM skills WHERE source_cluster_id = ?",
+        )
+        .get(c.id) as { description_embedding: Buffer | null } | undefined;
+      expect(row).toBeDefined();
+      expect(row!.description_embedding).toBeNull();
     } finally {
       db.close();
     }

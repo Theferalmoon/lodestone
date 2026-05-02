@@ -21,6 +21,8 @@ import {
   renderFrontmatter,
   sourceToMaturity,
 } from "./frontmatter.js";
+import type { EmbedderHandle } from "../embed/runtime.js";
+
 import { writeSkill } from "./persist.js";
 import { shouldEmit, type SelectionConfig } from "./selection.js";
 import { slugify } from "./slug.js";
@@ -46,6 +48,15 @@ export interface EmitConfig {
   db?: Database.Database;
   /** Stable id; generated when omitted. */
   id?: string;
+  /**
+   * Codex r2 §10 NEW RED: when supplied, embed the cluster's description and
+   * persist it as `skills.description_embedding` so §16 `skills_for` cosine
+   * search can rank the emitted cluster card. Without this, cluster cards
+   * land in SQLite with NULL embeddings and only show up via lexical
+   * fallback. The seed-skill path at pipeline/index.ts:315-323 already wires
+   * the embedder via writeSkills(); this brings the cluster path to parity.
+   */
+  embedder?: EmbedderHandle;
 }
 
 export type EmitResult =
@@ -115,7 +126,14 @@ export async function emit(cluster: Cluster, cfg: EmitConfig): Promise<EmitResul
         // forcing a disk rewrite.
         if (cfg.db) {
           const skill = buildSkill(parsed.fields, body, cluster, source, observedDays);
-          writeSkill(cfg.db, skill, { body_sha256: sha256 });
+          // Codex r2 §10 NEW RED: also embed the description on the unchanged
+          // path so a re-run with a freshly-attached embedder can backfill a
+          // NULL description_embedding column without forcing a disk rewrite.
+          const embeddingBuf = await embedDescription(cfg.embedder, skill.description);
+          writeSkill(cfg.db, skill, {
+            body_sha256: sha256,
+            description_embedding: embeddingBuf,
+          });
         }
         return { written: false, reason: "unchanged", path: file };
       }
@@ -158,10 +176,40 @@ export async function emit(cluster: Cluster, cfg: EmitConfig): Promise<EmitResul
 
   const skill = buildSkill(frontmatter, body, cluster, source, observedDays);
   if (cfg.db) {
-    writeSkill(cfg.db, skill, { body_sha256: sha256 });
+    // Codex r2 §10 NEW RED: embed description so the row in `skills` carries a
+    // populated `description_embedding` and is rankable by §16 cosine search.
+    const embeddingBuf = await embedDescription(cfg.embedder, skill.description);
+    writeSkill(cfg.db, skill, {
+      body_sha256: sha256,
+      description_embedding: embeddingBuf,
+    });
   }
 
   return { written: true, path: file, sha256, skill };
+}
+
+/**
+ * Codex r2 §10 NEW RED helper. Returns a Buffer wrapping the Float32Array
+ * bytes of the description embedding when an embedder is supplied; null
+ * otherwise (preserves the pre-r2 column-NULL behaviour for callers without
+ * an embedder, e.g. tests + the §11 CLI seed-skills command).
+ *
+ * Embedder failure is best-effort: a thrown embedder reverts to NULL rather
+ * than aborting the whole pipeline (§0 uptime). The §16 reader degrades to
+ * lexical scoring on NULL, which is the same as the pre-r2 behaviour.
+ */
+async function embedDescription(
+  embedder: EmbedderHandle | undefined,
+  description: string,
+): Promise<Buffer | null> {
+  if (!embedder) return null;
+  try {
+    const [vec] = await embedder.embed([description]);
+    if (!vec) return null;
+    return Buffer.from(vec.buffer, vec.byteOffset, vec.byteLength);
+  } catch {
+    return null;
+  }
 }
 
 function buildSkill(

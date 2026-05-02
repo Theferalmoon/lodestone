@@ -16,6 +16,8 @@ import type Database from "better-sqlite3";
 
 import type { Cluster, Skill } from "@lodestone/shared";
 
+import type { EmbedderHandle } from "../embed/runtime.js";
+
 import { emit, type EmitConfig, type EmitResult, type EmitSource } from "./emit.js";
 import { renderFrontmatter, type FrontmatterFields } from "./frontmatter.js";
 import { slugify } from "./slug.js";
@@ -38,6 +40,14 @@ export interface EmitClusterSkillsOptions {
    * cluster epoch into ClusterRow can drop the override.
    */
   selection?: EmitConfig["selection"];
+  /**
+   * Codex r2 §10 NEW RED: forward the pipeline's embedder so the cluster
+   * card's `skills.description_embedding` column is populated. Mirrors the
+   * seed-skill path at pipeline/index.ts:315-323 (writeSkills(..., {embedder}))
+   * — without this, cluster skills are invisible to §16 cosine search and
+   * fall through to lexical fallback only.
+   */
+  embedder?: EmbedderHandle;
 }
 
 export interface EmitClusterSkillsResult {
@@ -79,6 +89,7 @@ export async function emitClusterSkills(
         db: opts.db,
         now,
         selection,
+        embedder: opts.embedder,
       });
     } catch (err) {
       // Swallow per-cluster failures — pipeline must keep moving (§0

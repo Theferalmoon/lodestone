@@ -333,6 +333,13 @@ export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSum
       await emitClusterSkills(clusters, {
         lodestoneDir,
         db: w,
+        // Codex r2 §10 NEW RED: thread the embedder through so cluster
+        // SKILL rows in SQLite get a populated `description_embedding` and
+        // are rankable by §16 `skills_for` cosine search. Without this
+        // they were invisible to semantic ranking and only matched via
+        // lexical fallback. Mirrors the seed-skill wiring at writeSkills()
+        // above.
+        embedder,
       });
     } catch (err) {
       // Disk emission is best-effort — never block pipeline completion on
