@@ -1,0 +1,73 @@
+{
+  "$comment": "Lodestone §20 fixture manifest. Predictions the e2e asserts against. Keep ranges loose enough to survive minor parser/clusterer tuning but tight enough to catch real regressions. Values verified against the deterministic Louvain seed (42) the clusterer ships.",
+  "schema_version": 1,
+  "languages": ["typescript", "javascript", "python", "go", "rust"],
+  "expected_files_min": 10,
+  "expected_files_max": 60,
+  "expected_symbols_min": 30,
+  "expected_clusters_min": 1,
+  "expected_clusters_max": 80,
+  "expected_subsystems": [
+    {
+      "name": "auth+api+db (TypeScript service)",
+      "member_path_substrings": ["src/auth.ts", "src/api.ts", "src/db.ts"],
+      "anchor_symbol_substring": "src/auth.ts"
+    },
+    {
+      "name": "python seed/migrate",
+      "member_path_substrings": ["scripts/seed.py", "scripts/migrate.py"],
+      "anchor_symbol_substring": "scripts/"
+    },
+    {
+      "name": "go cli",
+      "member_path_substrings": ["cli/main.go", "cli/handler.go"],
+      "anchor_symbol_substring": "cli/"
+    }
+  ],
+  "expected_seed_skills": [
+    {
+      "slug": "errors",
+      "min_evidence_count": 2,
+      "rationale": "TS AppError/AuthError/DbError/ApiError hierarchy + Py SeedError descendants — error-hierarchy scanner MUST detect."
+    },
+    {
+      "slug": "framework-express",
+      "min_evidence_count": 1,
+      "rationale": "web/server.js + web/routes.js both import express; framework-detector treats the conservative ≥2-file rule as required."
+    }
+  ],
+  "expected_high_pagerank_anchors": [
+    {
+      "path_substring": "src/util.ts",
+      "rationale": "log() is referenced by every other TS module — should top PageRank."
+    },
+    {
+      "path_substring": "src/db.ts",
+      "rationale": "find/insert helpers called by both auth + api — high in-degree."
+    }
+  ],
+  "expected_query_topics": [
+    {
+      "question": "user login authentication flow",
+      "expected_path_substring": "src/auth.ts"
+    },
+    {
+      "question": "database insert helper",
+      "expected_path_substring": "src/db.ts"
+    }
+  ],
+  "expected_mcp_tools": [
+    "cluster",
+    "context",
+    "feedback",
+    "impact",
+    "query",
+    "recent_changes",
+    "skills_for"
+  ],
+  "intentional_noise_files": [
+    "README.md",
+    "package.json",
+    ".gitignore"
+  ]
+}

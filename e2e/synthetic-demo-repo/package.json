@@ -1,0 +1,15 @@
+{
+  "name": "lodestone-synthetic-demo",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Synthetic multi-language demo repo for Lodestone end-to-end tests. Hand-built to exercise every parser, the graph builder, the clusterer, the seed-skill scanners, and every MCP tool against deterministic fixtures.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "noop": "echo 'fixture-only — no build'"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "axios": "^1.6.0"
+  }
+}

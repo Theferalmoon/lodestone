@@ -1,0 +1,27 @@
+{
+  "name": "@lodestone/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lodestone §20 — end-to-end integration tests + synthetic demo repo. Drives the real CLI install, the real ingest pipeline, and the real MCP tool handlers against a hand-built multi-language fixture (e2e/synthetic-demo-repo). Asserts predictions declared in FIXTURE_MANIFEST.json. Network is intercepted for the duration of the run (POST-CODEX-001 §18 amendment §3 — proves the privacy promise at integration scale).",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "vitest run --reporter=verbose",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p . --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@lodestone/cli": "workspace:*",
+    "@lodestone/ingest": "workspace:*",
+    "@lodestone/mcp-server": "workspace:*",
+    "@lodestone/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
+  }
+}

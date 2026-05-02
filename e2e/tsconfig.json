@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "./dist",
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": [
+    "run-e2e.ts",
+    "network-interceptor.ts",
+    "__tests__/**/*.ts"
+  ],
+  "exclude": [
+    "synthetic-demo-repo/**",
+    "node_modules",
+    "dist"
+  ]
+}
