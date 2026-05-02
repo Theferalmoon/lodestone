@@ -107,4 +107,13 @@ describe("writeMcpJson", () => {
     writeFileSync(path.join(tmp, ".mcp.json"), "{ this is not json");
     expect(() => writeMcpJson(tmp)).toThrow();
   });
+
+  it("rejects mcpServers as an array (Codex §04 RED #1: silent-success bug)", () => {
+    // `{ "mcpServers": [] }` is an object per `typeof`, but assigning a
+    // string property to an array is a JSON.stringify no-op. The pre-fix
+    // code returned `merged` and wrote a file that did NOT contain a
+    // lodestone-mcp entry. That violates the install contract.
+    writeFileSync(path.join(tmp, ".mcp.json"), JSON.stringify({ mcpServers: [] }));
+    expect(() => writeMcpJson(tmp)).toThrow(/mcpServers.*object/i);
+  });
 });

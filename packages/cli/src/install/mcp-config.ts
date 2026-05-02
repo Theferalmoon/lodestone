@@ -98,13 +98,22 @@ function readMcpJson(p: string): McpJsonShape {
     throw new Error(".mcp.json must be a JSON object");
   }
   const shape = parsed as Partial<McpJsonShape>;
-  if (typeof shape.mcpServers !== "object" || shape.mcpServers === null) {
+  if (shape.mcpServers === undefined) {
     // Tolerate older shapes where `mcpServers` is missing — promote into the
-    // canonical structure. Anything else (string, array) is a parse error.
-    if (shape.mcpServers !== undefined) {
-      throw new Error(".mcp.json `mcpServers` field must be an object");
-    }
+    // canonical structure.
     return { mcpServers: {} };
+  }
+  // Reject anything that is not a plain object. `Array.isArray` is checked
+  // explicitly because `typeof [] === "object"`; assigning a string property
+  // to an array silently no-ops under JSON.stringify, which would let
+  // `lodestone init` claim a successful merge while writing a config without
+  // a `lodestone-mcp` entry. Codex §04 RED #1.
+  if (
+    typeof shape.mcpServers !== "object" ||
+    shape.mcpServers === null ||
+    Array.isArray(shape.mcpServers)
+  ) {
+    throw new Error(".mcp.json `mcpServers` field must be an object");
   }
   return { mcpServers: shape.mcpServers as Record<string, McpServerEntry> };
 }
