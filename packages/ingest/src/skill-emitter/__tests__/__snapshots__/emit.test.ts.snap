@@ -1,0 +1,42 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`emit > snapshot: SKILL.md text is byte-stable for the auth fixture 1`] = `
+"---
+id: fixed-id-snapshot
+slug: auth-pipeline
+name: Auth pipeline
+description: Cluster of 5 symbols around the verb "verify".
+source: emerging
+source_cluster_id: abcd1234abcd1234
+emitted_at: 2026-05-01T12:00:00.000Z
+content_sha256: 08b705173d280d3120ca7ae3a47671ce22ddb36b92b2468e662a289c5cc88606
+member_count: 5
+confidence: 0.5299999999999999
+observed_days: 6
+evidence_count: 5
+top_symbols:
+  - src/auth.ts::sym_0
+  - src/auth.ts::sym_1
+  - src/auth.ts::sym_2
+  - src/util.ts::sym_3
+  - src/util.ts::sym_4
+---
+# Auth pipeline
+
+Cluster of 5 symbols around the verb "verify".
+
+## Where it lives
+
+- src/auth.ts
+- src/util.ts
+
+## Notable bridges
+
+- src/auth.ts::sym_0
+
+## Naming evidence
+
+- dominant verb: \`verify\`
+- sampled members: 5
+"
+`;

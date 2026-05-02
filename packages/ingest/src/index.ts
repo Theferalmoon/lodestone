@@ -75,6 +75,7 @@ export {
   writePagerank,
   writeClassInheritance,
   writeEmbeddings,
+  writeFeedback,
   ensureSymbolEmbeddingsTable,
   getSymbol,
   getInboundEdges,
@@ -101,3 +102,36 @@ export type {
   SymbolWriteContext,
   VectorHit,
 } from "./store/index.js";
+
+// Skill emitter — section 10. Cluster -> SKILL.md card emission, with
+// idempotency via SHA256 frontmatter check and SQLite mirror per
+// POST-CODEX-001 amendment block of section 10.
+export {
+  emit as emitSkill,
+  shouldEmit,
+  expireOld,
+  slugify,
+  renderFrontmatter,
+  parseFrontmatter,
+  sourceToMaturity,
+  computeConfidence,
+  observedDaysFrom,
+  confidenceInputsFromCluster,
+  renderBody as renderSkillBody,
+  writeSkill,
+  writeSkills,
+  sha256Hex,
+} from "./skill-emitter/index.js";
+export type {
+  EmitConfig,
+  EmitResult,
+  EmitSource,
+  SelectionConfig,
+  SelectionDecision,
+  SelectionInputs,
+  ArchiveConfig,
+  ArchiveResult,
+  FrontmatterFields,
+  ConfidenceInputs,
+  PersistResult,
+} from "./skill-emitter/index.js";

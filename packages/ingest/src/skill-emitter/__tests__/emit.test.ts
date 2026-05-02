@@ -1,0 +1,187 @@
+// SPDX-License-Identifier: Apache-2.0
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import type Database from "better-sqlite3";
+
+import { _resetWriterRegistry, bootstrap, closeDb, openWriter } from "../../store/sqlite.js";
+
+import { emit } from "../emit.js";
+import { parseFrontmatter } from "../frontmatter.js";
+import { mkCluster } from "./fixtures.js";
+
+let workdir: string;
+
+beforeEach(() => {
+  workdir = mkdtempSync(join(tmpdir(), "lodestone-emit-test-"));
+});
+
+afterEach(() => {
+  _resetWriterRegistry();
+  rmSync(workdir, { recursive: true, force: true });
+});
+
+function insertClusterStub(db: Database.Database, id: string, name: string): void {
+  db.prepare(
+    `INSERT INTO clusters (
+       id, name, name_status, description, description_embedding,
+       size, algorithm, algorithm_version, modularity, index_epoch
+     ) VALUES (?, ?, 'heuristic', 'stub', NULL, 1, 'louvain', 'louvain@0.0', 0.5, 1)`,
+  ).run(id, name);
+}
+
+describe("emit", () => {
+  it("writes .lodestone/skills/emerging/<slug>/SKILL.md with valid YAML frontmatter", async () => {
+    const cluster = mkCluster({ id: "abcd", name: "Auth pipeline", size: 5 });
+    const result = await emit(cluster, {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+      id: "fixed-id",
+    });
+    expect(result.written).toBe(true);
+    if (!result.written) throw new Error("expected written");
+    expect(result.path).toMatch(/\.lodestone\/skills\/emerging\/auth-pipeline\/SKILL\.md$/);
+
+    const text = readFileSync(result.path, "utf8");
+    const parsed = parseFrontmatter(text);
+    expect(parsed).not.toBeNull();
+    expect(parsed!.fields.id).toBe("fixed-id");
+    expect(parsed!.fields.slug).toBe("auth-pipeline");
+    expect(parsed!.fields.source).toBe("emerging");
+    expect(parsed!.fields.member_count).toBe(5);
+    expect(parsed!.fields.observed_days).toBe(6);
+    expect(parsed!.fields.content_sha256).toBe(result.sha256);
+  });
+
+  it("is idempotent: same cluster, same body — no rewrite, mtime unchanged", async () => {
+    const cluster = mkCluster({ id: "abcd", size: 5 });
+    const cfg = {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+      id: "fixed-id",
+    };
+    const first = await emit(cluster, cfg);
+    if (!first.written) throw new Error("first emit must write");
+    const mtime1 = statSync(first.path).mtimeMs;
+
+    // Sleep 10ms so mtime would tick if we wrote again.
+    await new Promise((r) => setTimeout(r, 10));
+
+    const second = await emit(cluster, cfg);
+    expect(second.written).toBe(false);
+    if (second.written) throw new Error("unreachable");
+    expect(second.reason).toBe("unchanged");
+    const mtime2 = statSync(first.path).mtimeMs;
+    expect(mtime2).toBe(mtime1);
+  });
+
+  it("rewrites when the body changes (different cluster description)", async () => {
+    const cfg = {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+      id: "fixed-id",
+    };
+    const first = await emit(mkCluster({ id: "abcd", description: "v1 desc" }), cfg);
+    if (!first.written) throw new Error("first emit must write");
+    const second = await emit(mkCluster({ id: "abcd", description: "v2 desc" }), cfg);
+    expect(second.written).toBe(true);
+  });
+
+  it("returns selection_rejected when shouldEmit fails", async () => {
+    const cluster = mkCluster({ id: "abcd", size: 1 });
+    const result = await emit(cluster, {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+    });
+    expect(result.written).toBe(false);
+    if (result.written) throw new Error("unreachable");
+    expect(result.reason).toBe("selection_rejected");
+    expect(result.decision_reason).toBe("too_small");
+  });
+
+  it("labels the source as 'observed' when observed_days >= 30", async () => {
+    const cluster = mkCluster({ id: "abcd", size: 5 });
+    const result = await emit(cluster, {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-03-01T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+    });
+    expect(result.written).toBe(true);
+    if (!result.written) throw new Error("unreachable");
+    expect(result.path).toMatch(/skills\/observed\//);
+  });
+
+  it("mirrors to the SQLite skills table when a db handle is supplied", async () => {
+    const dbPath = join(workdir, ".lodestone", "lodestone.sqlite");
+    const db = openWriter(dbPath);
+    bootstrap(db);
+    try {
+      const cluster = mkCluster({ id: "abcd1234abcd1234", size: 6 });
+      // Skills table FKs source_cluster_id -> clusters(id). Stub a row so the
+      // upsert doesn't trip the FK in this isolated unit test.
+      insertClusterStub(db, cluster.id, cluster.name);
+      const result = await emit(cluster, {
+        lodestoneDir: join(workdir, ".lodestone"),
+        createdAt: "2026-04-25T00:00:00Z",
+        now: new Date("2026-05-01T00:00:00Z"),
+        db,
+        id: "skill-uuid-1",
+      });
+      expect(result.written).toBe(true);
+      const row = db
+        .prepare("SELECT id, slug, maturity, body_sha256 FROM skills WHERE id = ?")
+        .get("skill-uuid-1") as
+        | { id: string; slug: string; maturity: string; body_sha256: string }
+        | undefined;
+      expect(row).toBeDefined();
+      expect(row!.maturity).toBe("emerging");
+      if (!result.written) throw new Error("unreachable");
+      expect(row!.body_sha256).toBe(result.sha256);
+    } finally {
+      closeDb(db);
+    }
+  });
+
+  it("snapshot: SKILL.md text is byte-stable for the auth fixture", async () => {
+    const cluster = mkCluster({
+      id: "abcd1234abcd1234",
+      name: "Auth pipeline",
+      size: 5,
+      bridges: 1,
+    });
+    const result = await emit(cluster, {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T12:00:00Z"),
+      id: "fixed-id-snapshot",
+    });
+    if (!result.written) throw new Error("unreachable");
+    const text = readFileSync(result.path, "utf8");
+    expect(text).toMatchSnapshot();
+  });
+
+  it("recognizes a hand-written SKILL.md with matching SHA as unchanged", async () => {
+    // Pre-emit, capture text, blow away mtime, re-emit. Establishes that the
+    // SHA check (not file mtime) drives idempotency.
+    const cluster = mkCluster({ id: "abcd", size: 4 });
+    const cfg = {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+      id: "stable-id",
+    };
+    const first = await emit(cluster, cfg);
+    if (!first.written) throw new Error("first emit must write");
+    const original = readFileSync(first.path, "utf8");
+    // Touch with same content (mtime would tick).
+    writeFileSync(first.path, original, "utf8");
+    const second = await emit(cluster, cfg);
+    expect(second.written).toBe(false);
+  });
+});
