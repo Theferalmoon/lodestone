@@ -27,10 +27,18 @@
     "./watcher": {
       "types": "./dist/watcher/index.d.ts",
       "default": "./dist/watcher/index.js"
+    },
+    "./store": {
+      "types": "./dist/store/index.d.ts",
+      "default": "./dist/store/index.js"
+    },
+    "./store/sqlite": {
+      "types": "./dist/store/sqlite.d.ts",
+      "default": "./dist/store/sqlite.js"
     }
   },
   "scripts": {
-    "build": "tsc -p .",
+    "build": "tsc -p . && node -e \"require('node:fs').cpSync('src/store/migrations','dist/store/migrations',{recursive:true})\"",
     "typecheck": "tsc -p . --noEmit",
     "test": "vitest run --coverage",
     "test:coverage": "vitest run --coverage",
@@ -42,11 +50,13 @@
   "dependencies": {
     "@lodestone/shared": "workspace:*",
     "@xenova/transformers": "^2.17.2",
+    "better-sqlite3": "^12.4.1",
     "chokidar": "^3.6.0",
     "graphology": "^0.25.4",
     "graphology-metrics": "^2.4.0",
     "ignore": "^5.3.2",
     "onnxruntime-node": "^1.18.0",
+    "sqlite-vec": "^0.1.9",
     "tree-sitter-go": "^0.25.0",
     "tree-sitter-javascript": "^0.25.0",
     "tree-sitter-python": "^0.25.0",
@@ -55,6 +65,7 @@
     "web-tree-sitter": "^0.26.8"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.14.0",
     "@vitest/coverage-v8": "^2.1.0",
     "graphology-types": "^0.24.8",

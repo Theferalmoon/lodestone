@@ -58,3 +58,46 @@ export type {
   WatcherOptions,
   WatcherStats,
 } from "./watcher/index.js";
+
+// Storage layer — section 08. SQLite (better-sqlite3 + WAL) + sqlite-vec
+// virtual table for symbol-body vectors + atomic ready.json marker. Section
+// 13 MCP server consumes openReader from this module per the POST-CODEX-001
+// amendment block of section 8.
+export {
+  openReader,
+  openWriter,
+  bootstrap,
+  readSchemaVersion,
+  closeDb,
+  VECTOR_DIM,
+  writeSymbols,
+  writeEdges,
+  writePagerank,
+  writeClassInheritance,
+  writeEmbeddings,
+  ensureSymbolEmbeddingsTable,
+  getSymbol,
+  getInboundEdges,
+  getOutboundEdges,
+  callersOf,
+  calleesOf,
+  impactOf,
+  clusterMembers,
+  vectorSearch,
+  readReady,
+  writeReady,
+  assertReady,
+  readyPath,
+  CALLERS_OF_SQL,
+  CALLEES_OF_SQL,
+  IMPACT_OF_SQL,
+  CLUSTER_MEMBERS_SQL,
+} from "./store/index.js";
+export type {
+  EmbeddingRow,
+  OpenOptions,
+  ReachabilityHit,
+  ReadyMarker,
+  SymbolWriteContext,
+  VectorHit,
+} from "./store/index.js";
