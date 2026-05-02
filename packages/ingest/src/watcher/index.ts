@@ -2,7 +2,7 @@
 // Public surface of the §12 file watcher submodule.
 
 export { createWatcher } from "./watcher.js";
-export { Coalescer } from "./coalesce.js";
+export { Coalescer, DEFAULT_MAX_BATCH_PATHS } from "./coalesce.js";
 export { GitPauseMonitor } from "./git-pause.js";
 export { buildIgnoreMatcher, BUILTIN_IGNORE_PATTERNS, toRelPosix } from "./ignore.js";
 export type { IgnoreMatcher, BuildIgnoreOptions } from "./ignore.js";

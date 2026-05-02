@@ -11,11 +11,17 @@ export type FileBatchReason = "add" | "change" | "unlink" | "mixed";
  * `paths` are repo-root-relative, sorted, and de-duplicated. `ts` is the
  * ISO-8601 flush timestamp. `reason` is `"mixed"` when the batch contains
  * more than one event kind, otherwise the single shared kind.
+ *
+ * `kinds` is the per-path event-kind map (after dedupe; last write wins).
+ * It exists so dispatch-time pause-replay can preserve per-path kinds
+ * instead of downgrading a "mixed" batch (which may contain unlinks) to
+ * a pure "change" batch — Codex impl-012 YELLOW.
  */
 export interface FileBatch {
   paths: string[];
   ts: string;
   reason: FileBatchReason;
+  kinds?: Readonly<Record<string, RawEventKind>>;
 }
 
 export type RawEventKind = "add" | "change" | "unlink";
@@ -31,8 +37,29 @@ export interface WatcherOptions {
   ignoreExtra?: string[];
   /** Pause dispatch while `.git/index.lock` exists. Defaults to true. */
   pauseDuringGit?: boolean;
-  /** Cap of in-flight batches before the dispatcher waits in a FIFO slot. Defaults to 3. */
+  /**
+   * Cap on TOTAL queue depth (queued + in-flight) before the producer-side
+   * timer re-arms instead of enqueueing. Acts as real backpressure on the
+   * watcher → coalescer → dispatch path. Defaults to 3.
+   *
+   * Codex impl-012 YELLOW: previously this only capped in-flight dispatches
+   * and the queue could grow unbounded behind a slow listener.
+   */
   maxQueueDepth?: number;
+  /**
+   * Cap on per-batch path-count. When a single flush would produce more
+   * than this many paths the snapshot is split deterministically into
+   * multiple FileBatches. Defaults to 500. Set higher for big monorepos
+   * where downstream ingest can absorb large batches; lower for tight
+   * memory targets.
+   */
+  maxBatchPaths?: number;
+  /**
+   * Callback fired when a single flush would have produced more than
+   * `maxBatchPaths` paths. Useful for diagnostics — e.g. logging or
+   * surfacing an operator alert when a `git pull` rewrote a huge subtree.
+   */
+  onFlood?: (totalPaths: number, maxBatchPaths: number) => void;
   /** Force chokidar to use `usePolling`. Falls back to `LODESTONE_WATCHER_POLLING` env var. */
   usePolling?: boolean;
   /** Disable initial scan emit. Always true in this package — exposed for parity only. */

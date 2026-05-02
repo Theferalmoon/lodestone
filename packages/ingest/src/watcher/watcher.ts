@@ -32,6 +32,8 @@ interface ResolvedOptions {
   ignoreExtra: string[];
   pauseDuringGit: boolean;
   maxQueueDepth: number;
+  maxBatchPaths: number | undefined;
+  onFlood: ((total: number, cap: number) => void) | undefined;
   usePolling: boolean;
 }
 
@@ -46,6 +48,8 @@ function resolveOptions(opts: WatcherOptions): ResolvedOptions {
     ignoreExtra: opts.ignoreExtra ?? [],
     pauseDuringGit: opts.pauseDuringGit ?? true,
     maxQueueDepth: opts.maxQueueDepth ?? DEFAULT_MAX_QUEUE_DEPTH,
+    maxBatchPaths: opts.maxBatchPaths,
+    onFlood: opts.onFlood,
     usePolling: polling,
   };
 }
@@ -84,6 +88,8 @@ class WatcherImpl extends EventEmitter implements Watcher {
     this.coalescer = new Coalescer({
       debounceMs: this.resolved.debounceMs,
       maxQueueDepth: this.resolved.maxQueueDepth,
+      maxBatchPaths: this.resolved.maxBatchPaths,
+      onFlood: this.resolved.onFlood,
       isPaused: () => this.isCurrentlyPaused(),
       dispatch: async (batch: FileBatch) => {
         try {
@@ -93,8 +99,18 @@ class WatcherImpl extends EventEmitter implements Watcher {
             // Re-queue the batch by replaying its paths into the
             // coalescer and bailing — the next debounce cycle will pick
             // it up after the pause clears.
+            //
+            // Codex impl-012 YELLOW — preserve the per-path event kind
+            // via batch.kinds. Falling back to batch.reason corrupts
+            // "mixed" batches: every path would be re-pushed as "change"
+            // and a later emit would lose unlinks. The kinds map is
+            // populated by Coalescer.buildBatch() exactly so this replay
+            // path can round-trip cleanly.
             for (const p of batch.paths) {
-              this.coalescer.push(p, batch.reason === "mixed" ? "change" : (batch.reason as RawEventKind));
+              const kind: RawEventKind =
+                batch.kinds?.[p] ??
+                (batch.reason === "mixed" ? "change" : (batch.reason as RawEventKind));
+              this.coalescer.push(p, kind);
             }
             return;
           }

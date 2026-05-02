@@ -257,6 +257,39 @@ describe("createWatcher (integration)", () => {
     await w.stop();
   });
 
+  // Codex impl-012 YELLOW — onFlood + maxBatchPaths integration check.
+  it("splits a flood into capped batches and fires onFlood once per flush", async () => {
+    const flooded: Array<[number, number]> = [];
+    const w = await startWatcher({
+      cwd: tmp,
+      debounceMs: 200,
+      pauseDuringGit: false,
+      maxBatchPaths: 4,
+      onFlood: (n, cap) => {
+        flooded.push([n, cap]);
+      },
+    });
+    watchers.push(w);
+    const batches: FileBatch[] = [];
+    w.on("batch", (b) => {
+      batches.push(b);
+    });
+    await settle(120);
+    // 10 files in one window — one flush, three batches (4+4+2).
+    await Promise.all(
+      Array.from({ length: 10 }, (_, i) => writeFile(path.join(tmp, `f${i}.ts`), "x")),
+    );
+    await waitFor(() => batches.length >= 3, 5_000);
+    await settle(400);
+    expect(batches.length).toBeGreaterThanOrEqual(3);
+    for (const b of batches) {
+      expect(b.paths.length).toBeLessThanOrEqual(4);
+      expect(b.kinds).toBeDefined();
+    }
+    expect(flooded.length).toBeGreaterThanOrEqual(1);
+    expect(flooded[0]![1]).toBe(4);
+  });
+
   it("forwards listener errors via the `error` event", async () => {
     const file = path.join(tmp, "foo.ts");
     await writeFile(file, "x");
