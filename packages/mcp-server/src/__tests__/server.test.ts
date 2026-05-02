@@ -70,6 +70,35 @@ describe("createServer", () => {
     }
   });
 
+  it("YELLOW fix: when dangerous_tools_enabled=true, server sets LODESTONE_DANGEROUS_TOOLS=1 so the sql handler env gate is satisfied", () => {
+    const prior = process.env.LODESTONE_DANGEROUS_TOOLS;
+    delete process.env.LODESTONE_DANGEROUS_TOOLS;
+    try {
+      const cfg = configWith({
+        expose: ["query", "sql"],
+        dangerous: true,
+      });
+      createServer({ config: cfg });
+      expect(process.env.LODESTONE_DANGEROUS_TOOLS).toBe("1");
+    } finally {
+      if (prior === undefined) delete process.env.LODESTONE_DANGEROUS_TOOLS;
+      else process.env.LODESTONE_DANGEROUS_TOOLS = prior;
+    }
+  });
+
+  it("YELLOW fix: when dangerous_tools_enabled=false, server clears LODESTONE_DANGEROUS_TOOLS (fail-closed)", () => {
+    const prior = process.env.LODESTONE_DANGEROUS_TOOLS;
+    process.env.LODESTONE_DANGEROUS_TOOLS = "1"; // simulate stale env from a prior run
+    try {
+      const cfg = configWith({ dangerous: false });
+      createServer({ config: cfg });
+      expect(process.env.LODESTONE_DANGEROUS_TOOLS).toBeUndefined();
+    } finally {
+      if (prior === undefined) delete process.env.LODESTONE_DANGEROUS_TOOLS;
+      else process.env.LODESTONE_DANGEROUS_TOOLS = prior;
+    }
+  });
+
   it("schema-level guard: lodestone.toml that exposes sql without dangerous_tools_enabled is REJECTED at parse time", () => {
     // The shared schema's mcpSchema.refine catches this BEFORE createServer
     // is even called. Confirms layer 1 of the defense-in-depth.

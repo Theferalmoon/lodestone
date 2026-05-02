@@ -55,6 +55,19 @@ export function createServer(opts: CreateServerOptions): CreatedServer {
     dangerousToolsEnabled: config.mcp.dangerous_tools_enabled,
   });
 
+  // §15 YELLOW fix (Codex impl-015): the `sql` tool's defense-in-depth handler
+  // gate reads `LODESTONE_DANGEROUS_TOOLS` from the process env. The §13 spec
+  // says the server entrypoint should set this from the parsed config — but
+  // until v0.1.1 nothing actually wired it, so `tools/list` could surface
+  // `sql` while every call returned "sql tool disabled". Wire it now: ON when
+  // config.dangerous_tools_enabled, CLEARED otherwise (fail-closed across
+  // restarts that toggle the flag off without the operator unsetting the env).
+  if (config.mcp.dangerous_tools_enabled) {
+    process.env.LODESTONE_DANGEROUS_TOOLS = "1";
+  } else {
+    delete process.env.LODESTONE_DANGEROUS_TOOLS;
+  }
+
   // Defense-in-depth: every tool description MUST be ≥150 chars (Claude Code
   // tool-search retrieval contract). The CI test enforces this; failing here
   // at server construction time would be too late, but we belt-and-suspender
