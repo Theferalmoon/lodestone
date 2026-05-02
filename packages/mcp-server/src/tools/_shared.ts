@@ -43,6 +43,25 @@ export interface JsonSchemaObject {
 }
 
 /**
+ * UUID v7 shape validator. Matches the canonical 8-4-4-4-12 hex layout where:
+ *   - the first version nibble (position 14, 1-indexed) is `7` (RFC 9562 v7)
+ *   - the variant nibble (position 19, 1-indexed) is `8`, `9`, `a`, or `b`
+ *
+ * Used by the §17 `feedback` tool to reject malformed `request_id` values
+ * before they pollute the SQLite `feedback` table — that linkage is
+ * load-bearing for v0.5 specialty-agent training-pair extraction (the agent
+ * replays prior tool input/output by `request_id`).
+ *
+ * Codex round-2 NEW RED §17. Case-insensitive (UUIDs render either way).
+ */
+const UUID_V7_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isValidUuidV7(value: string): boolean {
+  return UUID_V7_REGEX.test(value);
+}
+
+/**
  * Convert a zod schema to a JSON-Schema-7 representation suitable for the
  * MCP `inputSchema` field. Pre-compute at module load — `zodToJsonSchema` is
  * sync + cheap, so paying the cost once at import keeps the per-call

@@ -213,6 +213,58 @@ describe("RED #1 — assertReaderReady cross-store epoch oracle", () => {
       closeDb(db);
     }
   });
+
+  // Codex r2 §08 PARTIAL — identity-null bypass closed.
+  it("still enforces epoch comparison when index_meta exists but embedder identity is NULL", () => {
+    const db = openWriter(dbPath);
+    try {
+      bootstrap(db);
+      // bootstrap() populates index_meta with current_epoch=0 + NULL identity.
+      // ready.json claims epoch=5 — pre-r2 this would have passed via the
+      // identity-null shim. r2 narrows the shim: identity-null + table-present
+      // must still trip the epoch oracle.
+      writeReady(lodestoneDir, {
+        schema_version: 2,
+        lodestone_version: "0.1.3",
+        ready: true,
+        embedder: { id: "nomic-embed-text-v1.5", dim: 768, quant: "int8" },
+        languages_indexed: ["typescript"],
+        indexed_at: "2026-05-02T00:00:00Z",
+        commit_at_index: null,
+        dirty_at_index: false,
+        index_epoch: 5,
+        writer_pid: process.pid,
+      });
+      expect(() => assertReaderReady(db, lodestoneDir)).toThrow(/epoch mismatch/i);
+    } finally {
+      closeDb(db);
+    }
+  });
+
+  // Codex r2 §08 PARTIAL — true legacy DB shim still works (no index_meta table).
+  it("falls back to marker-only check when index_meta table is absent (true pre-v0.1.2 DB)", () => {
+    const db = openWriter(dbPath);
+    try {
+      // Skip bootstrap() — simulate a legacy DB that predates migration 002.
+      db.prepare("DROP TABLE IF EXISTS index_meta").run();
+      writeReady(lodestoneDir, {
+        schema_version: 1,
+        lodestone_version: "0.1.0",
+        ready: true,
+        embedder: { id: "nomic-embed-text-v1.5", dim: 768, quant: "int8" },
+        languages_indexed: ["typescript"],
+        indexed_at: "2026-05-02T00:00:00Z",
+        commit_at_index: null,
+        dirty_at_index: false,
+        index_epoch: 9,
+        writer_pid: process.pid,
+      });
+      // No index_meta → no DB side to compare → marker-only path. Should pass.
+      expect(() => assertReaderReady(db, lodestoneDir)).not.toThrow();
+    } finally {
+      closeDb(db);
+    }
+  });
 });
 
 describe("RED #2 — beginReindex clean replacement", () => {

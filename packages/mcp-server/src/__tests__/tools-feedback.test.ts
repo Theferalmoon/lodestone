@@ -129,6 +129,76 @@ describe("inputSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  // Codex round-2 NEW RED §17 — `tool` must be a known McpToolName.
+  // Free-form strings persisted into the SQLite `feedback` table pollute
+  // future training-pair extraction (v0.5).
+  it("rejects an unknown tool name (must be a canonical McpToolName)", () => {
+    const result = inputSchema.safeParse({
+      tool: "totally-made-up",
+      request_id: "01900000-0000-7000-8000-000000000000",
+      signal: "useful",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts every canonical MCP tool name", () => {
+    for (const tool of [
+      "query",
+      "context",
+      "impact",
+      "cluster",
+      "skills_for",
+      "recent_changes",
+      "feedback",
+      "sql",
+    ]) {
+      const result = inputSchema.safeParse({
+        tool,
+        request_id: "01900000-0000-7000-8000-000000000000",
+        signal: "useful",
+      });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  // Codex round-2 NEW RED §17 — `request_id` must be UUID v7 shape.
+  it("rejects a malformed request_id (not UUID v7 shape)", () => {
+    const result = inputSchema.safeParse({
+      tool: "query",
+      request_id: "definitely-not-a-uuid",
+      signal: "useful",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a UUID with version != 7 (e.g. v4)", () => {
+    // Valid v4 UUID — version nibble at position 14 is `4`, variant `8|9|a|b`.
+    const result = inputSchema.safeParse({
+      tool: "query",
+      request_id: "550e8400-e29b-41d4-a716-446655440000",
+      signal: "useful",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a canonical UUID v7 (lowercase)", () => {
+    const result = inputSchema.safeParse({
+      tool: "query",
+      request_id: "01900000-0000-7000-8000-000000000000",
+      signal: "useful",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a canonical UUID v7 (uppercase)", () => {
+    const result = inputSchema.safeParse({
+      tool: "query",
+      request_id: "01900000-DEAD-7BEE-8000-FEEDF00DCAFE",
+      signal: "useful",
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe("truncateNote", () => {
@@ -192,8 +262,16 @@ describe("handler — happy path", () => {
 
   it("persists each of the four signal literals", async () => {
     const handler = makeHandler({ cwd: workdir });
+    // Distinct UUID v7 values per signal so the rows are independently
+    // identifiable in the read-back.
+    const ids = {
+      useful: "01900000-0000-7000-8000-00000000a001",
+      not_useful: "01900000-0000-7000-8000-00000000a002",
+      wrong: "01900000-0000-7000-8000-00000000a003",
+      stale: "01900000-0000-7000-8000-00000000a004",
+    } as const;
     for (const signal of ["useful", "not_useful", "wrong", "stale"] as const) {
-      await handler({ tool: "query", request_id: `req-${signal}`, signal });
+      await handler({ tool: "query", request_id: ids[signal], signal });
     }
     const rows = readAllRows();
     expect(rows.map((r) => r.signal).sort()).toEqual(["not_useful", "stale", "useful", "wrong"]);
@@ -203,7 +281,7 @@ describe("handler — happy path", () => {
     const handler = makeHandler({ cwd: workdir });
     await handler({
       tool: "query",
-      request_id: "req-1",
+      request_id: "01900000-0000-7000-8000-00000000b001",
       signal: "useful",
       note: "this nailed the import I needed",
     });
@@ -216,7 +294,7 @@ describe("handler — happy path", () => {
     const big = "x".repeat(NOTE_MAX_BYTES + 500);
     const env = (await handler({
       tool: "query",
-      request_id: "req-big",
+      request_id: "01900000-0000-7000-8000-00000000b002",
       signal: "not_useful",
       note: big,
     })) as LodestoneToolResponseV13<FeedbackAck>;
@@ -279,7 +357,11 @@ describe("handler — writer caching + serialization (v0.1.1, impl-017 B2)", () 
     // signal handler), the next handler call lazily re-opens — verified here
     // by calling handler twice, with a deliberate cache flush in between.
     const handler = makeHandler({ cwd: workdir });
-    await handler({ tool: "query", request_id: "a", signal: "useful" });
+    await handler({
+      tool: "query",
+      request_id: "01900000-0000-7000-8000-00000000c001",
+      signal: "useful",
+    });
 
     // Simulate the writer being torn down (e.g. server shutdown then restart
     // within the same process). The cached writer entry must be re-opened on
@@ -287,13 +369,19 @@ describe("handler — writer caching + serialization (v0.1.1, impl-017 B2)", () 
     _resetCachedWriters();
     _resetWriterRegistry();
 
-    await handler({ tool: "query", request_id: "b", signal: "useful" });
+    await handler({
+      tool: "query",
+      request_id: "01900000-0000-7000-8000-00000000c002",
+      signal: "useful",
+    });
     expect(readAllRows()).toHaveLength(2);
   });
 
   it("persists across simulated MCP server restarts (handler invocations) — the file is the source of truth", async () => {
+    const firstId = "01900000-0000-7000-8000-00000000d001";
+    const secondId = "01900000-0000-7000-8000-00000000d002";
     const h1 = makeHandler({ cwd: workdir });
-    await h1({ tool: "query", request_id: "first", signal: "useful" });
+    await h1({ tool: "query", request_id: firstId, signal: "useful" });
 
     // Drop the cached writer + the §08 registry as if the server process
     // exited and restarted. The next handler call must lazily re-open.
@@ -301,10 +389,10 @@ describe("handler — writer caching + serialization (v0.1.1, impl-017 B2)", () 
     _resetWriterRegistry();
 
     const h2 = makeHandler({ cwd: workdir });
-    await h2({ tool: "context", request_id: "second", signal: "stale" });
+    await h2({ tool: "context", request_id: secondId, signal: "stale" });
 
     const rows = readAllRows();
-    expect(rows.map((r) => r.request_id)).toEqual(["first", "second"]);
+    expect(rows.map((r) => r.request_id)).toEqual([firstId, secondId]);
   });
 
   it("ten concurrent calls all land — no §08 writerRegistry collision (impl-017 B2 spec)", async () => {
@@ -313,10 +401,16 @@ describe("handler — writer caching + serialization (v0.1.1, impl-017 B2)", () 
     // guard. v0.1.1 fixes this by caching the writer module-scope and
     // serializing writes through a per-path Promise chain.
     const handler = makeHandler({ cwd: workdir });
-    const concurrent = Array.from({ length: 10 }, (_, i) =>
+    // Build 10 distinct UUID v7 strings keyed by the loop index so the
+    // round-trip request_id check below remains deterministic.
+    const concurrentIds = Array.from(
+      { length: 10 },
+      (_, i) => `01900000-0000-7000-8000-00000000e0${i.toString().padStart(2, "0")}`,
+    );
+    const concurrent = concurrentIds.map((request_id) =>
       handler({
         tool: "query",
-        request_id: `concurrent-${i}`,
+        request_id,
         signal: "useful",
       }),
     );
@@ -338,8 +432,8 @@ describe("handler — writer caching + serialization (v0.1.1, impl-017 B2)", () 
     // request_id linkage must round-trip — load-bearing for v0.5.
     const requestIds = new Set(rows.map((r) => r.request_id));
     expect(requestIds.size).toBe(10);
-    for (let i = 0; i < 10; i++) {
-      expect(requestIds.has(`concurrent-${i}`)).toBe(true);
+    for (const id of concurrentIds) {
+      expect(requestIds.has(id)).toBe(true);
     }
   });
 
@@ -349,35 +443,104 @@ describe("handler — writer caching + serialization (v0.1.1, impl-017 B2)", () 
     // "writer already open" error — proof that we are NOT closing per call
     // anymore.
     const handler = makeHandler({ cwd: workdir });
-    await handler({ tool: "query", request_id: "kept-open-1", signal: "useful" });
+    await handler({
+      tool: "query",
+      request_id: "01900000-0000-7000-8000-00000000f001",
+      signal: "useful",
+    });
 
     expect(() => openWriter(dbPath)).toThrow(/writer already open/i);
 
     // The handler can still serve subsequent calls because it owns that entry.
-    await handler({ tool: "query", request_id: "kept-open-2", signal: "useful" });
+    await handler({
+      tool: "query",
+      request_id: "01900000-0000-7000-8000-00000000f002",
+      signal: "useful",
+    });
     expect(readAllRows()).toHaveLength(2);
   });
 });
 
-describe("handler — fresh-repo bootstrap (no preceding `lodestone init`)", () => {
-  it("bootstraps the schema on first feedback call when the DB file is brand new", async () => {
+describe("handler — refuses standalone bootstrap (Codex round-2 NEW RED §17)", () => {
+  // POST-FIX contract: feedback against an uninitialized project — no
+  // `.lodestone/` dir, OR a `.lodestone/` with neither ready.json nor an
+  // index_meta row — must NOT silently create a fresh SQLite + bootstrap the
+  // schema. Doing so produces orphan training signals tied to a database the
+  // operator never asked to exist, and pollutes the project root with a
+  // surprise `.lodestone/` directory. The fix returns a clear error envelope
+  // instructing the caller to run `lodestone init` first.
+  it("rejects feedback when .lodestone/ does not exist", async () => {
     const fresh = mkdtempSync(path.join(tmpdir(), "lodestone-feedback-fresh-"));
     try {
+      const freshDbPath = lodestoneSubpath(fresh, "sqlite");
+      // No .lodestone/ dir at all.
+      expect(existsSync(path.join(fresh, ".lodestone"))).toBe(false);
+
+      const handler = makeHandler({ cwd: fresh });
+      const env = (await handler({
+        tool: "query",
+        request_id: "01900000-0000-7000-8000-000000000001",
+        signal: "useful",
+      })) as LodestoneToolResponseV13<FeedbackAck>;
+
+      expect(env.results).toEqual([]);
+      const warnings = env.diagnostics.warnings ?? [];
+      expect(warnings.some((w) => /lodestone init/i.test(w))).toBe(true);
+      // Side-effect check: the handler must not have created a SQLite DB or
+      // a `.lodestone/` directory just to refuse the call.
+      expect(existsSync(freshDbPath)).toBe(false);
+      expect(existsSync(path.join(fresh, ".lodestone"))).toBe(false);
+    } finally {
+      _resetWriterRegistry();
+      _resetCachedWriters();
+      rmSync(fresh, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects feedback when .lodestone/ exists but DB is empty (no ready.json, no index_meta)", async () => {
+    const fresh = mkdtempSync(path.join(tmpdir(), "lodestone-feedback-empty-"));
+    try {
+      mkdirSync(path.join(fresh, ".lodestone"), { recursive: true });
       const freshDbPath = lodestoneSubpath(fresh, "sqlite");
       expect(existsSync(freshDbPath)).toBe(false);
 
       const handler = makeHandler({ cwd: fresh });
       const env = (await handler({
         tool: "query",
-        request_id: "boot-1",
+        request_id: "01900000-0000-7000-8000-000000000002",
         signal: "useful",
       })) as LodestoneToolResponseV13<FeedbackAck>;
-      expect(env.results[0]?.ack).toBe(true);
-      expect(existsSync(freshDbPath)).toBe(true);
+
+      expect(env.results).toEqual([]);
+      const warnings = env.diagnostics.warnings ?? [];
+      expect(warnings.some((w) => /lodestone init/i.test(w))).toBe(true);
+      // Must not have bootstrapped a fresh SQLite to satisfy the call.
+      expect(existsSync(freshDbPath)).toBe(false);
     } finally {
       _resetWriterRegistry();
+      _resetCachedWriters();
       rmSync(fresh, { recursive: true, force: true });
     }
+  });
+
+  it("accepts feedback when DB has been initialized (index_meta present, even without ready.json)", async () => {
+    // The §08 init path writes index_meta during bootstrap. Once that row
+    // exists the project IS initialized — feedback may proceed even if the
+    // first index pass hasn't completed (no ready.json yet). This is the
+    // common operator path: `lodestone init` followed quickly by a feedback
+    // call before the watcher has flushed.
+    //
+    // The standard beforeEach() in this file already pre-bootstraps the DB
+    // (which writes index_meta.current_epoch=0) without writing ready.json,
+    // so we can reuse the shared workdir for this assertion.
+    const handler = makeHandler({ cwd: workdir });
+    const env = (await handler({
+      tool: "query",
+      request_id: "01900000-0000-7000-8000-000000000003",
+      signal: "useful",
+    })) as LodestoneToolResponseV13<FeedbackAck>;
+    expect(env.results).toHaveLength(1);
+    expect(env.results[0]?.ack).toBe(true);
   });
 });
 

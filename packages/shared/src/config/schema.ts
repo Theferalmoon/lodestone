@@ -73,7 +73,7 @@ const skillEmitterSchema = z
  * Treating `expose` as an enum (not free-form strings) catches friend-facing
  * typos at parse time. Codex impl-002 finding C5/A6.
  */
-const MCP_TOOL = z.enum([
+export const MCP_TOOL = z.enum([
   "query",
   "context",
   "impact",
@@ -83,6 +83,13 @@ const MCP_TOOL = z.enum([
   "feedback",
   "sql",
 ]);
+/**
+ * Materialized list of canonical MCP tool names. Re-exported by
+ * `@lodestone/shared` so input-validation in MCP tool handlers (notably §17
+ * `feedback`) can reject unknown `tool` values at the schema boundary instead
+ * of persisting garbage. Values are identical to `MCP_TOOL.options`.
+ */
+export const MCP_TOOL_NAMES = MCP_TOOL.options;
 export type McpToolName = z.infer<typeof MCP_TOOL>;
 
 const DEFAULT_MCP_EXPOSE: readonly McpToolName[] = [

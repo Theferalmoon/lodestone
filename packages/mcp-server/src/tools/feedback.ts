@@ -25,18 +25,22 @@
 // other writer never releases, we return a clear `WriterContentionError`
 // envelope so the agent can surface a real diagnostic instead of a stack
 // trace.
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { z } from "zod";
 
 import {
   FEEDBACK_SIGNALS,
+  MCP_TOOL_NAMES,
   type FeedbackEvent,
 } from "@lodestone/shared";
 import {
   bootstrap,
   closeDb,
+  openReader,
   openWriter,
+  readIndexMeta,
+  readReady,
   writeFeedback,
 } from "@lodestone/ingest/store";
 
@@ -47,7 +51,7 @@ import {
   wrapOk,
   type LodestoneToolResponseV13,
 } from "../envelope.js";
-import { resolveSqlitePath, toMcpInputSchema } from "./_shared.js";
+import { isValidUuidV7, resolveSqlitePath, toMcpInputSchema } from "./_shared.js";
 
 type WriterDb = ReturnType<typeof openWriter>;
 
@@ -59,9 +63,36 @@ export const NOTE_MAX_BYTES = 2048;
 export const description =
   "Record agent feedback on a prior Lodestone tool call. Required fields: the tool name (`query`, `cluster`, `context`, etc.), the prior call's `request_id` (UUID v7 from the prior envelope), and a `signal` literal (`useful` | `not_useful` | `wrong` | `stale`). Optional `note` (≤2 KB) explains why. Feedback is the training signal Lodestone uses to improve cluster names, skill cards, and ranking — call this whenever a prior tool call was meaningfully helpful or unhelpful.";
 
+/**
+ * Input schema for the feedback tool.
+ *
+ * v0.1.3 Codex round-2 NEW RED §17 — both linkage fields are now strictly
+ * validated at the schema boundary instead of accepting any non-empty string:
+ *
+ *   - `tool` must be a canonical {@link MCP_TOOL_NAMES} value. Free-form tool
+ *     names previously persisted unchanged into the SQLite `feedback` table
+ *     and would corrupt v0.5 specialty-agent training-pair extraction (which
+ *     keys signals by tool to bucket per-agent improvement loops).
+ *
+ *   - `request_id` must be a UUID v7 in canonical 8-4-4-4-12 hex layout
+ *     (version nibble = 7, variant = 8|9|a|b). The prior tool call's envelope
+ *     stamps this exact shape (see §13 envelope builder); rejecting malformed
+ *     ids here means the persisted row is always linkable back to a real
+ *     prior call.
+ */
 export const inputSchema = z.object({
-  tool: z.string().min(1, "tool must be non-empty"),
-  request_id: z.string().min(1, "request_id is required (UUID from prior call)"),
+  tool: z.enum(MCP_TOOL_NAMES, {
+    errorMap: () => ({
+      message: `tool must be one of: ${MCP_TOOL_NAMES.join(", ")}`,
+    }),
+  }),
+  request_id: z
+    .string()
+    .min(1, "request_id is required (UUID v7 from prior call)")
+    .refine(isValidUuidV7, {
+      message:
+        "request_id must be a UUID v7 (canonical 8-4-4-4-12 hex layout, version nibble = 7)",
+    }),
   signal: z.enum(FEEDBACK_SIGNALS),
   note: z.string().optional(),
   channel: z.literal("code").optional(),
@@ -130,6 +161,79 @@ class WriterContentionError extends Error {
 
 const MAX_OPEN_RETRIES = 3;
 const RETRY_BACKOFF_MS = 100;
+
+/**
+ * Error message returned when feedback() is called against an uninitialized
+ * project. Surfaced as a diagnostics warning in an empty-results envelope so
+ * the agent can render it directly to the operator. Codex round-2 NEW RED
+ * §17 — refuses standalone bootstrap.
+ */
+const INIT_REQUIRED_MESSAGE =
+  "feedback persist failed: this project is not initialized — run `lodestone init` first. " +
+  "Feedback never bootstraps a fresh `.lodestone/` on its own (doing so would create orphan " +
+  "training signals against a SQLite the operator never asked to exist).";
+
+/**
+ * Determine whether the project rooted at `dbPath` has been initialized.
+ *
+ * "Initialized" means at least one of:
+ *   - the §08 SQLite has an `index_meta` row (written by `bootstrap()` during
+ *     `lodestone init`), OR
+ *   - a `ready.json` marker exists in the parent `.lodestone/` (written by a
+ *     completed index pass, which implies init ran)
+ *
+ * Returns false (uninitialized) when:
+ *   - the parent `.lodestone/` dir does not exist
+ *   - the SQLite file does not exist
+ *   - the SQLite file exists but has no schema_version table (so no
+ *     `index_meta` either) AND no ready.json
+ *
+ * The check is read-only — it never opens a writer or creates files. We open
+ * a reader handle on the SQLite (which is non-destructive) and immediately
+ * close it before returning. Used by the feedback handler to refuse
+ * standalone bootstrap; the §17 fix (Codex round-2) requires an explicit
+ * `lodestone init` rather than auto-creating state on the first feedback
+ * call.
+ */
+function isProjectInitialized(dbPath: string): boolean {
+  const lodestoneDir = dirname(dbPath);
+  if (!existsSync(lodestoneDir)) return false;
+
+  // ready.json present is a sufficient init proof — the marker is only
+  // written after a successful index pass, which presupposes init.
+  try {
+    const marker = readReady(lodestoneDir);
+    if (marker !== null) return true;
+  } catch {
+    // Malformed ready.json is treated as "not a clean init signal"; fall
+    // through to the index_meta check rather than throwing here.
+  }
+
+  if (!existsSync(dbPath)) return false;
+
+  // Reader open is non-destructive on an empty file; if the file is a valid
+  // SQLite with our schema, readIndexMeta returns a row. If the file is
+  // empty / missing the table, readIndexMeta returns null.
+  let reader: ReturnType<typeof openReader> | null = null;
+  try {
+    reader = openReader(dbPath, { loadVec: false });
+    const meta = readIndexMeta(reader);
+    return meta !== null;
+  } catch {
+    // openReader can throw on a corrupt file; treat as uninitialized so
+    // the operator gets the actionable `lodestone init` error rather than
+    // a stack trace.
+    return false;
+  } finally {
+    if (reader !== null) {
+      try {
+        reader.close();
+      } catch {
+        /* best-effort close; don't mask the init signal */
+      }
+    }
+  }
+}
 
 /**
  * Cached writer state. Keyed by absolute db path so a single Node process can
@@ -214,9 +318,13 @@ async function ensureWriter(dbPath: string): Promise<WriterCacheEntry> {
       /* mkdir is best-effort; openWriter will surface a real failure below */
     }
     const db = await openWriterWithRetry(dbPath);
-    // Idempotent — no-op when the schema is current. Lets a standalone
-    // MCP-server start (no preceding `lodestone init`) still accept feedback
-    // without crashing.
+    // Idempotent — no-op when the schema is current. v0.1.3 Codex round-2 §17:
+    // standalone-bootstrap is refused at the handler boundary by
+    // isProjectInitialized() above, so by the time we get here `lodestone init`
+    // has already populated index_meta. The bootstrap() call is retained as a
+    // belt-and-suspenders no-op (idempotent on a current schema; would catch a
+    // schema-version drift mid-deploy by surfacing a real version-mismatch
+    // error rather than silently writing into a stale table).
     bootstrap(db);
     const entry: WriterCacheEntry = { db, tail: Promise.resolve() };
     writerCache.set(dbPath, entry);
@@ -320,6 +428,14 @@ export function makeHandler(opts: HandlerOptions = {}) {
     // across every tool. Explicit override wins (test paths); otherwise
     // resolveSqlitePath honors LODESTONE_CWD then falls back to process.cwd().
     const dbPath = opts.cwd !== undefined ? resolveSqlitePath(opts.cwd) : resolveSqlitePath();
+
+    // Codex round-2 NEW RED §17 — refuse standalone bootstrap. Feedback never
+    // initializes a project on its own; the operator must run `lodestone init`
+    // first. This is checked BEFORE any writer/dir creation so an uninitialized
+    // project root stays untouched on rejection.
+    if (!isProjectInitialized(dbPath)) {
+      return wrapErr<FeedbackAck>(INIT_REQUIRED_MESSAGE, LODESTONE_CHANNEL_V0);
+    }
 
     let entry: WriterCacheEntry;
     try {

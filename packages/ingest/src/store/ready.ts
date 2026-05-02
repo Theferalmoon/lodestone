@@ -10,7 +10,7 @@ import type Database from "better-sqlite3";
 
 import { LODESTONE_DIRNAME, parseReadyJson, type ReadyJson } from "@lodestone/shared";
 
-import { getCurrentEpoch, getEmbedderIdentity } from "./index-meta.js";
+import { getCurrentEpoch, getEmbedderIdentity, readIndexMeta } from "./index-meta.js";
 
 /** Re-export for callers that prefer importing from the store. */
 export type ReadyMarker = ReadyJson;
@@ -120,25 +120,38 @@ export function assertReady(lodestoneDir: string, expectedEpoch?: number): Ready
  * epoch the DB never reached. ready.json and SQLite must agree before we
  * serve a read.
  *
- * Databases that predate migration 002 (no `index_meta` table) are treated
- * as DB epoch = 0; any `ready.json.index_epoch > 0` mismatches — a
- * deliberately strict failure that forces the operator to reindex.
+ * Codex r2 §08 PARTIAL precedence (v0.1.3 hardening):
+ *   1. If `index_meta` table is ABSENT entirely → true pre-v0.1.2 fixed-shape
+ *      DB; fall back to the marker-only check (the cross-store oracle has no
+ *      DB side to compare against).
+ *   2. If `index_meta` table EXISTS → strictly require
+ *      `index_meta.current_epoch === ready.json.index_epoch`, even when the
+ *      embedder identity columns are NULL. Previously identity-null bypassed
+ *      the epoch check, which let a hand-bootstrapped or partially-migrated
+ *      DB pass on `ready.json` alone — weakening the oracle. After the v0.1.2
+ *      schema-v3 cut every produced index has the table; this only narrows
+ *      the legacy shim.
  */
 export function assertReaderReady(
   db: Database.Database,
   lodestoneDir: string,
 ): ReadyMarker {
   const marker = assertReady(lodestoneDir);
-  // Legacy-DB shim: when the pipeline has not stamped an embedder identity
-  // into `index_meta` (every field is NULL), the DB epoch is 0 by default,
-  // which would falsely mismatch a ready.json that records a real epoch.
-  // Fall back to the marker-only check in that case. As soon as ANY pipeline
-  // pass writes an embedder identity (the production path always does), the
-  // strict cross-store check kicks in and catches the crash window.
-  const identity = getEmbedderIdentity(db);
-  if (identity === null) {
+
+  // Pre-v0.1.2 fixed-shape DB: no `index_meta` table at all. There is no
+  // DB side to the cross-store oracle, so we must trust the marker. This is
+  // the only case where we skip the epoch comparison.
+  const meta = readIndexMeta(db);
+  if (meta === null) {
     return marker;
   }
+
+  // index_meta exists. The DB side is authoritative — compare epochs even
+  // when identity is NULL. (Identity-null with index_meta present means a
+  // hand-bootstrapped or partially-migrated DB; bypassing the epoch check
+  // would let a stale ready.json walk past the oracle. See r2 §08 PARTIAL.)
+  const identity = getEmbedderIdentity(db);
+  void identity; // identity no longer gates the comparison; documented only.
   const dbEpoch = getCurrentEpoch(db);
   if (dbEpoch !== marker.index_epoch) {
     throw new Error(
