@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# CMNDI-DOCS-MANDATE-001 §5 — CI assertion that the generated
+# docs/cmndi/index.html is in sync with its source markdown set
+# (docs/cmndi/0[1-5]-*.md for lodestone Tier-C public-Apache).
+#
+# Runs on every push and PR. Re-runs the build, then `git diff
+# --exit-code` on the generated artifact. Fails the workflow if the
+# committed HTML drifts from what the script would produce — forces
+# the contributor to run the build locally and commit the refresh
+# before merge.
+#
+# Kept as a separate job from the main CI so:
+#   - The named check appears as its own status on every PR.
+#   - It does not bloat or slow the build/test matrix.
+#   - It can fail independently without masking unrelated test results.
+#
+# Security note: this workflow does not consume any github.event.*
+# untrusted input in `run:` blocks. The only inputs to script
+# execution are repo-tracked files (the build script + source MDs).
+#
+# Compliance: NIST 800-53 SA-15 (development process), CM-3 (config
+# change control), AU-3 (audit content); SOC 2 CC8.1 (change
+# management); CMMC L2 SI.L2-3.14.1 (flaw remediation tracking);
+# ISO 27001 A.12.1.2 (change management).
+
+name: cmndi-docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  cmndi-docs-build:
+    name: cmndi docs HTML in sync
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Re-run cmndi docs build
+        run: python3 scripts/docs/cmndi-docs-build.py
+
+      - name: Assert docs/cmndi/index.html is in sync with source MDs
+        # `git diff --exit-code` exits non-zero if the working tree
+        # differs from HEAD. If the build above produced a different
+        # HTML than what's committed, this step fails and the
+        # contributor is expected to run the build locally and commit
+        # the refresh.
+        run: |
+          if ! git diff --exit-code docs/cmndi/index.html; then
+            echo "::error file=docs/cmndi/index.html::generated HTML is stale relative to docs/cmndi/0*.md sources. Run python3 scripts/docs/cmndi-docs-build.py locally and commit the refresh." >&2
+            exit 1
+          fi
+          echo "docs/cmndi/index.html is in sync with sources."
