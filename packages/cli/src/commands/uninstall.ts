@@ -12,6 +12,7 @@
 // Exit codes: 0 on success, 1 on partial failure (any helper returned a
 // non-recoverable result), 2 on argv error (currently impossible — all flags
 // are optional and unknown ones are silently ignored to match init's parser).
+import path from "node:path";
 import { output } from "../ui/output.js";
 import { readInstallManifest } from "../uninstall/manifest-reader.js";
 import { removeMcpEntry } from "../uninstall/mcp-config-uninstall.js";
@@ -19,6 +20,16 @@ import { removeClaudeMdBlock } from "../uninstall/claude-md-uninstall.js";
 import { removeGitignoreLine } from "../uninstall/gitignore-uninstall.js";
 import { removeLodestoneTree } from "../uninstall/index-removal.js";
 import type { InstallManifest } from "./init.js";
+
+// The absolute path the install side wrote into `.mcp.json` as the
+// lodestone-mcp `command` (see install/mcp-config.ts — kept in sync by
+// hand because the install module is part of a different surface and
+// importing it would pull the entire install tree into the uninstall
+// path). Codex r2 §19 YELLOW: passed to removeMcpEntry as the manifest-
+// scoped removal guard so we never shred a foreign install's entry.
+function expectedRuntimeCommandFor(repoRoot: string): string {
+  return path.join(repoRoot, ".lodestone", "runtime", "lodestone-mcp");
+}
 
 export interface UninstallOptions {
   dryRun: boolean;
@@ -99,7 +110,20 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
   reportGitignore(gitRes, opts.dryRun);
   if (gitRes.action === "unreadable") exitCode = 1;
 
-  const mcpRes = removeMcpEntry(cwd, { dryRun: opts.dryRun });
+  // Codex r2 §19 YELLOW: when we have a manifest, scope MCP removal to
+  // entries whose `command` matches THIS install's runtime path. Without
+  // this, a pending-state manifest (mcp_json still holds the staging
+  // placeholder, real `writeMcpJson` never ran) would let uninstall
+  // shred a pre-existing `lodestone-mcp` entry from a different install
+  // that the pending one was about to overwrite. Conservative mode (no
+  // manifest) keeps the v0.1.2 remove-by-key behavior — tested elsewhere
+  // in this file as the "missing manifest" contract.
+  const mcpRes = removeMcpEntry(cwd, {
+    dryRun: opts.dryRun,
+    ...(manifest !== null
+      ? { expectedRuntimeCommand: expectedRuntimeCommandFor(cwd) }
+      : {}),
+  });
   reportMcp(mcpRes, opts.dryRun);
   if (mcpRes.action === "unparseable") {
     // Codex r2 §19 PARTIAL #1: `.mcp.json` removal failures are part of
@@ -240,6 +264,11 @@ function reportMcp(
     case "unparseable":
       output.warn(
         `  .mcp.json:        unparseable — leaving alone (${res.detail ?? ""})`
+      );
+      break;
+    case "foreign-entry":
+      output.info(
+        `  .mcp.json:        skipped (lodestone-mcp entry belongs to a different install — ${res.detail ?? ""})`
       );
       break;
   }

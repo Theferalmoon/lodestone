@@ -18,8 +18,13 @@ export interface RemoveMcpResult {
    * - `missing-file`: `.mcp.json` does not exist.
    * - `unparseable`: `.mcp.json` exists but is not valid JSON; left untouched
    *   (see safety guarantee in spec — never destroy a file we can't parse).
+   * - `foreign-entry`: a `lodestone-mcp` entry exists but its `command` does
+   *   not match the caller-supplied `expectedRuntimeCommand`, so the entry
+   *   belongs to a different install (different machine, or a previous
+   *   pending install this binary did not author). Codex r2 §19 YELLOW —
+   *   never shred someone else's MCP entry.
    */
-  action: "removed" | "noop" | "missing-file" | "unparseable";
+  action: "removed" | "noop" | "missing-file" | "unparseable" | "foreign-entry";
   path: string;
   detail?: string;
 }
@@ -37,15 +42,24 @@ interface McpJsonShape {
  * - If the file does not exist → `missing-file`.
  * - If the file is not parseable → `unparseable`. The file is NOT modified.
  * - If the entry is absent → `noop`.
+ * - If `expectedRuntimeCommand` is supplied AND the entry's `command` field
+ *   does not match it → `foreign-entry`. The file is NOT modified. (Codex
+ *   r2 §19 YELLOW — protects pre-existing entries from another install
+ *   that a partial/pending install was about to overwrite.)
  * - Otherwise → `removed`. The remaining `mcpServers` map (possibly empty) is
  *   written back with 2-space indentation and a trailing newline. Other
  *   top-level fields (some MCP hosts add their own) are preserved.
  *
  * `dryRun: true` plans the same result without touching disk.
+ *
+ * `expectedRuntimeCommand` is the absolute path the caller knows THIS
+ * install would have written into `command`. When omitted, removal is by
+ * key alone (the v0.1.2 conservative-mode contract — used when no
+ * manifest is available to scope removal).
  */
 export function removeMcpEntry(
   repoRoot: string,
-  opts: { dryRun?: boolean } = {}
+  opts: { dryRun?: boolean; expectedRuntimeCommand?: string } = {}
 ): RemoveMcpResult {
   const mcpPath = path.join(repoRoot, ".mcp.json");
 
@@ -80,6 +94,32 @@ export function removeMcpEntry(
   }
   if (!(SERVER_NAME in obj.mcpServers)) {
     return { action: "noop", path: mcpPath };
+  }
+
+  // Manifest-scoped guard (Codex r2 §19 YELLOW). When the caller knows
+  // the canonical command this install would have written, refuse to
+  // touch an entry whose `command` does not match — it belongs to a
+  // different install on a different machine, or to a prior install
+  // that the pending one was about to overwrite.
+  if (opts.expectedRuntimeCommand !== undefined) {
+    const entry = obj.mcpServers[SERVER_NAME] as
+      | { command?: unknown }
+      | null
+      | undefined;
+    const actualCommand =
+      entry && typeof entry === "object" && typeof entry.command === "string"
+        ? entry.command
+        : null;
+    if (actualCommand !== opts.expectedRuntimeCommand) {
+      return {
+        action: "foreign-entry",
+        path: mcpPath,
+        detail:
+          actualCommand === null
+            ? "entry has no string `command` field"
+            : `entry.command (${actualCommand}) does not match expected (${opts.expectedRuntimeCommand})`,
+      };
+    }
   }
 
   if (opts.dryRun === true) {

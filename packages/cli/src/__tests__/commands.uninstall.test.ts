@@ -330,6 +330,77 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     expect(stdout.toLowerCase()).toContain("nothing to do");
   });
 
+  it("pending-state manifest does NOT shred a foreign lodestone-mcp entry (Codex r2 §19 YELLOW)", async () => {
+    // Simulate the partial-install window: a previous install on a
+    // different machine left a `lodestone-mcp` entry pointing at THAT
+    // machine's runtime path. A new `lodestone init` then started but
+    // crashed BEFORE writeMcpJson() could overwrite the entry — leaving
+    // a `pending` manifest whose mcp_json field still holds the staging
+    // placeholder. v0.1.2's uninstall would remove the pre-existing
+    // entry by key alone; v0.1.3 scopes removal to entries whose
+    // `command` matches THIS install's runtime path.
+    const foreignCommand =
+      "/Users/someone-else/project/.lodestone/runtime/lodestone-mcp";
+    const foreignEntry = {
+      mcpServers: {
+        "lodestone-mcp": { command: foreignCommand, args: [], env: {} },
+      },
+    };
+    writeFileSync(
+      path.join(tmp, ".mcp.json"),
+      `${JSON.stringify(foreignEntry, null, 2)}\n`
+    );
+
+    // Manually craft a pending manifest with the staging mcp_json
+    // placeholder (action="merged", path=<tmp>/.mcp.json — same shape
+    // runInstallSteps writes before writeMcpJson runs).
+    mkdirSync(path.join(tmp, ".lodestone"), { recursive: true });
+    writeFileSync(
+      path.join(tmp, ".lodestone", "install-manifest.json"),
+      JSON.stringify(
+        {
+          schema_version: 2,
+          installed_at: "2026-05-02T00:00:00.000Z",
+          install_state: "pending",
+          mcp_json: { action: "merged", path: path.join(tmp, ".mcp.json") },
+          claude_md: { action: "skipped" },
+          gitignore: {
+            action: "noop",
+            path: path.join(tmp, ".gitignore"),
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    expect(await uninstall([])).toBe(0);
+
+    // Foreign lodestone-mcp entry preserved byte-identically.
+    expect(readFileSync(path.join(tmp, ".mcp.json"), "utf8")).toBe(
+      `${JSON.stringify(foreignEntry, null, 2)}\n`
+    );
+    // .lodestone/ removed (no other surface failed).
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
+  });
+
+  it("complete-state manifest with matching runtime command DOES remove the entry (regression guard)", async () => {
+    // A complete install with the canonical command should still be
+    // removed — manifest-aware scoping only protects FOREIGN entries,
+    // not our own.
+    runInstallSteps(tmp, { writeClaudeMd: false });
+    // The mcp.json now has the canonical entry pointing at this repo.
+    const before = JSON.parse(
+      readFileSync(path.join(tmp, ".mcp.json"), "utf8")
+    );
+    expect(before.mcpServers["lodestone-mcp"]).toBeDefined();
+
+    expect(await uninstall([])).toBe(0);
+
+    const after = JSON.parse(readFileSync(path.join(tmp, ".mcp.json"), "utf8"));
+    expect(after.mcpServers["lodestone-mcp"]).toBeUndefined();
+  });
+
   it("preserves the manifest on partial failure so a re-run can resume (Codex §19 RED)", async () => {
     // Stage an install with a friend-pre-existing CLAUDE.md (so manifest
     // records `appended` and uninstall will try to read+rewrite). Then
