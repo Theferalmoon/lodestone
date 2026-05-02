@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+# Bundled embedder weights (~185 MB total: nomic ~150 MB + snowflake ~33 MB).
+# Populated by `pnpm --filter @lodestone/ingest bundle-models` (maintainer-only,
+# pre-publish). Friends never run that script — they receive the weights via
+# the published npm tarball, where `dist/models/` contains the bundled files
+# (copied from `models/` by the `build` script).
+models/

@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Note: bundled-paths reads from packageRoot which is derived from
 // `import.meta.url`. We can't easily inject a different root; but we CAN
@@ -45,6 +46,39 @@ describe("resolveBundledModelDir", () => {
       expect(e.message).toMatch(/model_quantized\.onnx/);
     }
   });
+});
+
+describe("(opportunistic) bundler output check", () => {
+  // This test only runs assertions when the bundler has actually been
+  // executed on this machine (`pnpm --filter @lodestone/ingest bundle-models`).
+  // In CI and on fresh clones, the models/ dir is empty (gitignored, ~185 MB
+  // weights), so we skip — it would be wrong to fail CI on a maintainer-only
+  // step. When the bundler HAS run, we confirm both target dirs exist with
+  // the required files so a regression in scripts/bundle-models.mjs is caught
+  // before publish.
+  const fs = require("node:fs") as typeof import("node:fs");
+  // Walk up from this test file: src/embed/ -> packages/ingest/
+  const here = fileURLToPath(import.meta.url);
+  const pkgRoot = path.resolve(path.dirname(here), "..", "..");
+  const cases: Array<{ id: string; dir: string }> = [
+    { id: "nomic-text-v1.5", dir: "nomic" },
+    { id: "snowflake-arctic-embed-s", dir: "snowflake" },
+  ];
+
+  for (const c of cases) {
+    const modelDir = path.join(pkgRoot, "models", c.dir);
+    const hasModel =
+      fs.existsSync(path.join(modelDir, "model_quantized.onnx")) &&
+      fs.existsSync(path.join(modelDir, "tokenizer.json"));
+    const maybeIt = hasModel ? it : it.skip;
+    maybeIt(`bundler populated models/${c.dir}/ for ${c.id}`, () => {
+      expect(fs.existsSync(path.join(modelDir, "model_quantized.onnx"))).toBe(true);
+      expect(fs.existsSync(path.join(modelDir, "tokenizer.json"))).toBe(true);
+      // resolveBundledModelDir should now succeed for this id.
+      const resolved = resolveBundledModelDir(c.id as never);
+      expect(resolved).toBeTruthy();
+    });
+  }
 });
 
 describe("(integration) tmp-fixture flow — verifies the existsSync logic", () => {

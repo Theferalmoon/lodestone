@@ -54,7 +54,8 @@
     }
   },
   "scripts": {
-    "build": "tsc -p . && node -e \"require('node:fs').cpSync('src/store/migrations','dist/store/migrations',{recursive:true})\"",
+    "build": "tsc -p . && node -e \"require('node:fs').cpSync('src/store/migrations','dist/store/migrations',{recursive:true})\" && node -e \"const fs=require('node:fs');if(fs.existsSync('models'))fs.cpSync('models','dist/models',{recursive:true});else console.warn('[build] models/ not present — skipping dist/models copy. Run pnpm bundle-models before publish.');\"",
+    "bundle-models": "node scripts/bundle-models.mjs",
     "typecheck": "tsc -p . --noEmit",
     "test": "vitest run --coverage",
     "test:coverage": "vitest run --coverage",
