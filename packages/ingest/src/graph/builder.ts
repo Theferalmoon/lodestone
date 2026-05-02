@@ -48,15 +48,33 @@ export interface BuildGraphInput {
   edges: readonly Edge[];
 }
 
+export interface BuildGraphOptions {
+  /**
+   * When true, synthesize stub `external: true` nodes for edge endpoints
+   * that aren't in the symbol set (legacy behaviour). When false (the
+   * default), drop those edges entirely so the public surface only ever
+   * contains internal symbols. (YELLOW §07 fix per Codex impl-007-result:
+   * direct callers of `buildGraph` were leaking external package names
+   * like "lodash" into PageRank rankings; the production pipeline already
+   * filtered to resolved-only edges, but the public API surface needs to
+   * match that default.)
+   *
+   * Use `true` only when you specifically want adjacency completeness for
+   * a centrality measure that needs un-pruned out-degree on internal
+   * nodes — currently nothing in production does.
+   */
+  includeExternalStubs?: boolean;
+}
+
 /**
  * Build a directed graphology Graph from the union of all parsers' output.
  *
  * Behaviour:
  *   - One node per `LodestoneSymbol` keyed by `symbol.symbol`.
- *   - Edges to a target id that isn't in the symbol set are kept by
- *     synthesizing a stub node with `{ external: true, symbol: null }`.
- *     This keeps PageRank's adjacency complete — dropping the edge would
- *     mute the source node's outbound contribution.
+ *   - Edges to a target id that isn't in the symbol set are dropped by
+ *     default (YELLOW §07 fix). Pass `includeExternalStubs: true` to get
+ *     the legacy behaviour where unresolved targets become stub nodes
+ *     with `{ external: true, symbol: null }`.
  *   - Self-loops are accepted (recursive functions exist).
  *   - Repeated `(from, to, kind)` triples increment `weight` rather than
  *     adding a parallel edge. The single-edge model fits a `DirectedGraph`
@@ -66,7 +84,8 @@ export interface BuildGraphInput {
  *     including `kind` in the edge key — this is why we use the explicit
  *     `addEdgeWithKey` API instead of relying on graphology's auto-keying.
  */
-export function buildGraph(input: BuildGraphInput): LodestoneGraph {
+export function buildGraph(input: BuildGraphInput, options: BuildGraphOptions = {}): LodestoneGraph {
+  const { includeExternalStubs = false } = options;
   // MultiDirectedGraph (vs DirectedGraph) so that distinct edge `kind`s
   // between the same (from, to) pair can coexist — e.g. "calls" + "imports"
   // both linking module A → module B. Matches §08's `EdgeRow` composite key
@@ -84,15 +103,19 @@ export function buildGraph(input: BuildGraphInput): LodestoneGraph {
     }
   }
 
-  // Pass 2 — add edges. Stub external nodes for unresolved targets.
+  // Pass 2 — add edges. Stub external nodes for unresolved targets only
+  // when the caller asked for them; otherwise drop the edge entirely so
+  // the public surface stays internal-only.
   for (const edge of input.edges) {
-    if (!graph.hasNode(edge.from)) {
-      // The source isn't in the symbol set — this shouldn't normally happen
-      // (parsers attach each ParserEdge to a known symbol id), but we tolerate
-      // it by stubbing rather than throwing.
+    const fromKnown = graph.hasNode(edge.from);
+    const toKnown = graph.hasNode(edge.to);
+    if (!includeExternalStubs && (!fromKnown || !toKnown)) {
+      continue;
+    }
+    if (!fromKnown) {
       graph.addNode(edge.from, { symbol: null, external: true });
     }
-    if (!graph.hasNode(edge.to)) {
+    if (!toKnown) {
       graph.addNode(edge.to, { symbol: null, external: true });
     }
 

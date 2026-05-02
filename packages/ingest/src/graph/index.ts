@@ -6,6 +6,7 @@
 export { buildGraph } from "./builder.js";
 export type {
   BuildGraphInput,
+  BuildGraphOptions,
   GraphEdgeAttributes,
   GraphNodeAttributes,
   LodestoneGraph,

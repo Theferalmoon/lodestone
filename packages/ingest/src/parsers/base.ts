@@ -106,26 +106,26 @@ export function toRange(start: { row: number }, end: { row: number }): { start_l
 
 /**
  * §07 RED #1 fix: emit a synthetic file-as-module `LodestoneSymbol` (id ==
- * filePath) when the file produces at least one import edge with
- * `from = filePath`. Without this symbol the pipeline's
- * `internalParserEdges` filter drops every file-level imports edge as
- * having no source-symbol, and §15 `context()` returns empty
- * `imports_from` / `imported_by`. Emitting the file-as-module symbol makes
- * the import edge first-class throughout resolveEdges → buildGraph →
- * SQLite without changing the parser-emitted `from = filePath` convention.
+ * filePath) for every parsed file. Two purposes:
  *
- * Mutates `symbols` in place. No-op if already present, or if the file
- * emitted no `from = filePath` import edges (keeps the symbol table tidy
- * for non-importing files).
+ *   1. File-level import edges (parser-emitted with `from = filePath`)
+ *      now have a real symbol to attach to; the pipeline's
+ *      `internalParserEdges` filter no longer drops them, and §15
+ *      `context()` can populate `imports_from` / `imported_by`.
+ *   2. Cross-file imports (one file importing another) can land on the
+ *      target file's file-as-module symbol, giving a clean inter-file
+ *      edge target without needing to resolve to a specific exported
+ *      symbol.
+ *
+ * Mutates `symbols` in place. No-op if a symbol with id == filePath is
+ * already present (e.g. from a prior call or from another emission path).
  */
 export function addFileAsModuleSymbolIfNeeded(
   symbols: LodestoneSymbolType[],
-  edges: ParserEdge[],
+  _edges: ParserEdge[],
   filePath: string,
   language: Language,
 ): void {
-  const hasFileImports = edges.some((e) => e.kind === "imports" && e.from === filePath);
-  if (!hasFileImports) return;
   if (symbols.some((s) => s.symbol === filePath)) return;
   symbols.push({
     symbol: filePath,

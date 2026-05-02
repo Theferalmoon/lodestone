@@ -9,8 +9,11 @@ import { buildGraph } from "../builder.js";
 import { TINY_EDGES, TINY_SYMBOLS } from "../__fixtures__/tiny-fixture.js";
 
 describe("buildGraph", () => {
-  it("produces one node per symbol plus stubs for unresolved edge targets", () => {
-    const g = buildGraph({ symbols: TINY_SYMBOLS, edges: TINY_EDGES });
+  it("produces one node per symbol plus stubs for unresolved edge targets when includeExternalStubs is enabled", () => {
+    const g = buildGraph(
+      { symbols: TINY_SYMBOLS, edges: TINY_EDGES },
+      { includeExternalStubs: true },
+    );
     // 5 real symbols + 1 external "lodash" stub
     expect(g.order).toBe(6);
     for (const sym of TINY_SYMBOLS) {
@@ -20,8 +23,11 @@ describe("buildGraph", () => {
     }
   });
 
-  it("attaches edges with correct kind/weight for the tiny fixture", () => {
-    const g = buildGraph({ symbols: TINY_SYMBOLS, edges: TINY_EDGES });
+  it("attaches edges with correct kind/weight for the tiny fixture (with includeExternalStubs)", () => {
+    const g = buildGraph(
+      { symbols: TINY_SYMBOLS, edges: TINY_EDGES },
+      { includeExternalStubs: true },
+    );
     // 4 distinct (from, to, kind) triples in TINY_EDGES.
     expect(g.size).toBe(4);
     const loginEdges = g.outEdges("src/auth.ts::login").map((e) => ({
@@ -37,8 +43,11 @@ describe("buildGraph", () => {
     );
   });
 
-  it("marks unresolved edge targets as external stub nodes", () => {
-    const g = buildGraph({ symbols: TINY_SYMBOLS, edges: TINY_EDGES });
+  it("marks unresolved edge targets as external stub nodes (with includeExternalStubs)", () => {
+    const g = buildGraph(
+      { symbols: TINY_SYMBOLS, edges: TINY_EDGES },
+      { includeExternalStubs: true },
+    );
     expect(g.hasNode("lodash")).toBe(true);
     expect(g.getNodeAttribute("lodash", "external")).toBe(true);
     expect(g.getNodeAttribute("lodash", "symbol")).toBeNull();
@@ -81,7 +90,7 @@ describe("buildGraph", () => {
     expect(g.size).toBe(2);
   });
 
-  it("stubs the source side too if an edge references an unknown source", () => {
+  it("stubs the source side too if an edge references an unknown source (with includeExternalStubs)", () => {
     const sym = (name: string): LodestoneSymbol => ({
       symbol: `f.ts::${name}`,
       path: "f.ts",
@@ -93,7 +102,7 @@ describe("buildGraph", () => {
     const edges: Edge[] = [
       { from: "ghost::x", to: "f.ts::b", kind: "calls", weight: 1 },
     ];
-    const g = buildGraph({ symbols, edges });
+    const g = buildGraph({ symbols, edges }, { includeExternalStubs: true });
     expect(g.hasNode("ghost::x")).toBe(true);
     expect(g.getNodeAttribute("ghost::x", "external")).toBe(true);
   });
@@ -119,5 +128,32 @@ describe("buildGraph", () => {
     const g = buildGraph({ symbols: [], edges: [] });
     expect(g.order).toBe(0);
     expect(g.size).toBe(0);
+  });
+
+  it("hides external stub nodes from the public builder by default (YELLOW §07)", () => {
+    // Codex impl-007 YELLOW: direct callers of buildGraph currently see
+    // external package names in PageRank rankings. The pipeline filters
+    // resolved-only before passing edges, but the public surface should
+    // also default to "internal symbols only" so accidental misuse can't
+    // surface package names like "lodash" in user-facing rankings.
+    const g = buildGraph({ symbols: TINY_SYMBOLS, edges: TINY_EDGES });
+    // Default: only the 5 real symbols make it into the graph.
+    // (Previously: 5 real + "lodash" stub = 6.)
+    expect(g.order).toBe(5);
+    expect(g.hasNode("lodash")).toBe(false);
+    // The lodash imports edge from `login` is dropped along with the stub.
+    // Three remaining edges: login→verifyPassword, login→recordAttempt,
+    // verifyPassword→hashCompare.
+    expect(g.size).toBe(3);
+  });
+
+  it("opt-in `includeExternalStubs: true` restores stub-external behaviour (YELLOW §07)", () => {
+    const g = buildGraph(
+      { symbols: TINY_SYMBOLS, edges: TINY_EDGES },
+      { includeExternalStubs: true },
+    );
+    expect(g.order).toBe(6);
+    expect(g.hasNode("lodash")).toBe(true);
+    expect(g.getNodeAttribute("lodash", "external")).toBe(true);
   });
 });

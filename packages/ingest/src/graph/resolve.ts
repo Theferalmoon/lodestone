@@ -90,6 +90,28 @@ function resolveOne(
   const exact = index.byId.get(edge.to_name);
   if (exact) return exact;
 
+  // (1.5) file-as-module match — when the edge has a relative `to_path`
+  // hint (typical for `import` edges), resolve it against fromPath's
+  // directory and try matching the result against any file-as-module
+  // symbol id. This lets `import { x } from "./helper"` land on the
+  // file-as-module symbol `src/helper.ts` directly, without needing the
+  // edge's `to_name` to match the helper's tail (the parser-emitted
+  // to_name is the import source string, not an internal symbol name).
+  if (
+    edge.kind === "imports" &&
+    edge.to_path !== undefined &&
+    (edge.to_path.startsWith("./") || edge.to_path.startsWith("../") || edge.to_path.startsWith("/")) &&
+    fromPath
+  ) {
+    const resolvedHint = posixResolveRelative(fromPath, edge.to_path);
+    if (resolvedHint !== null) {
+      // Try the hint with common source extensions + /index.<ext> variants.
+      for (const candidatePath of fileAsModuleCandidates(resolvedHint, symbolsById)) {
+        if (index.byId.has(candidatePath)) return candidatePath;
+      }
+    }
+  }
+
   // Tail of `to_name` — "User::login" → "login", "login" → "login".
   const idx = edge.to_name.lastIndexOf("::");
   const tail = idx >= 0 ? edge.to_name.slice(idx + 2) : edge.to_name;
@@ -205,6 +227,26 @@ function posixResolveRelative(fromPath: string, hint: string): string | null {
     out.push(seg);
   }
   return out.join("/");
+}
+
+/**
+ * Yield candidate file-as-module symbol ids (== file paths) that a
+ * resolved hint might refer to. Tries common source extensions + the
+ * Node-style `/index.<ext>` directory-import shape.
+ */
+function* fileAsModuleCandidates(
+  resolved: string,
+  symbolsById: Map<string, LodestoneSymbol>,
+): Generator<string> {
+  // First — the exact resolved path (covers hints that already include the ext).
+  if (symbolsById.has(resolved)) yield resolved;
+  const exts = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py", ".pyi", ".go", ".rs"];
+  for (const ext of exts) {
+    const withExt = `${resolved}${ext}`;
+    if (symbolsById.has(withExt)) yield withExt;
+    const indexed = `${resolved}/index${ext}`;
+    if (symbolsById.has(indexed)) yield indexed;
+  }
 }
 
 function stripExt(p: string): string {
