@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "description": "Lodestone outbound network allowlist. Lists EVERY URL pattern any Lodestone build, install, or runtime path is permitted to contact. Anything not on this list landing in compiled dist/ fails the §18 build-artifact privacy audit (packages/shared/src/net/__tests__/no-outbound-urls.test.ts) and the CI workflow's privacy-audit step (.github/workflows/ci.yml). Entries are paired with their gate so a reviewer can trace 'how does this URL ever get hit?' to the chokepoint that would have to fire first.",
+  "doc_refs": [
+    "docs/PRIVACY.md",
+    "docs/SUPPLY-CHAIN.md",
+    "packages/shared/src/net/__tests__/no-outbound-urls.test.ts",
+    "packages/shared/src/net/fetch.ts"
+  ],
+  "allowed_urls": [
+    {
+      "url_pattern": "https://registry.npmjs.org/",
+      "reason": "npm registry — used by `npm install -g @lodestone/cli` and `pnpm install --frozen-lockfile` to fetch the package itself + its declared dependencies. Never contacted by the running tool; the URL only appears in lockfiles / package metadata, never in shipped runtime code paths.",
+      "gated_by": "out-of-process (npm/pnpm); not a Lodestone runtime path",
+      "scope": "install-time only"
+    },
+    {
+      "url_pattern": "https://huggingface.co/Xenova/nomic-embed-text-v1.5/",
+      "reason": "Default embedder weights (nomic-embed-text-v1.5 ONNX int8). Bundled inside @lodestone/ingest at publish time via `pnpm bundle-models`. The URL is referenced ONLY from `lodestone setup-models` (opt-in re-fetch path) and never from the steady-state runtime — the bundled copy on disk is what actually loads.",
+      "gated_by": "two-gate: (1) operator opt-in via `--allow-download` flag OR `LODESTONE_ALLOW_MODEL_DOWNLOAD=1`, (2) `assertNetworkAllowed('setup-models: nomic-embed-text')` which throws when LODESTONE_OFFLINE=1",
+      "scope": "setup-models opt-in re-fetch only"
+    },
+    {
+      "url_pattern": "https://huggingface.co/Snowflake/snowflake-arctic-embed-s/",
+      "reason": "Fallback embedder weights (snowflake-arctic-embed-s ONNX int8) — used when the friend explicitly sets `[embedder].profile = 'tiny'` in lodestone.toml. Bundled at publish time alongside the default; URL only fires if the bundled copy is missing AND the friend has opted into download.",
+      "gated_by": "two-gate: (1) operator opt-in via `--allow-download` flag OR `LODESTONE_ALLOW_MODEL_DOWNLOAD=1`, (2) `assertNetworkAllowed('snowflake fallback weights')` which throws when LODESTONE_OFFLINE=1",
+      "scope": "setup-models opt-in re-fetch + tiny-profile cold-start fallback"
+    },
+    {
+      "url_pattern": "https://huggingface.co/nomic-ai/",
+      "reason": "Reserved for future direct-from-maintainer fetches of the nomic-ai org's bundled assets. Currently UNUSED in code but pre-approved here so adding a nomic-ai variant to the §05 manifest does not require a separate manifest change. If this ever appears in dist/ without a corresponding setup-models entry it is a bug.",
+      "gated_by": "two-gate (same as Xenova/Snowflake): operator opt-in + assertNetworkAllowed",
+      "scope": "reserved for future setup-models entries"
+    },
+    {
+      "url_pattern": "https://huggingface.co/ibm-granite/",
+      "reason": "Reserved for the future code-aware embedder swap (ibm-granite/granite-embedding-english-r2 — the §05 deep-plan §10 768-dim fallback once the code-aware tier ships). Currently UNUSED in code; pre-approved so the §10 follow-on does not have to re-amend this manifest.",
+      "gated_by": "two-gate (same as Xenova/Snowflake): operator opt-in + assertNetworkAllowed",
+      "scope": "reserved for future setup-models entries"
+    },
+    {
+      "url_pattern": "https://spdx.org/licenses/",
+      "reason": "SPDX license identifier root — appears in source-header comments that survive into compiled output for some build settings. Inert at runtime; never the target of an outbound HTTP call. Allowlisted in the §18 audit so spurious header preservation does not trip the build.",
+      "gated_by": "comment-only; never reached at runtime",
+      "scope": "source-header comment preservation"
+    }
+  ],
+  "deny_by_default": true,
+  "enforcement": {
+    "build_time": "scripts/audit-dist-urls (CI) + packages/shared/src/net/__tests__/no-outbound-urls.test.ts (vitest, runs in `pnpm -r test`)",
+    "runtime": "packages/shared/src/net/fetch.ts → assertNetworkAllowed() throws NetworkBlockedError when LODESTONE_OFFLINE=1; every fetch in the codebase routes through this gate",
+    "ci_workflow": ".github/workflows/ci.yml → `privacy-audit` job runs the no-outbound-urls vitest suite against compiled dist/ and fails the build on any unexpected URL"
+  }
+}

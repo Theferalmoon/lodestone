@@ -59,3 +59,7 @@ Every direct dependency is Apache 2.0 or MIT. Lodestone itself is Apache 2.0 (se
 The v0 dependency graph was rebuilt from scratch — every transitive dependency walked, every license read, every maintainer org checked. The audit lives in the workspace lockfile (`pnpm-lock.yaml`) and in the per-package `package.json` files; `pnpm audit` is a CI gate. One known transitive issue (a CVE in a deeply-nested embedder dep) is documented in [`KNOWN-ISSUES.md`](./KNOWN-ISSUES.md) — it does not affect Lodestone's use of the package, and an upstream fix is tracked.
 
 If you want to verify any of the above on your machine: `pnpm why <package>` shows where a dep entered the graph; `pnpm audit` lists open advisories; the Hugging Face model card pages link directly to the maintainer organization.
+
+## The network manifest
+
+Every URL Lodestone is allowed to contact — at install, build, or runtime — is enumerated in [`../network-manifest.json`](../network-manifest.json) at the repo root, paired with the gate that has to fire before the URL is reached. The CI privacy audit (`.github/workflows/ci.yml` → `Privacy audit — no outbound URLs in dist/`) treats anything not on that list landing in shipped `dist/` as a build failure. See [`PRIVACY.md`](./PRIVACY.md) for how the two-gate `setup-models` consent path interacts with the manifest.

@@ -35,13 +35,52 @@ If you want a hard guarantee, set `LODESTONE_OFFLINE=1` in your shell or in your
 
 `lodestone doctor` reports the current offline-mode status so you can verify it without restarting your editor.
 
+## The opt-in `setup-models` path
+
+There is exactly one runtime-fetch path Lodestone exposes to the friend, and it is gated by **two** consents that both have to say yes:
+
+```bash
+# Default behavior: refuses to do anything network-side.
+lodestone setup-models nomic-embed-text-v1.5
+# → exits non-zero with "model download is opt-in; pass --allow-download
+#   or set LODESTONE_ALLOW_MODEL_DOWNLOAD=1"
+
+# Opt in explicitly:
+lodestone setup-models nomic-embed-text-v1.5 --allow-download
+# → still hits assertNetworkAllowed("setup-models: nomic-embed-text-v1.5")
+#   and so still fails when LODESTONE_OFFLINE=1.
+```
+
+The two gates:
+
+1. **Operator opt-in.** The `--allow-download` flag (or the equivalent `LODESTONE_ALLOW_MODEL_DOWNLOAD=1` env var) — the friend has to say "yes, fetch this." Without it, the command refuses.
+2. **Repo-wide chokepoint.** `assertNetworkAllowed("setup-models: <id>")` from `@lodestone/shared/net/fetch`. When `LODESTONE_OFFLINE=1` is set anywhere in the environment, this throws — the operator opt-in is overridden by the offline guard.
+
+This is the only deliberate path that touches the network at runtime. Weights land per-project at `<repoRoot>/.lodestone/models/<id>/`, never in a shared global cache, so one friend's `setup-models` cannot leak weights into another friend's project.
+
+The implementation lives in `packages/cli/src/commands/setup-models.ts`. The full list of URLs `setup-models` is permitted to contact is in [`network-manifest.json`](../network-manifest.json) at the repo root.
+
 ## The build-time grep audit
 
-We enforce the "no outbound URLs" claim at release time, not just at runtime. Every CI build runs a grep over the shipped `dist/` directory looking for `https://` URLs. Any URL that appears must be on a documented allowlist; anything new fails the build. The current allowlist is:
+We enforce the "no outbound URLs" claim at release time, not just at runtime. Every CI build runs a grep over the shipped `dist/` directory looking for `https://` URLs. Any URL that appears must be on a documented allowlist; anything new fails the build.
 
-- `https://registry.npmjs.org` — the npm registry, used only by `npm install` itself, not by the running tool
+The allowlist lives in two places that have to agree:
 
-The audit lives in `packages/shared/src/net/__tests__/no-outbound-urls.test.ts` and runs in `pnpm -r test`. If you ever see a Lodestone release that has more URLs in its dist than this list, treat it as a bug and file an issue.
+- [`network-manifest.json`](../network-manifest.json) at the repo root — the human-readable, reviewer-facing list of every URL pattern Lodestone is allowed to contact at install, build, or setup time, paired with the chokepoint that gates each one.
+- `packages/shared/src/net/__tests__/no-outbound-urls.test.ts` — the machine-readable allowlist consumed by the audit. Every entry carries a `reason` field. The test walks every shipped `dist/` directory, regex-matches every `http(s)://` literal, and fails on anything not on the list.
+
+Today the allowlist is:
+
+- `https://registry.npmjs.org/` — the npm registry, used only by `npm install` / `pnpm install` itself, not by the running tool.
+- `https://huggingface.co/Xenova/nomic-embed-text-v1.5/` — the default embedder, fetched only via the opt-in `setup-models` path above.
+- `https://huggingface.co/Snowflake/snowflake-arctic-embed-s/` — the tiny-profile fallback embedder, fetched only via the opt-in `setup-models` path above.
+- `https://huggingface.co/nomic-ai/`, `https://huggingface.co/ibm-granite/` — pre-approved maintainer orgs reserved for future bundled embedder variants. Currently unused in code; pre-listing them means the §05 / §10 follow-on work does not have to amend the manifest at the same time as it ships code.
+- `https://spdx.org/licenses/` — license-identifier comment root. Inert, never contacted at runtime.
+
+The audit runs in two places, both as gates:
+
+1. **Locally**, inside `pnpm -r test` — every developer hits it before pushing.
+2. **In CI**, as a dedicated `Privacy audit — no outbound URLs in dist/` step inside `.github/workflows/ci.yml`. The step exists separately from the bulk test run so the privacy claim shows up as its own named check on every PR. If you ever see a Lodestone release that has more URLs in its dist than the allowlist, treat it as a bug and file an issue.
 
 ## No telemetry
 

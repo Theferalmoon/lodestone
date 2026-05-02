@@ -42,11 +42,22 @@ const PACKAGE_DISTS = ["shared", "ingest", "cli", "mcp-server"].map((p) =>
 /**
  * Allowed outbound URL literals. Every entry MUST have a comment explaining
  * why it is here. Adding to this list is a privacy decision — keep it tiny.
+ *
+ * This list MUST stay in sync with `network-manifest.json` at the repo
+ * root. The manifest is the human/reviewer-facing form; this is the
+ * machine-checked form that the §18 build-artifact audit consumes.
  */
 const ALLOWLIST: ReadonlyArray<{ url: string; reason: string }> = [
   // SPDX license identifier root — appears in source-header comments that
   // survive into compiled output for some build settings. Inert at runtime.
   { url: "https://spdx.org/licenses/", reason: "SPDX license identifier root in source headers" },
+  // Default-embedder weights pin (Xenova/nomic-embed-text-v1.5). The URL is
+  // a CONSTANT in cli/commands/setup-models.ts. The runtime path is
+  // double-gated: (1) operator opt-in via `--allow-download` /
+  // `LODESTONE_ALLOW_MODEL_DOWNLOAD=1`, (2) `assertNetworkAllowed(
+  // "setup-models: nomic-embed-text-v1.5")` which throws when
+  // `LODESTONE_OFFLINE=1`. Documented in docs/PRIVACY.md, network-manifest.json.
+  { url: "https://huggingface.co/Xenova/nomic-embed-text-v1.5/", reason: "Default embedder weights (nomic-embed-text-v1.5) — pinned URL, opt-in via setup-models, gated runtime" },
   // Snowflake fallback weights pin. The URL is a CONSTANT exported from
   // snowflake.ts so SUPPLY-CHAIN.md / tests can reference the exact pin.
   // The runtime path is gated behind `assertNetworkAllowed("snowflake
@@ -55,6 +66,14 @@ const ALLOWLIST: ReadonlyArray<{ url: string; reason: string }> = [
   // unset offline mode AND the bundled weights are missing. Documented in
   // docs/PRIVACY.md and SUPPLY-CHAIN.md (Sections 18 + 21).
   { url: "https://huggingface.co/Snowflake/snowflake-arctic-embed-s/", reason: "Snowflake fallback weights — pinned URL, gated runtime" },
+  // Reserved maintainer orgs for future bundled embedder variants
+  // (nomic-ai direct, ibm-granite). Currently UNUSED in code; pre-listed so
+  // §05 / §10 follow-on work does not have to amend the audit at the same
+  // time as it ships code. If either appears in dist/ today there is no
+  // gated path, so they will land here only after their setup-models
+  // entries are added in a future commit.
+  { url: "https://huggingface.co/nomic-ai/", reason: "Reserved nomic-ai maintainer org — future bundled-embedder variants, opt-in via setup-models" },
+  { url: "https://huggingface.co/ibm-granite/", reason: "Reserved ibm-granite maintainer org — §10 768-dim fallback (granite-embedding-english-r2), opt-in via setup-models" },
 ];
 
 /**
