@@ -18,6 +18,7 @@ import { detectErrorHierarchy } from "./error-hierarchy.js";
 import { detectFrameworks } from "./framework-detector.js";
 import { detectTestPatterns } from "./test-patterns.js";
 import { detectLoggingPatterns } from "./logging-patterns.js";
+import { detectConfigEnvPatterns } from "./config-env-patterns.js";
 import type {
   SeedSkillInput,
   SeedSkillRecord,
@@ -60,6 +61,11 @@ export function seedSkillsFor(
     records.push({ source: "logging-patterns", record: loggingRecord });
   }
 
+  const configRecord = detectConfigEnvPatterns(input);
+  if (configRecord) {
+    records.push({ source: "config-env-patterns", record: configRecord });
+  }
+
   const frameworkRecords = detectFrameworks(input);
   for (const record of frameworkRecords) {
     records.push({ source: "framework-detector", record });
@@ -90,6 +96,7 @@ export { detectErrorHierarchy } from "./error-hierarchy.js";
 export { detectFrameworks } from "./framework-detector.js";
 export { detectTestPatterns } from "./test-patterns.js";
 export { detectLoggingPatterns } from "./logging-patterns.js";
+export { detectConfigEnvPatterns } from "./config-env-patterns.js";
 export type {
   SeedSkillInput,
   SeedSkillRecord,
