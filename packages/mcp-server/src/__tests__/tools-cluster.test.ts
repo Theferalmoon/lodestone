@@ -159,7 +159,16 @@ describe("cluster MCP tool — description gate", () => {
 
   it("description mentions architectural-mental-model keywords", () => {
     const d = CLUSTER_DESCRIPTION.toLowerCase();
-    for (const kw of ["cluster", "architectural", "louvain", "agent_instruction"]) {
+    for (const kw of [
+      "cluster",
+      "architectural",
+      "louvain",
+      "agent_instruction",
+      // Codex impl-016 YELLOW: keyword density for Tool Search retrieval.
+      "pagerank",
+      "bridges",
+      "subsystem",
+    ]) {
       expect(d).toContain(kw);
     }
   });

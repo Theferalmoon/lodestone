@@ -165,6 +165,18 @@ describe("skills_for MCP tool — description gate", () => {
     }
   });
 
+  it("description carries the §16 honesty mandate (best after >=7 days, seed for fresh install, may return zero, no hallucination)", () => {
+    // Codex impl-016 YELLOW: the honesty caveat lived only in MCP-TOOLS.md;
+    // Claude Code reads tools/list at selection time, not the docs site.
+    const d = SKILLS_FOR_DESCRIPTION.toLowerCase();
+    expect(d).toContain("7 days");
+    expect(d).toContain("seed");
+    expect(d).toContain("fresh install");
+    // honest-empty + no-hallucination framing
+    expect(d).toMatch(/zero|empty|no result/);
+    expect(d).toContain("does not hallucinate");
+  });
+
   it("input schema accepts a task_description and top_k", () => {
     const parsed = inputSchema.parse({ task_description: "add error handling", top_k: 3 });
     expect(parsed.task_description).toBe("add error handling");

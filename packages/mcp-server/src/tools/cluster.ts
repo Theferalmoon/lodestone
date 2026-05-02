@@ -47,7 +47,7 @@ import { openReader, type ReaderHandle } from "../client/sqlite.js";
 import { assertReady, toMcpInputSchema } from "./_shared.js";
 
 export const description =
-  "Return the architectural cluster (community) matching a name or natural-language query. Each cluster is a Louvain-detected group of symbols representing an emergent module — auth, payments, ingest, etc. The response carries the cluster's heuristic name, its name_status (heuristic vs human-confirmed), an agent_instruction string telling the calling agent how to interact with the cluster, naming_evidence (top tokens / files / signature snippets that drove the name), and the member symbol IDs. Granularity selects between Louvain resolution levels (fine | medium | coarse). This is the core moat surface for code-aware agents.";
+  "Return the architectural cluster (community/subsystem) matching a name or natural-language query. Each cluster is a Louvain-detected group of symbols representing an emergent subsystem — auth, payments, ingest, etc. — ranked internally by PageRank with bridges (cross-cluster connector symbols) called out separately. The response carries the cluster's heuristic name, its name_status (heuristic vs human-confirmed), an agent_instruction string telling the calling agent how to interact with the subsystem, naming_evidence (anchor symbol + members sampled), the member symbol IDs (PageRank-ordered), and the bridge symbols. Granularity selects between Louvain resolution levels (fine | medium | coarse) — a wider granularity surfaces more members per subsystem. This is the core moat surface for code-aware agents.";
 
 export const inputSchema = z.object({
   name_or_query: z.string().min(1, "name_or_query must be non-empty"),
