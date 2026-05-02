@@ -133,6 +133,63 @@ describe("buildIgnoreMatcher", () => {
     expect(BUILTIN_IGNORE_PATTERNS).toContain(".lodestone");
     expect(BUILTIN_IGNORE_PATTERNS).toContain(".lodestone/**");
   });
+
+  // Codex impl-012 RED: a `.gitignore` containing `!.lodestone/**` (or any
+  // negation that re-allows the runtime dir) MUST NOT be able to override
+  // the hard self-watch guard. Otherwise the watcher → ingest → write →
+  // watcher feedback loop is one operator typo away.
+  it("HARD: .gitignore cannot negate .lodestone/** (self-watch guard)", () => {
+    const m = buildIgnoreMatcher({
+      cwd: tmp,
+      inheritGitignore: true,
+      extra: [],
+      readGitignore: () => "!.lodestone/**\n!.lodestone\n",
+    });
+    expect(m.ignores(".lodestone/db.sqlite")).toBe(true);
+    expect(m.ignores(".lodestone")).toBe(true);
+    expect(m.ignores(".lodestone/feedback/x.json")).toBe(true);
+  });
+
+  it("HARD: extras cannot negate .lodestone/** (self-watch guard)", () => {
+    const m = buildIgnoreMatcher({
+      cwd: tmp,
+      inheritGitignore: false,
+      extra: ["!.lodestone/**", "!.lodestone"],
+    });
+    expect(m.ignores(".lodestone/db.sqlite")).toBe(true);
+    expect(m.ignores(".lodestone")).toBe(true);
+  });
+
+  it("HARD: .git is also non-negotiable", () => {
+    const m = buildIgnoreMatcher({
+      cwd: tmp,
+      inheritGitignore: true,
+      extra: ["!.git/**"],
+      readGitignore: () => "!.git\n",
+    });
+    expect(m.ignores(".git/HEAD")).toBe(true);
+    expect(m.ignores(".git")).toBe(true);
+  });
+
+  it("HARD: node_modules is also non-negotiable", () => {
+    const m = buildIgnoreMatcher({
+      cwd: tmp,
+      inheritGitignore: false,
+      extra: ["!node_modules", "!node_modules/**"],
+    });
+    expect(m.ignores("node_modules/foo.js")).toBe(true);
+  });
+
+  it("HARD: nested .lodestone is also blocked", () => {
+    const m = buildIgnoreMatcher({
+      cwd: tmp,
+      inheritGitignore: false,
+      extra: ["!packages/x/.lodestone/**"],
+    });
+    // Even a nested .lodestone/ subtree is blocked — the runtime never
+    // creates one but a friend's repo might. Defence in depth.
+    expect(m.ignores("packages/x/.lodestone/db.sqlite")).toBe(true);
+  });
 });
 
 describe("toRelPosix", () => {

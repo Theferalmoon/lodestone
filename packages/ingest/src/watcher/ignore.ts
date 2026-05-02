@@ -49,6 +49,39 @@ export const BUILTIN_IGNORE_PATTERNS: readonly string[] = Object.freeze([
   ".turbo/**",
 ]);
 
+/**
+ * Codex impl-012 RED — hard, NON-NEGOTIABLE excludes. These directory
+ * segments are checked by raw path-segment scan BEFORE the negatable
+ * `ignore` matcher runs. A repo `.gitignore` like `!.lodestone/**` (or
+ * `extra: ["!.lodestone"]`) cannot re-allow them. `.lodestone` is the
+ * runtime dir and a self-watch loop here means the watcher fires every
+ * time ingest writes — we never let operator config override that.
+ *
+ * `.git` and `node_modules` are also hard-locked: re-watching them is
+ * never useful and always expensive.
+ */
+export const HARD_EXCLUDE_SEGMENTS: readonly string[] = Object.freeze([
+  ".lodestone",
+  ".git",
+  "node_modules",
+]);
+
+/**
+ * Returns true when any path segment matches a HARD_EXCLUDE_SEGMENTS
+ * entry. POSIX-separated, repo-relative input expected.
+ */
+export function isHardExcluded(relPath: string): boolean {
+  if (relPath === "" || relPath === ".") return false;
+  const segs = relPath.split("/");
+  for (const s of segs) {
+    if (s === "") continue;
+    for (const hard of HARD_EXCLUDE_SEGMENTS) {
+      if (s === hard) return true;
+    }
+  }
+  return false;
+}
+
 export interface IgnoreMatcher {
   /** True when `relPath` (POSIX-separated, repo-relative) should be ignored. */
   ignores(relPath: string): boolean;
@@ -101,6 +134,10 @@ export function buildIgnoreMatcher(opts: BuildIgnoreOptions): IgnoreMatcher {
       let normalized = relPath.replace(/\\/g, "/");
       if (normalized.startsWith("./")) normalized = normalized.slice(2);
       if (normalized === "") return false;
+      // Hard guard FIRST. `.lodestone/`, `.git/`, `node_modules/` cannot
+      // be unignored by operator `.gitignore` negation patterns or by
+      // caller-supplied `extra` patterns. See HARD_EXCLUDE_SEGMENTS.
+      if (isHardExcluded(normalized)) return true;
       return ig.ignores(normalized);
     },
     raw() {
