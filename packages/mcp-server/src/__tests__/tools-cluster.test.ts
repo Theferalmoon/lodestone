@@ -374,6 +374,57 @@ describe("cluster MCP tool — emitted_skill_id determinism (impl-016 YELLOW)", 
   });
 });
 
+describe("cluster MCP tool — mixed embedding populations (impl-016 YELLOW)", () => {
+  it("merges unembedded rows into the result via lexical fallback when corpus is mixed", async () => {
+    // Backfill description_embedding only on cluster-auth and cluster-payments;
+    // leave cluster-ingest with NULL. The query "stream pipeline" should
+    // surface cluster-ingest (matches its description literally) even though
+    // the semantic path operates on the embedded subset and would otherwise
+    // drop it.
+    const w = openWriter(dbPath);
+    const dim = 4;
+    const upd = w.prepare("UPDATE clusters SET description_embedding = ? WHERE id = ?");
+    const writeVec = (id: string, vec: number[]) => {
+      const buf = Buffer.alloc(vec.length * 4);
+      for (let i = 0; i < vec.length; i += 1) buf.writeFloatLE(vec[i]!, i * 4);
+      upd.run(buf, id);
+    };
+    writeVec("cluster-auth", [1, 0, 0, 0]);
+    writeVec("cluster-payments", [0, 1, 0, 0]);
+    closeDb(w);
+    _resetWriterRegistry();
+
+    const fakeEmbedder: EmbedderHandle = {
+      id: "nomic-text-v1.5",
+      dim,
+      maxBatch: 1,
+      async embed() {
+        // Far from auth/payments embeddings; cosine alone would surface
+        // those two with low scores and drop the unembedded ingest row.
+        return [new Float32Array([0, 0, 0, 1])];
+      },
+      async dispose() {
+        /* no-op */
+      },
+    };
+
+    const handler = createClusterHandler({
+      openReader: () => openReader(dbPath),
+      loadEmbedder: async () => fakeEmbedder,
+    });
+
+    const env = await handler({ name_or_query: "stream pipeline" });
+    const ids = env.results.map((c) => c.id);
+    // The unembedded cluster-ingest row matches "stream pipeline" literally
+    // and MUST appear in results despite mixed embedding population.
+    expect(ids).toContain("cluster-ingest");
+    // Diagnostic warns about the mixed corpus so the agent can advise the
+    // operator that a re-embed is in order.
+    const warnings = env.diagnostics.warnings ?? [];
+    expect(warnings.some((w) => w.toLowerCase().includes("mixed"))).toBe(true);
+  });
+});
+
 describe("cluster MCP tool — empty + error paths", () => {
   it("returns empty results (not throw) when nothing matches", async () => {
     const handler = createClusterHandler(ctx());

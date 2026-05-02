@@ -206,6 +206,10 @@ async function rankSkills(
   const withEmbeddings = rows.filter(
     (r) => r.description_embedding !== null && r.description_embedding !== undefined,
   );
+  const withoutEmbeddings = rows.filter(
+    (r) => r.description_embedding === null || r.description_embedding === undefined,
+  );
+  const isMixed = withEmbeddings.length > 0 && withoutEmbeddings.length > 0;
 
   if (withEmbeddings.length === 0 || !loadEmbedder) {
     warnings.push(
@@ -248,6 +252,27 @@ async function rankSkills(
     scored.push({ row, score: cosine01 });
   }
   scored.sort((a, b) => b.score - a.score);
+
+  // Codex impl-016 YELLOW: a mixed embedding population (some rows embedded,
+  // some not — common during partial reindex or right after a manual seed)
+  // silently dropped the unembedded rows. Merge a substring-fallback pass
+  // over those rows so they get a chance to surface, and warn the operator
+  // that the corpus is mixed (a re-embed pass is in order).
+  if (isMixed) {
+    warnings.push(
+      `mixed embedding population: ${withEmbeddings.length} skills embedded, ${withoutEmbeddings.length} not — unembedded rows surfaced via substring fallback (re-run the embed pass to consolidate)`,
+    );
+    const fallback = substringRank(withoutEmbeddings, query);
+    const seen = new Set(scored.map((s) => s.row.id));
+    for (const hit of fallback) {
+      if (!seen.has(hit.row.id)) {
+        scored.push(hit);
+        seen.add(hit.row.id);
+      }
+    }
+    // Re-sort so the merged list stays globally ranked.
+    scored.sort((a, b) => b.score - a.score);
+  }
   return scored;
 }
 

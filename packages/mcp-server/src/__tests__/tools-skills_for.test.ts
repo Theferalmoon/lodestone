@@ -339,6 +339,47 @@ describe("skills_for MCP tool — embedding cosine path", () => {
   });
 });
 
+describe("skills_for MCP tool — mixed embedding populations (impl-016 YELLOW)", () => {
+  it("merges unembedded skill rows via substring fallback when corpus is mixed", async () => {
+    // Seed two skills: one embedded (auth) and one not (error). Use an
+    // embedder vector aligned with auth so cosine ranks auth highest.
+    // The error skill MUST still surface for an "error" query — without
+    // the merge, the unembedded row is silently dropped.
+    seedFixture(dbPath, [
+      { ...EMERGING_AUTH_SKILL, embedding: [0, 1, 0, 0] },
+      // No embedding on this one — pre-embed era / partial reindex.
+      SEED_ERROR_SKILL,
+    ]);
+
+    const fakeEmbedder: EmbedderHandle = {
+      id: "nomic-text-v1.5",
+      dim: 4,
+      maxBatch: 1,
+      async embed() {
+        // Aligned with the auth embedding vector.
+        return [new Float32Array([0, 1, 0, 0])];
+      },
+      async dispose() {
+        /* no-op */
+      },
+    };
+
+    const handler = createSkillsForHandler({
+      openReader: () => openReader(dbPath),
+      loadEmbedder: async () => fakeEmbedder,
+    });
+
+    const env = await handler({ task_description: "error handling pattern" });
+    const slugs = env.results.map((s) => s.slug);
+    // BOTH must appear: the embedded auth via cosine, the unembedded
+    // error via lexical fallback. Pre-fix behavior dropped the latter.
+    expect(slugs).toContain("auth-handler-style");
+    expect(slugs).toContain("custom-error-subclass");
+    const warnings = env.diagnostics.warnings ?? [];
+    expect(warnings.some((w) => w.toLowerCase().includes("mixed"))).toBe(true);
+  });
+});
+
 describe("skills_for MCP tool — error paths", () => {
   it("converts schema validation failures into an error envelope", async () => {
     seedFixture(dbPath, [SEED_ERROR_SKILL]);

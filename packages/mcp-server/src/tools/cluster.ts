@@ -216,6 +216,10 @@ async function semanticMatch(
   const withEmbeddings = allRows.filter(
     (r) => r.description_embedding !== null && r.description_embedding !== undefined,
   );
+  const withoutEmbeddings = allRows.filter(
+    (r) => r.description_embedding === null || r.description_embedding === undefined,
+  );
+  const isMixed = withEmbeddings.length > 0 && withoutEmbeddings.length > 0;
 
   if (withEmbeddings.length === 0 || !loadEmbedder) {
     // No embeddings on disk yet — fall back to LIKE on description.
@@ -262,7 +266,46 @@ async function semanticMatch(
     scored.push({ row, score: dot });
   }
   scored.sort((a, b) => b.score - a.score);
-  return { rows: scored.map((s) => s.row) };
+
+  // Codex impl-016 YELLOW: mixed embedding populations silently hid rows.
+  // When some clusters have embeddings and some don't (mid-reindex, partial
+  // re-embed, manual seed), the unembedded rows should NOT vanish from
+  // results. Merge a lexical-fallback pass over the unembedded subset so
+  // those rows still get a chance to surface, and warn the operator that
+  // the corpus is mixed (a re-embed pass is in order).
+  let merged: ClusterRow[] = scored.map((s) => s.row);
+  if (isMixed) {
+    warnings.push(
+      `mixed embedding population: ${withEmbeddings.length} clusters embedded, ${withoutEmbeddings.length} not — unembedded rows surfaced via lexical fallback (re-run the embed pass to consolidate)`,
+    );
+    const lexicalHits = lexicalMatchRows(withoutEmbeddings, q);
+    const seen = new Set(merged.map((r) => r.id));
+    for (const row of lexicalHits) {
+      if (!seen.has(row.id)) {
+        merged.push(row);
+        seen.add(row.id);
+      }
+    }
+  }
+  return { rows: merged };
+}
+
+/**
+ * In-memory token-based lexical match over a row subset. Used to merge
+ * unembedded rows into a semantic-search result when the corpus has mixed
+ * embedding state. We split the query into whitespace tokens and accept any
+ * row whose name or description contains at least one — coarse, but matches
+ * the parallel substring-rank fallback in `skills_for` and surfaces partial
+ * hits (e.g. "stream pipeline" matches a description containing "Streaming
+ * file ingest pipeline ...") that a single-substring scan would drop.
+ */
+function lexicalMatchRows(rows: ClusterRow[], q: string): ClusterRow[] {
+  const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return [];
+  return rows.filter((r) => {
+    const haystack = `${r.name} ${r.description ?? ""}`.toLowerCase();
+    return tokens.some((t) => haystack.includes(t));
+  });
 }
 
 /** Substring match on description — last-resort fallback. */
