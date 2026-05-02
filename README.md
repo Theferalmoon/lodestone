@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Lodestone
 
 A project-local code-aware Knowledge Graph for coding agents.
