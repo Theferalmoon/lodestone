@@ -13,7 +13,8 @@ import {
   closeDb,
   writeReady,
   _resetWriterRegistry,
-} from "@lodestone/ingest/store";
+  writeIndexMeta,
+  } from "@lodestone/ingest/store";
 
 import { openReader } from "../client/sqlite.js";
 
@@ -29,6 +30,7 @@ beforeEach(() => {
   // Bootstrap a real schema so the readonly handle has something to point at.
   const w = openWriter(dbPath);
   bootstrap(w);
+  writeIndexMeta(w, 1, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
   closeDb(w);
   _resetWriterRegistry();
 });

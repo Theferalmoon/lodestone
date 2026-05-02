@@ -16,7 +16,8 @@ import {
   openWriter,
   writeReady,
   _resetWriterRegistry,
-} from "@lodestone/ingest/store";
+  writeIndexMeta,
+  } from "@lodestone/ingest/store";
 import type { EmbedderHandle } from "@lodestone/ingest/embed";
 
 import { openReader } from "../client/sqlite.js";
@@ -30,6 +31,7 @@ import {
 function seedFixture(dbPath: string): void {
   const w = openWriter(dbPath);
   bootstrap(w);
+  writeIndexMeta(w, 1, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
 
   const clusters = [
     {

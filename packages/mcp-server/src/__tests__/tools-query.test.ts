@@ -18,7 +18,8 @@ import {
   writeEmbeddings,
   writeReady,
   writeSymbols,
-} from "@lodestone/ingest/store";
+  writeIndexMeta,
+  } from "@lodestone/ingest/store";
 import type { EmbedderHandle } from "@lodestone/ingest/embed";
 
 import { handler, __setEmbedderForTests, type QueryHit } from "../tools/query.js";
@@ -64,6 +65,7 @@ function seed(): void {
   mkdirSync(lodestoneDir, { recursive: true });
   const db = openWriter(dbPath);
   bootstrap(db);
+  writeIndexMeta(db, 1, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
   const symbols: LodestoneSymbol[] = [
     sym("auth_login", { signature: "function login(user)", docstring: "authentication entry point" }),
     sym("auth_logout", { signature: "function logout(user)", docstring: "tear down session" }),
@@ -139,6 +141,7 @@ describe("query handler — readiness gate", () => {
     mkdirSync(lodestoneDir, { recursive: true });
     const db = openWriter(dbPath);
     bootstrap(db);
+    writeIndexMeta(db, 1, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
     closeDb(db);
     _resetWriterRegistry();
     const res = await handler({ question: "hello" });
@@ -305,6 +308,7 @@ describe("query handler — filter pushdown (RED #2)", () => {
       await import("@lodestone/ingest/store");
     const db = openWriter(dbPath);
     bootstrap(db);
+    writeIndexMeta(db, 1, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
     // 50 noise symbols outside src/, all matching "format" — they would
     // monopolize a naive LIMIT-then-filter result list.
     const noise: LodestoneSymbol[] = [];

@@ -22,7 +22,8 @@ import {
   openWriter,
   writeReady,
   writeSymbols,
-} from "@lodestone/ingest/store";
+  writeIndexMeta,
+  } from "@lodestone/ingest/store";
 import type { LodestoneSymbol } from "@lodestone/shared";
 
 import { _setTestDbPath } from "../tools/db.js";
@@ -44,6 +45,7 @@ function sym(id: string): LodestoneSymbol {
 function seedFixture(dbPath: string): void {
   const db = openWriter(dbPath);
   bootstrap(db);
+  writeIndexMeta(db, 1, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
   writeSymbols(db, [sym("a"), sym("b"), sym("c"), sym("d"), sym("e")], {
     index_epoch: 1,
   });

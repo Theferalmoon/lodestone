@@ -18,7 +18,8 @@ import {
   openWriter,
   writeReady,
   writeSymbols,
-} from "@lodestone/ingest/store";
+  writeIndexMeta,
+  } from "@lodestone/ingest/store";
 
 import { handler, type ChangeBucket, type RecentChangeResult } from "../tools/recent_changes.js";
 import type { LodestoneToolResponseV13 } from "../envelope.js";
@@ -107,6 +108,7 @@ function seedIndex(): void {
   mkdirSync(lodestoneDir, { recursive: true });
   const db = openWriter(dbPath);
   bootstrap(db);
+  writeIndexMeta(db, 2, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
   // Seed symbols, attaching each to one of the two commits via the
   // updated_at_commit field (writeSymbols stamps it from ctx.commit).
   writeSymbols(

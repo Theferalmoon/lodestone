@@ -16,7 +16,8 @@ import {
   openWriter,
   writeReady,
   _resetWriterRegistry,
-} from "@lodestone/ingest/store";
+  writeIndexMeta,
+  } from "@lodestone/ingest/store";
 import type { EmbedderHandle } from "@lodestone/ingest/embed";
 
 import { openReader } from "../client/sqlite.js";
@@ -46,6 +47,7 @@ interface SeedSkill {
 function seedFixture(dbPath: string, skills: SeedSkill[]): void {
   const w = openWriter(dbPath);
   bootstrap(w);
+  writeIndexMeta(w, 1, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
   const insert = w.prepare(
     `INSERT INTO skills (id, slug, name, description, description_embedding,
         body, source_cluster_id, maturity, confidence, evidence_count,

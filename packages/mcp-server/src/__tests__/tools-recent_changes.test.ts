@@ -17,7 +17,8 @@ import {
   openWriter,
   writeReady,
   writeSymbols,
-} from "@lodestone/ingest/store";
+  writeIndexMeta,
+  } from "@lodestone/ingest/store";
 
 import { handler, type RecentChangedSymbol } from "../tools/recent_changes.js";
 import type { LodestoneToolResponseV13 } from "../envelope.js";
@@ -45,6 +46,7 @@ function seed(): void {
   mkdirSync(lodestoneDir, { recursive: true });
   const db = openWriter(dbPath);
   bootstrap(db);
+  writeIndexMeta(db, 3, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
   writeSymbols(db, [sym("oldest_a"), sym("oldest_b")], { index_epoch: 1, commit: "c1" });
   writeSymbols(db, [sym("middle_a"), sym("middle_b")], { index_epoch: 2, commit: "c2" });
   writeSymbols(db, [sym("newest_a"), sym("newest_b"), sym("newest_c")], {
@@ -91,6 +93,7 @@ describe("recent_changes handler — readiness gate", () => {
     mkdirSync(lodestoneDir, { recursive: true });
     const db = openWriter(dbPath);
     bootstrap(db);
+    writeIndexMeta(db, 3, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
     closeDb(db);
     _resetWriterRegistry();
     const res = await handler({});

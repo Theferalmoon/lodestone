@@ -23,7 +23,8 @@ import {
   writePagerank,
   writeReady,
   writeSymbols,
-} from "@lodestone/ingest/store";
+  writeIndexMeta,
+  } from "@lodestone/ingest/store";
 import { buildGraph, pageRank } from "@lodestone/ingest/graph";
 import type { Edge, LodestoneSymbol } from "@lodestone/shared";
 
@@ -56,6 +57,7 @@ function sym(id: string, filePath: string): LodestoneSymbol {
 function seedFixture(dbPath: string): void {
   const db = openWriter(dbPath);
   bootstrap(db);
+  writeIndexMeta(db, 1, { id: "nomic-text-v1.5", dim: 768, quant: "fp32" });
   const symbols: LodestoneSymbol[] = [
     sym("src/auth/user.ts::User::login", "src/auth/user.ts"),
     sym("src/auth/user.ts::User::logout", "src/auth/user.ts"),
