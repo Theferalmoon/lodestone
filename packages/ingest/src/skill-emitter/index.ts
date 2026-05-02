@@ -31,5 +31,15 @@ export { renderBody } from "./template.js";
 export { writeSkill, writeSkills } from "./persist.js";
 export type { PersistResult } from "./persist.js";
 
+// Codex v0.1.1 §10/§11 YELLOW: pipeline-side helpers that drive batch
+// emission of SKILL.md cards (clusters via emit(); seeds via a parallel
+// helper that mirrors the §10 frontmatter shape).
+export { emitClusterSkills, emitSeedSkillFiles } from "./pipeline-emit.js";
+export type {
+  EmitClusterSkillsResult,
+  EmitClusterSkillsOptions,
+  EmitSeedSkillFilesResult,
+} from "./pipeline-emit.js";
+
 // Re-export types consumers commonly need.
 export type { Skill, Maturity } from "@lodestone/shared";

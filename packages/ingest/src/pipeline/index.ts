@@ -31,8 +31,14 @@ import { buildGraph, pageRank, resolveEdges } from "../graph/index.js";
 import { parserForFile } from "../parsers/index.js";
 import type { ParseResult, ParserEdge } from "../parsers/base.js";
 import { seedSkillsFor } from "../seed-skills/index.js";
-import { sha256Hex, writeSkills } from "../skill-emitter/index.js";
 import {
+  emitClusterSkills,
+  emitSeedSkillFiles,
+  sha256Hex,
+  writeSkills,
+} from "../skill-emitter/index.js";
+import {
+  beginReindex,
   bootstrap,
   closeDb,
   ensureSymbolEmbeddingsTable,
@@ -132,7 +138,6 @@ export function listSourceFiles(root: string): string[] {
  */
 export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSummary> {
   const { repoRoot, embedder, onProgress } = opts;
-  const indexEpoch = opts.indexEpoch ?? 1;
   const dbPath = lodestoneSubpath(repoRoot, "sqlite");
   const progress = onProgress ?? ((): void => {});
 
@@ -215,6 +220,16 @@ export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSum
   let summary: PipelineSummary;
   try {
     bootstrap(w);
+    // impl-008 RED #1/#2/#3 fix: allocate a fresh monotonic epoch, wipe
+    // every prior-pass row in one transaction, and stamp the embedder
+    // identity so writeEmbeddings can validate vector dim. Whatever the
+    // caller passed in `opts.indexEpoch` is honored as a *minimum* — if
+    // a previous pass committed a higher epoch, beginReindex bumps past it.
+    const allocatedEpoch = beginReindex(w, opts.embedderIdentity);
+    const indexEpoch =
+      opts.indexEpoch !== undefined && opts.indexEpoch > allocatedEpoch
+        ? opts.indexEpoch
+        : allocatedEpoch;
     writeSymbols(w, allSymbols, { index_epoch: indexEpoch, commit: null });
     writeEdges(w, graph);
     writePagerank(w, pr, graph);
@@ -253,6 +268,29 @@ export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSum
       })),
       { embedder },
     );
+
+    // Codex v0.1.1 §10/§11 YELLOW: also emit on-disk SKILL.md cards so
+    // friends can read + git-track the skill set. Cluster cards go to
+    // .lodestone/skills/{emerging,observed}/ via the §10 emitter (with
+    // selection gating + SQLite mirror); seed cards go to
+    // .lodestone/skills/seed/ via the matching §11 helper. Both use SHA-
+    // based idempotency so reruns do not churn disk.
+    const lodestoneDir = path.dirname(dbPath);
+    try {
+      await emitClusterSkills(clusters, {
+        lodestoneDir,
+        db: w,
+      });
+    } catch (err) {
+      // Disk emission is best-effort — never block pipeline completion on
+      // a SKILL.md write failure (the SQLite mirror is the source of truth).
+      progress(`skills_emit_warn:${err instanceof Error ? err.message : String(err)}`);
+    }
+    try {
+      await emitSeedSkillFiles(seedSkills, lodestoneDir);
+    } catch (err) {
+      progress(`seed_emit_warn:${err instanceof Error ? err.message : String(err)}`);
+    }
 
     // 6. Embeddings — populate symbol_embeddings via the caller's embedder.
     progress(`embed:${allSymbols.length}`);
