@@ -1,0 +1,124 @@
+{
+  "ranking": [
+    {
+      "id": "src/utils.ts::now",
+      "score": 0.1155285
+    },
+    {
+      "id": "src/utils.ts::assertNonEmpty",
+      "score": 0.0788563
+    },
+    {
+      "id": "src/utils.ts::hash",
+      "score": 0.0632154
+    },
+    {
+      "id": "src/db.ts::query",
+      "score": 0.05832402
+    },
+    {
+      "id": "src/utils.ts::isPlainObject",
+      "score": 0.05424164
+    },
+    {
+      "id": "src/utils.ts::clamp",
+      "score": 0.0500795
+    },
+    {
+      "id": "src/auth.ts::verifyToken",
+      "score": 0.04382743
+    },
+    {
+      "id": "src/db.ts::buildWhere",
+      "score": 0.04271934
+    },
+    {
+      "id": "src/auth.ts::extractBearer",
+      "score": 0.03655814
+    },
+    {
+      "id": "src/utils.ts::deepFreeze",
+      "score": 0.03641154
+    },
+    {
+      "id": "src/orders.ts::applyDiscount",
+      "score": 0.02707004
+    },
+    {
+      "id": "src/auth.ts::hashPassword",
+      "score": 0.02239613
+    },
+    {
+      "id": "src/api.ts::logRequest",
+      "score": 0.02174161
+    },
+    {
+      "id": "src/api.ts::respondError",
+      "score": 0.02174161
+    },
+    {
+      "id": "src/api.ts::respondJson",
+      "score": 0.02174161
+    },
+    {
+      "id": "src/api.ts::route",
+      "score": 0.02174161
+    },
+    {
+      "id": "src/db.ts::tx",
+      "score": 0.02150315
+    },
+    {
+      "id": "src/orders.ts::computeTotal",
+      "score": 0.02150315
+    },
+    {
+      "id": "src/orders.ts::validateOrder",
+      "score": 0.02150315
+    },
+    {
+      "id": "src/utils.ts::slugify",
+      "score": 0.02150315
+    },
+    {
+      "id": "src/api.ts::parseQuery",
+      "score": 0.02101132
+    },
+    {
+      "id": "src/auth.ts::login",
+      "score": 0.02101132
+    },
+    {
+      "id": "src/auth.ts::logout",
+      "score": 0.02101132
+    },
+    {
+      "id": "src/orders.ts::cancelOrder",
+      "score": 0.02101132
+    },
+    {
+      "id": "src/orders.ts::createOrder",
+      "score": 0.02101132
+    },
+    {
+      "id": "src/orders.ts::listOrders",
+      "score": 0.02101132
+    },
+    {
+      "id": "src/api.ts::handleRequest",
+      "score": 0.01793127
+    },
+    {
+      "id": "src/auth.ts::issueToken",
+      "score": 0.01793127
+    },
+    {
+      "id": "src/db.ts::close",
+      "score": 0.01793127
+    },
+    {
+      "id": "src/db.ts::connect",
+      "score": 0.01793127
+    }
+  ]
+}

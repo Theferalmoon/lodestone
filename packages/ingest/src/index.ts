@@ -23,4 +23,22 @@ export type {
   AbstractParser,
   ParseResult,
   ClassInheritance,
+  ParserEdge,
 } from "./parsers/base.js";
+
+// Graph builder + PageRank + edge resolution + git-pause gate — section 07.
+export {
+  buildGraph,
+  pageRank,
+  resolveEdges,
+  shouldPause,
+} from "./graph/index.js";
+export type {
+  BuildGraphInput,
+  GraphEdgeAttributes,
+  GraphNodeAttributes,
+  LodestoneGraph,
+  PageRankOptions,
+  ResolvedEdge,
+  ResolveResult,
+} from "./graph/index.js";
