@@ -51,14 +51,26 @@ jobs:
         run: python3 scripts/docs/cmndi-docs-build.py
 
       - name: Assert docs/cmndi/index.html is in sync with source MDs
-        # `git diff --exit-code` exits non-zero if the working tree
-        # differs from HEAD. If the build above produced a different
-        # HTML than what's committed, this step fails and the
-        # contributor is expected to run the build locally and commit
-        # the refresh.
+        # The HTML embeds the build's commit hash + timestamp in the
+        # nav.toc brand block and the footer, so a naive
+        # `git diff --exit-code` would always fail (the just-built HTML
+        # carries CI's HEAD; the committed HTML carries the prior
+        # HEAD). We strip those two volatile lines before comparing —
+        # the rest of the HTML (the substantive content derived from
+        # the source MDs) must match exactly.
+        #
+        # If a contributor changed source MDs without rebuilding, the
+        # substantive diff WILL fire and this step fails with a clear
+        # remediation message.
         run: |
-          if ! git diff --exit-code docs/cmndi/index.html; then
+          set -euo pipefail
+          STRIP_RE='^(\s*<div class="brand">CMNDI<small>.*</small></div>|\s*Source markdown: <code>docs/cmndi/0\[1-6\]-\*\.md</code>.*)$'
+          # Build was already run in the previous step — the working
+          # tree now has the freshly generated HTML.
+          if ! diff -u \
+              <(git show HEAD:docs/cmndi/index.html | grep -vE "$STRIP_RE") \
+              <(grep -vE "$STRIP_RE" docs/cmndi/index.html) ; then
             echo "::error file=docs/cmndi/index.html::generated HTML is stale relative to docs/cmndi/0*.md sources. Run python3 scripts/docs/cmndi-docs-build.py locally and commit the refresh." >&2
             exit 1
           fi
-          echo "docs/cmndi/index.html is in sync with sources."
+          echo "docs/cmndi/index.html substantive content is in sync with sources."

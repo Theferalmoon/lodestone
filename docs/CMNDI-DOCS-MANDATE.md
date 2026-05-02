@@ -204,7 +204,7 @@ needs a one-time health analysis + cleanup pass before the mandate fires.
 | `local-opus-lab` | I | pending | pending | partial (this commit) | Framework deployed; docs seeded; gate in warn-only mode |
 | `CMNDClaw` | I | pending | pending | not yet | Wait for rebase stabilization |
 | `cmmc-scanner` | I | pending | pending | not yet | Private-forever; manual rollout |
-| `lodestone` | C | pending | pending (v0.1.2 in flight) | post-v0.1.2 | Wait for v0.1.2 ship |
+| `lodestone` | C | done 2026-05-02 | done 2026-05-02 | active 2026-05-02 | v0.1.2 shipped; 5-doc Tier-C set deployed (no IP-summary per public-Apache carve-out); HTML built; CI workflow live |
 | `windrose-helm` | C | pending | pending | not yet | Wait for /deep-plan finalization |
 | `ulysses-s-grants-saas` | C | pending | pending | pending operator slot | Schedule when bandwidth available |
 | `HAL-Hygiene-Assessment-Logic` | C | pending | pending | not yet | Schedule at next minor release |
