@@ -12,7 +12,7 @@ const callLog = {
   resolveBundledModelDir: [] as string[],
   createNomicHandle: [] as Array<{ modelDir: string; useCoreML: boolean; maxBatch: number }>,
   createSnowflakeHandle: [] as Array<{ modelDir: string; useCoreML: boolean; maxBatch: number }>,
-  ensureSnowflakeWeights: [] as Array<{ cacheDir: string }>,
+  ensureSnowflakeWeights: [] as Array<{ cacheDir: string; allowDownload?: boolean }>,
 };
 
 const cfg = {
@@ -65,7 +65,7 @@ vi.mock("./snowflake.js", () => ({
       dispose: async () => {},
     };
   },
-  ensureSnowflakeWeights: async (opts: { cacheDir: string }) => {
+  ensureSnowflakeWeights: async (opts: { cacheDir: string; allowDownload?: boolean }) => {
     callLog.ensureSnowflakeWeights.push(opts);
     return cfg.ensureSnowflakeReturns || opts.cacheDir;
   },
@@ -190,6 +190,28 @@ describe("load() dispatcher", () => {
       path.join(".lodestone", "models", "snowflake-arctic-embed-s")
     );
     expect(callLog.createSnowflakeHandle[0]!.modelDir).toBe("/cached/snowflake/path");
+  });
+
+  // Codex impl-005 §05 RED #1 — load() must propagate allowDownload to
+  // ensureSnowflakeWeights so the consent flag flows through the public API.
+  // Without this, no friend can ever opt in via the load() entrypoint.
+  it("propagates allowDownload through to ensureSnowflakeWeights on the snowflake fallback path", async () => {
+    cfg.resolveBundledThrowsFor.add("snowflake-arctic-embed-s");
+    cfg.ensureSnowflakeReturns = "/cached/path";
+    await load({
+      freeRamBytesOverride: 1 * 1024 * 1024 * 1024,
+      allowDownload: true,
+    });
+    expect(callLog.ensureSnowflakeWeights).toHaveLength(1);
+    expect(callLog.ensureSnowflakeWeights[0]!.allowDownload).toBe(true);
+  });
+
+  it("does NOT pass allowDownload when caller did not opt in (default = undefined)", async () => {
+    cfg.resolveBundledThrowsFor.add("snowflake-arctic-embed-s");
+    cfg.ensureSnowflakeReturns = "/cached/path";
+    await load({ freeRamBytesOverride: 1 * 1024 * 1024 * 1024 });
+    expect(callLog.ensureSnowflakeWeights).toHaveLength(1);
+    expect(callLog.ensureSnowflakeWeights[0]!.allowDownload).toBeUndefined();
   });
 
   it("force='nomic-text-v1.5' picks nomic even on a low-RAM host", async () => {

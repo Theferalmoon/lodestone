@@ -27,4 +27,12 @@ export interface LoadOptions {
   freeRamBytesOverride?: number;
   /** Override the resolved model dir (for tests). */
   modelPathOverride?: string;
+  /**
+   * Per-call operator consent for the snowflake fallback's runtime fetch
+   * path. Equivalent to setting `LODESTONE_ALLOW_MODEL_DOWNLOAD=1` in env;
+   * either is sufficient. When neither is set, `load()` REFUSES to fetch
+   * snowflake weights from the network even if LODESTONE_OFFLINE is unset
+   * — silence is not consent. See Codex impl-005 §05 RED #1.
+   */
+  allowDownload?: boolean;
 }

@@ -156,7 +156,11 @@ describe("loadFeatureExtractor", () => {
     expect(transformersState.pipelineCalls).toHaveLength(2);
   });
 
-  it("when on Apple Silicon and CoreML EP creation succeeds on the first try, marks CoreML enabled", async () => {
+  // Codex impl-005 §05 review YELLOW (post-fix): the loader can no longer
+  // claim CoreML is enabled because @xenova/transformers v2.x has no per-call
+  // EP override. Even on Apple Silicon, status surfaces report CoreML as
+  // unavailable — honest reporting beats false-positive telemetry.
+  it("on Apple Silicon, marks CoreML UNAVAILABLE (no honest way to enable it under transformers.js v2)", async () => {
     const origPlatform = Object.getOwnPropertyDescriptor(process, "platform");
     const origArch = Object.getOwnPropertyDescriptor(process, "arch");
     try {
@@ -164,7 +168,8 @@ describe("loadFeatureExtractor", () => {
       Object.defineProperty(process, "arch", { value: "arm64", configurable: true });
       _resetCoreMLState();
       await loadFeatureExtractor({ modelDir: "/m", useCoreML: true });
-      expect(isCoreMLEnabled()).toBe(true);
+      // We DELIBERATELY do not mark CoreML enabled — see file header for why.
+      expect(isCoreMLEnabled()).toBe(false);
     } finally {
       if (origPlatform) Object.defineProperty(process, "platform", origPlatform);
       if (origArch) Object.defineProperty(process, "arch", origArch);
@@ -172,7 +177,7 @@ describe("loadFeatureExtractor", () => {
     }
   });
 
-  it("on Apple Silicon, falls back to CPU when CoreML EP attempt throws and marks CoreML unavailable", async () => {
+  it("calls pipeline() exactly once (no EP-list retry loop — single CPU/wasm path)", async () => {
     const origPlatform = Object.getOwnPropertyDescriptor(process, "platform");
     const origArch = Object.getOwnPropertyDescriptor(process, "arch");
     try {
@@ -183,16 +188,15 @@ describe("loadFeatureExtractor", () => {
       let attempt = 0;
       transformersState.pipelineImpl = async () => {
         attempt += 1;
-        if (attempt === 1) {
-          throw new Error("CoreML EP boom");
-        }
         const fx = async () => ({ data: new Float32Array(0), dims: [0] });
         return Object.assign(fx, { dispose: async () => {} });
       };
 
       const fx = await loadFeatureExtractor({ modelDir: "/m", useCoreML: true });
       expect(typeof fx).toBe("function");
-      expect(attempt).toBe(2); // tried coreml then cpu
+      // Previously: 2 attempts (coreml, then cpu). Now: 1 — there is no
+      // per-call EP override to retry, so pipeline() runs once and that's it.
+      expect(attempt).toBe(1);
       expect(isCoreMLEnabled()).toBe(false);
     } finally {
       if (origPlatform) Object.defineProperty(process, "platform", origPlatform);

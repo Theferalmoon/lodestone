@@ -61,7 +61,9 @@ export async function load(opts: LoadOptions = {}): Promise<EmbedderHandle> {
     return createNomicHandle({ modelDir, useCoreML, maxBatch: MAX_BATCH });
   }
 
-  // snowflake path: prefer bundled if present, otherwise fetch+cache
+  // snowflake path: prefer bundled if present, otherwise fetch+cache. The
+  // operator's consent flag (Codex impl-005 §05 RED #1) flows through to
+  // ensureSnowflakeWeights — without it, the fallback throws fail-closed.
   let modelDir: string;
   if (opts.modelPathOverride) {
     modelDir = opts.modelPathOverride;
@@ -70,7 +72,10 @@ export async function load(opts: LoadOptions = {}): Promise<EmbedderHandle> {
       modelDir = resolveBundledModelDir("snowflake-arctic-embed-s");
     } catch (err) {
       if (!(err instanceof EmbedderLoadError)) throw err;
-      modelDir = await ensureSnowflakeWeights({ cacheDir: snowflakeCacheDir() });
+      modelDir = await ensureSnowflakeWeights({
+        cacheDir: snowflakeCacheDir(),
+        allowDownload: opts.allowDownload,
+      });
     }
   }
   return createSnowflakeHandle({ modelDir, useCoreML, maxBatch: MAX_BATCH });
