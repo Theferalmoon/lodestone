@@ -153,8 +153,8 @@ function normalizeManifest(value: unknown): InstallManifest | null {
     installed_at: obj.installed_at,
     install_state: installState,
     ...(reindexState !== undefined ? { reindex_state: reindexState } : {}),
-    mcp_json: mcp as InstallManifest["mcp_json"],
-    claude_md: cm as InstallManifest["claude_md"],
-    gitignore: gi as InstallManifest["gitignore"],
+    mcp_json: mcp as unknown as InstallManifest["mcp_json"],
+    claude_md: cm as unknown as InstallManifest["claude_md"],
+    gitignore: gi as unknown as InstallManifest["gitignore"],
   };
 }
