@@ -13,12 +13,28 @@ import {
   unlinkSync,
   writeSync,
 } from "node:fs";
+import { randomBytes } from "node:crypto";
 import path from "node:path";
+
+/**
+ * Generate a unique-per-call temp suffix so concurrent `lodestone init`
+ * invocations in the same repo do not race on a deterministic
+ * `<target>.tmp` filename. PID + timestamp + 8 random hex chars is
+ * sufficient — no two concurrent writers share a tmp path even if they
+ * are kicked off in the same millisecond.
+ *
+ * Codex §04 YELLOW: prior code used a deterministic `<target>.tmp`,
+ * which caused spurious failures under concurrent init.
+ */
+function uniqueTmpPath(targetPath: string): string {
+  const suffix = `${process.pid}-${Date.now().toString(36)}-${randomBytes(4).toString("hex")}`;
+  return `${targetPath}.tmp.${suffix}`;
+}
 
 export function writeFileAtomic(targetPath: string, body: string): void {
   const dir = path.dirname(targetPath);
   mkdirSync(dir, { recursive: true });
-  const tmpPath = `${targetPath}.tmp`;
+  const tmpPath = uniqueTmpPath(targetPath);
   const fd = openSync(tmpPath, "w");
   try {
     writeSync(fd, body, 0, "utf8");
