@@ -8,7 +8,13 @@ import type { ParseResult } from "../parsers/base.js";
  * produced it. Used by callers / observability; does NOT change the
  * `Maturity` value (which is always `"deterministic_seed"` per §10).
  */
-export type SeedSkillSource = "error-hierarchy" | "framework-detector";
+export type SeedSkillSource =
+  | "error-hierarchy"
+  | "framework-detector"
+  | "test-patterns"
+  | "logging-patterns"
+  | "config-env-patterns"
+  | "persistence-patterns";
 
 /**
  * Input passed to every scanner. `parseResults` are the §06 ParseResult

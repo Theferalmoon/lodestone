@@ -16,6 +16,7 @@ import type { ParseResult } from "../parsers/base.js";
 
 import { detectErrorHierarchy } from "./error-hierarchy.js";
 import { detectFrameworks } from "./framework-detector.js";
+import { detectTestPatterns } from "./test-patterns.js";
 import type {
   SeedSkillInput,
   SeedSkillRecord,
@@ -48,6 +49,11 @@ export function seedSkillsFor(
     records.push({ source: "error-hierarchy", record: errorRecord });
   }
 
+  const testRecord = detectTestPatterns(input);
+  if (testRecord) {
+    records.push({ source: "test-patterns", record: testRecord });
+  }
+
   const frameworkRecords = detectFrameworks(input);
   for (const record of frameworkRecords) {
     records.push({ source: "framework-detector", record });
@@ -76,6 +82,7 @@ function recordToSkill(record: SeedSkillRecord, emittedAtIso: string): Skill {
 
 export { detectErrorHierarchy } from "./error-hierarchy.js";
 export { detectFrameworks } from "./framework-detector.js";
+export { detectTestPatterns } from "./test-patterns.js";
 export type {
   SeedSkillInput,
   SeedSkillRecord,
