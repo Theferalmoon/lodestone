@@ -184,4 +184,70 @@ describe("emit", () => {
     const second = await emit(cluster, cfg);
     expect(second.written).toBe(false);
   });
+
+  // Codex v0.1.1 §10 RED #1: id must be stable across content updates without
+  // requiring callers to thread cfg.id. A second emit with a CHANGED body must
+  // reuse the same id (existing frontmatter id), and absent any prior file the
+  // id must be deterministic from cluster identity.
+  it("RED #1 — reuses existing frontmatter id when body changes", async () => {
+    const cfg = {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+      // No cfg.id — let the emitter derive it.
+    };
+    const first = await emit(mkCluster({ id: "abcd", description: "v1" }), cfg);
+    if (!first.written) throw new Error("first emit must write");
+    const firstId = first.skill.id;
+
+    // Body changes (different description), but id should be stable.
+    const second = await emit(mkCluster({ id: "abcd", description: "v2 — different" }), cfg);
+    expect(second.written).toBe(true);
+    if (!second.written) throw new Error("unreachable");
+    expect(second.skill.id).toBe(firstId);
+  });
+
+  it("RED #1 — derives a deterministic id from cluster id when no cfg.id and no prior file", async () => {
+    const cfg = {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+    };
+    const a = await emit(mkCluster({ id: "abcd1234abcd1234" }), cfg);
+    if (!a.written) throw new Error("a must write");
+
+    // Tear down workdir and re-emit fresh — id must match because it's derived
+    // from cluster identity, not random.
+    rmSync(workdir, { recursive: true, force: true });
+    const b = await emit(mkCluster({ id: "abcd1234abcd1234" }), {
+      ...cfg,
+      lodestoneDir: join(workdir, ".lodestone"),
+    });
+    if (!b.written) throw new Error("b must write");
+    expect(b.skill.id).toBe(a.skill.id);
+  });
+
+  it("RED #1 — different cluster ids yield different deterministic ids", async () => {
+    const cfg = {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+    };
+    const a = await emit(mkCluster({ id: "cluster-aaaa", name: "Auth A" }), cfg);
+    const b = await emit(mkCluster({ id: "cluster-bbbb", name: "Auth B" }), cfg);
+    if (!a.written || !b.written) throw new Error("both must write");
+    expect(a.skill.id).not.toBe(b.skill.id);
+  });
+
+  it("RED #1 — cfg.id (when supplied) takes precedence over derived id", async () => {
+    const cfg = {
+      lodestoneDir: join(workdir, ".lodestone"),
+      createdAt: "2026-04-25T00:00:00Z",
+      now: new Date("2026-05-01T00:00:00Z"),
+      id: "explicit-override-id",
+    };
+    const r = await emit(mkCluster({ id: "abcd" }), cfg);
+    if (!r.written) throw new Error("must write");
+    expect(r.skill.id).toBe("explicit-override-id");
+  });
 });

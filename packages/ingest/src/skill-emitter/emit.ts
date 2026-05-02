@@ -2,7 +2,7 @@
 // Lodestone — convert a Cluster into an idempotent SKILL.md (and a `skills`
 // table row) on disk and in SQLite.
 
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -89,26 +89,46 @@ export async function emit(cluster: Cluster, cfg: EmitConfig): Promise<EmitResul
   const slug = slugify(cluster.name, cluster.id);
   const dir = path.join(cfg.lodestoneDir, "skills", source, slug);
   const file = path.join(dir, "SKILL.md");
-  const id = cfg.id ?? randomUUID();
 
   const body = renderBody(cluster);
   const sha256 = sha256Hex(body);
 
   // Idempotency check: read existing frontmatter (if any) and compare SHAs.
+  // Codex v0.1.1 §10 RED #1 + YELLOW: id stability across content changes
+  // requires reusing the existing frontmatter id. Body-idempotency YELLOW
+  // requires comparing the recomputed body SHA against BOTH the stored
+  // `content_sha256` AND the actual on-disk body SHA (a friend may have
+  // edited the body without updating frontmatter).
   const existing = await readIfExists(file);
+  let existingId: string | undefined;
   if (existing) {
     const parsed = parseFrontmatter(existing);
-    if (parsed && parsed.fields.content_sha256 === sha256) {
-      // Even when the disk file is unchanged, mirror to SQLite when supplied
-      // — this lets a re-run pick up a freshly bootstrapped DB without
-      // forcing a disk rewrite.
-      if (cfg.db) {
-        const skill = buildSkill(parsed.fields, body, cluster, source, observedDays);
-        writeSkill(cfg.db, skill, { body_sha256: sha256 });
+    if (parsed) {
+      existingId = parsed.fields.id;
+      const onDiskBodySha = sha256Hex(parsed.body);
+      // Treat as unchanged ONLY when both the stored hash matches the new
+      // body AND the on-disk body actually matches that stored hash. This
+      // catches the "frontmatter says X but body has been hand-edited" case.
+      if (parsed.fields.content_sha256 === sha256 && onDiskBodySha === sha256) {
+        // Even when the disk file is unchanged, mirror to SQLite when supplied
+        // — this lets a re-run pick up a freshly bootstrapped DB without
+        // forcing a disk rewrite.
+        if (cfg.db) {
+          const skill = buildSkill(parsed.fields, body, cluster, source, observedDays);
+          writeSkill(cfg.db, skill, { body_sha256: sha256 });
+        }
+        return { written: false, reason: "unchanged", path: file };
       }
-      return { written: false, reason: "unchanged", path: file };
     }
   }
+
+  // ID resolution order (RED #1):
+  //   1. Existing frontmatter id (preserves identity across body updates).
+  //   2. Explicit cfg.id from caller (test seam + override hook).
+  //   3. Deterministic id derived from a content-stable signature
+  //      (cluster.id + source + slug — mirrors the v0.1.1 anchor-based
+  //      stableClusterId pattern; never randomUUID).
+  const id = existingId ?? cfg.id ?? deriveStableSkillId(cluster.id, source, slug);
 
   const confidence = computeConfidence(confidenceInputsFromCluster(cluster, observedDays));
 
@@ -169,6 +189,29 @@ function buildSkill(
 
 function sha256Hex(input: string): string {
   return createHash("sha256").update(input, "utf8").digest("hex");
+}
+
+/**
+ * Codex v0.1.1 §10 RED #1: derive a stable skill id from content-stable
+ * inputs (NOT from the body, which can shift run-to-run). The signature is
+ * `${source}|${cluster.id}|${slug}` — same cluster identity, same skill id,
+ * regardless of body churn from member/bridge order tweaks. Formatted as a
+ * UUIDv5-ish 36-char string so existing UUID consumers don't break.
+ */
+function deriveStableSkillId(clusterId: string, source: EmitSource, slug: string): string {
+  const sig = `lodestone-skill-id|${source}|${clusterId}|${slug}`;
+  const digest = createHash("sha256").update(sig, "utf8").digest("hex");
+  // 8-4-4-4-12 hyphenation; not a true UUIDv5 but a stable, opaque token of
+  // the same shape. Identity is content-determined; collisions across
+  // different (source, clusterId, slug) triples are cryptographically
+  // negligible.
+  return [
+    digest.slice(0, 8),
+    digest.slice(8, 12),
+    digest.slice(12, 16),
+    digest.slice(16, 20),
+    digest.slice(20, 32),
+  ].join("-");
 }
 
 async function readIfExists(file: string): Promise<string | null> {
