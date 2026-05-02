@@ -11,6 +11,7 @@ export {
   readSchemaVersion,
   closeDb,
   VECTOR_DIM,
+  vecLoadError,
   _resetWriterRegistry,
 } from "./sqlite.js";
 export type { OpenOptions } from "./sqlite.js";
@@ -43,9 +44,20 @@ export {
   readReady,
   writeReady,
   assertReady,
+  assertReaderReady,
   readyPath,
 } from "./ready.js";
 export type { ReadyMarker } from "./ready.js";
+
+// Codex impl-008 RED #1/#3 fixup: cross-store epoch + embedder identity oracle.
+export {
+  beginReindex,
+  getCurrentEpoch,
+  getEmbedderIdentity,
+  readIndexMeta,
+  writeIndexMeta,
+} from "./index-meta.js";
+export type { EmbedderIdentity } from "./index-meta.js";
 
 export {
   CALLERS_OF_SQL,

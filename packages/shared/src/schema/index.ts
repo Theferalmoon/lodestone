@@ -136,6 +136,29 @@ export interface FeedbackRow {
 }
 
 /**
+ * Singleton row in `index_meta` (migration 002 — Codex impl-008 RED #1/#3).
+ * Captures the authoritative cross-store epoch + embedder identity. Only
+ * `id = 1` is ever populated.
+ *
+ * - `current_epoch` is bumped inside the same transaction that wipes prior
+ *   state and writes a fresh index pass (see `beginReindex` in §08 store).
+ *   Readers compare it against `ready.json.index_epoch` to detect a partial-
+ *   write crash window.
+ * - `embedder_*` describe the embedder used to populate the vec0 table; new
+ *   `writeEmbeddings` calls fail-fast if their vector dim doesn't match
+ *   `embedder_dim`. Nullable for the bootstrap state (no index pass yet).
+ */
+export interface IndexMetaRow {
+  id: 1;
+  current_epoch: number;
+  embedder_id: string | null;
+  embedder_dim: number | null;
+  embedder_quant: string | null;
+  /** ISO-8601 of the most recent UPDATE. */
+  updated_at: string;
+}
+
+/**
  * Maps each table name to its row type. Lets call sites parameterize on the
  * table name (e.g. by §13's read-only client wrappers) and get the right row
  * shape without per-table boilerplate.
@@ -149,6 +172,7 @@ export interface LodestoneSchema {
   cluster_members: ClusterMemberRow;
   skills: SkillRow;
   feedback: FeedbackRow;
+  index_meta: IndexMetaRow;
 }
 
 /** Names of every table in the canonical schema. Useful for migration drivers. */
@@ -161,9 +185,19 @@ export const LODESTONE_TABLES = [
   "cluster_members",
   "skills",
   "feedback",
+  "index_meta",
 ] as const;
 
 export type LodestoneTableName = (typeof LODESTONE_TABLES)[number];
 
-/** Current schema version (matches the row `bootstrap()` writes). */
-export const CURRENT_SCHEMA_VERSION = 1;
+/**
+ * Current schema version (matches the row `bootstrap()` writes).
+ * v2 (impl-008 fixup, 2026-05-02): adds `index_meta` table — singleton row
+ * holding `current_epoch` (cross-store oracle) + embedder identity.
+ */
+/**
+ * v3 (impl-008 §08 YELLOW, 2026-05-02): class_inheritance gains a composite
+ * (class_id, base_name) primary key — no more silent collapse for classes
+ * with multiple bases.
+ */
+export const CURRENT_SCHEMA_VERSION = 3;

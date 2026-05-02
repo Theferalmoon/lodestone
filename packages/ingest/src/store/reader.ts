@@ -7,7 +7,8 @@ import type Database from "better-sqlite3";
 
 import type { EdgeRow, SymbolRow } from "@lodestone/shared";
 
-import { VECTOR_DIM } from "./sqlite.js";
+import { getEmbedderIdentity } from "./index-meta.js";
+import { VECTOR_DIM, vecLoadError } from "./sqlite.js";
 import {
   CALLEES_OF_SQL,
   CALLERS_OF_SQL,
@@ -109,16 +110,26 @@ export function clusterMembers(
 /**
  * Cosine search over the symbol_embeddings vec0 table. Returns the topK
  * nearest hits; raises a clear error if the query vector dimension does
- * not match VECTOR_DIM.
+ * not match the active embedder dim.
+ *
+ * Active dim = `index_meta.embedder_dim` when an ingest pass has stamped
+ * one, else the legacy `VECTOR_DIM` constant. Read-side half of the impl-008
+ * RED #3 fixup: a 384-dim query against a 768-dim store (or vice versa)
+ * fails fast with a readable error instead of silently returning empty.
  */
 export function vectorSearch(
   db: Database.Database,
   queryVector: Float32Array,
   topK = 10,
 ): VectorHit[] {
-  if (queryVector.length !== VECTOR_DIM) {
+  // §08 YELLOW (sqlite-vec degrade): when the extension didn\'t load on this
+  // platform, return empty hits instead of letting `embedding MATCH` raise
+  // "no such function". Lexical lanes (LIKE / SQL) keep working.
+  if (vecLoadError(db) !== null) return [];
+  const expectedDim = getEmbedderIdentity(db)?.dim ?? VECTOR_DIM;
+  if (queryVector.length !== expectedDim) {
     throw new Error(
-      `Query vector has length ${queryVector.length}, expected ${VECTOR_DIM}.`,
+      `Query vector has length ${queryVector.length}, expected ${expectedDim}.`,
     );
   }
   const buf = Buffer.from(

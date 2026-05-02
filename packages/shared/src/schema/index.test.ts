@@ -11,11 +11,11 @@ import {
 } from "./index.js";
 
 describe("Canonical SQLite schema (post-Codex-001 single source of truth)", () => {
-  it("CURRENT_SCHEMA_VERSION is 1 (v0 lock)", () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe(1);
+  it("CURRENT_SCHEMA_VERSION is 3 (impl-008 fixup: index_meta + class_inheritance composite key)", () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe(3);
   });
 
-  it("LODESTONE_TABLES includes the 8 canonical tables in DDL order", () => {
+  it("LODESTONE_TABLES includes the 9 canonical tables in DDL order", () => {
     expect([...LODESTONE_TABLES]).toEqual([
       "schema_version",
       "symbols",
@@ -25,6 +25,7 @@ describe("Canonical SQLite schema (post-Codex-001 single source of truth)", () =
       "cluster_members",
       "skills",
       "feedback",
+      "index_meta",
     ]);
   });
 

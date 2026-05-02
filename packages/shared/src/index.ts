@@ -72,6 +72,7 @@ export type {
   ClusterMemberRow,
   SkillRow,
   FeedbackRow,
+  IndexMetaRow,
   LodestoneSchema,
   LodestoneTableName,
 } from "./schema/index.js";

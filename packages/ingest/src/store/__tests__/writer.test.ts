@@ -204,7 +204,7 @@ describe("writePagerank", () => {
 });
 
 describe("writeClassInheritance", () => {
-  it("inserts inheritance triples and updates on conflict", () => {
+  it("preserves multiple bases per class (impl-008 §08 YELLOW: composite (class_id, base_name) PK)", () => {
     const db = openWriter(dbPath);
     try {
       bootstrap(db);
@@ -213,16 +213,44 @@ describe("writeClassInheritance", () => {
         [makeSymbol({ symbol: "a", path: "a.ts", kind: "class" })],
         { index_epoch: 1 },
       );
-      const triples: ClassInheritance[] = [
+      writeClassInheritance(db, [
         { class_id: "a", base_name: "Base", base_path: "src/base.ts" },
-      ];
-      writeClassInheritance(db, triples);
+      ]);
       writeClassInheritance(db, [{ class_id: "a", base_name: "Base2" }]);
+      const rows = db
+        .prepare(
+          "SELECT base_name, base_path FROM class_inheritance WHERE class_id = 'a' ORDER BY base_name",
+        )
+        .all() as Array<{ base_name: string; base_path: string | null }>;
+      expect(rows.map((r) => r.base_name)).toEqual(["Base", "Base2"]);
+      expect(rows[0]?.base_path).toBe("src/base.ts");
+      expect(rows[1]?.base_path).toBeNull();
+    } finally {
+      closeDb(db);
+    }
+  });
+
+  it("UPSERT on (class_id, base_name) refreshes base_path", () => {
+    const db = openWriter(dbPath);
+    try {
+      bootstrap(db);
+      writeSymbols(
+        db,
+        [makeSymbol({ symbol: "a", path: "a.ts", kind: "class" })],
+        { index_epoch: 1 },
+      );
+      writeClassInheritance(db, [
+        { class_id: "a", base_name: "Base", base_path: "src/base.ts" },
+      ]);
+      writeClassInheritance(db, [
+        { class_id: "a", base_name: "Base", base_path: "src/base/index.ts" },
+      ]);
       const row = db
-        .prepare("SELECT base_name, base_path FROM class_inheritance WHERE class_id = 'a'")
+        .prepare(
+          "SELECT base_name, base_path FROM class_inheritance WHERE class_id = 'a' AND base_name = 'Base'",
+        )
         .get() as { base_name: string; base_path: string | null };
-      expect(row.base_name).toBe("Base2");
-      expect(row.base_path).toBeNull();
+      expect(row.base_path).toBe("src/base/index.ts");
     } finally {
       closeDb(db);
     }

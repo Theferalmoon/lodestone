@@ -12,8 +12,18 @@ import { fileURLToPath } from "node:url";
 
 import { CURRENT_SCHEMA_VERSION } from "@lodestone/shared";
 
-/** Vector dimension for the symbol-body embedding column. Matches the
- * Codex-approved nomic-text-v1.5 dim used by section 5's embedder runtime. */
+/**
+ * Default vector dimension used when no embedder identity has been recorded
+ * in `index_meta` yet (e.g. fresh bootstrap, tests that bypass the pipeline).
+ * Matches the Codex-approved nomic-text-v1.5 dim used by §05's embedder
+ * runtime.
+ *
+ * IMPORTANT (impl-008 RED #3 fixup): runtime callers should NOT treat this
+ * as the canonical dim. The authoritative dim for any populated index lives
+ * in `index_meta.embedder_dim` and is consulted by `writeEmbeddings`. Tests
+ * and legacy callers that don't set an embedder identity fall back to this
+ * default.
+ */
 export const VECTOR_DIM = 768;
 
 /** Module-level registry of writer handles, keyed by absolute db path. The
@@ -76,6 +86,14 @@ export function openWriter(dbPath: string, opts: OpenOptions = {}): Database.Dat
  * Open the SQLite DB in read-only mode. Always succeeds when the file exists,
  * even if a writer is currently open in this or another process.
  *
+ * sqlite-vec load failure is now logged + ignored instead of being fatal —
+ * impl-008 §08 YELLOW: the extension binary may not ship for every platform
+ * (musl, win32-arm64, etc.), and a missing extension would otherwise lock
+ * out every reader, including non-vector tools (`context`, `impact`, `sql`,
+ * `recent_changes`). Vector-using paths (`vectorSearch`, semantic
+ * `cluster()`) detect the missing extension at call time and degrade
+ * gracefully (empty results + diagnostics warning).
+ *
  * @throws if the DB file does not exist (with a friendly hint about
  *   `lodestone init`). This is the section 13 MCP-server-facing reader.
  */
@@ -89,9 +107,31 @@ export function openReader(dbPath: string, opts: OpenOptions = {}): Database.Dat
   const db = new Database(dbPath, { readonly: true, fileMustExist: true });
   applyPragmas(db, { readOnly: true });
   if (opts.loadVec !== false) {
-    loadVectorExtension(db);
+    try {
+      loadVectorExtension(db);
+    } catch (err) {
+      // Degrade rather than crash. Stash the error message on the handle so
+      // vector-using tools can surface it as a diagnostics warning instead of
+      // throwing an opaque "no such function: vec_version" downstream.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (db as unknown as { __vecLoadError?: string }).__vecLoadError =
+        err instanceof Error ? err.message : String(err);
+    }
   }
   return db;
+}
+
+/**
+ * Returns the recorded sqlite-vec load failure on a reader, if any. Used by
+ * `vectorSearch` and the §16 `cluster` semantic-fallback path to decide
+ * whether to attempt a vector query at all.
+ */
+export function vecLoadError(db: Database.Database): string | null {
+  return (
+    ((db as unknown as { __vecLoadError?: string }).__vecLoadError as
+      | string
+      | undefined) ?? null
+  );
 }
 
 /**
@@ -113,12 +153,19 @@ export function bootstrap(db: Database.Database): void {
     );
   }
 
-  const sql = loadInitialSchemaSql();
-  // Apply schema and stamp version atomically so a partial schema apply leaves
-  // no half-built tables. The INSERT must be prepared AFTER the schema runs,
+  // Load every migration body in declared order. The list is closed at
+  // module build time; every new migration adds an entry here AND bumps
+  // CURRENT_SCHEMA_VERSION in @lodestone/shared.
+  const migrations = [
+    loadMigrationSql("001-initial.sql"),
+    loadMigrationSql("002-index-meta.sql"),
+    loadMigrationSql("003-class-inheritance-composite.sql"),
+  ];
+  // Apply schema + stamp version atomically so a partial schema apply leaves
+  // no half-built tables. The INSERT must be prepared AFTER the schema runs
   // because better-sqlite3 validates table existence at prepare time.
   const tx = db.transaction(() => {
-    db.exec(sql);
+    for (const sql of migrations) db.exec(sql);
     db.prepare("INSERT INTO schema_version (version, applied_at) VALUES (?, ?)").run(
       CURRENT_SCHEMA_VERSION,
       new Date().toISOString(),
@@ -180,19 +227,19 @@ function loadVectorExtension(db: Database.Database): void {
   sqliteVec.load(db);
 }
 
-function loadInitialSchemaSql(): string {
+function loadMigrationSql(filename: string): string {
   // Resolve path relative to this compiled module so the schema file ships
   // next to the .js after tsc build (src/store/migrations -> dist/store/migrations).
   const here = dirname(fileURLToPath(import.meta.url));
   const candidates = [
-    join(here, "migrations", "001-initial.sql"),
+    join(here, "migrations", filename),
     // src tree (vitest runs against src/, not dist/).
-    join(here, "..", "..", "src", "store", "migrations", "001-initial.sql"),
+    join(here, "..", "..", "src", "store", "migrations", filename),
   ];
   for (const c of candidates) {
     if (existsSync(c)) return readFileSync(c, "utf8");
   }
   throw new Error(
-    `Lodestone initial schema SQL not found. Looked at: ${candidates.join(", ")}`,
+    `Lodestone migration SQL not found: ${filename}. Looked at: ${candidates.join(", ")}`,
   );
 }

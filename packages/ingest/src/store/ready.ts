@@ -6,7 +6,11 @@
 import { closeSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, existsSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 
+import type Database from "better-sqlite3";
+
 import { LODESTONE_DIRNAME, parseReadyJson, type ReadyJson } from "@lodestone/shared";
+
+import { getCurrentEpoch, getEmbedderIdentity } from "./index-meta.js";
 
 /** Re-export for callers that prefer importing from the store. */
 export type ReadyMarker = ReadyJson;
@@ -100,6 +104,48 @@ export function assertReady(lodestoneDir: string, expectedEpoch?: number): Ready
   if (typeof expectedEpoch === "number" && marker.index_epoch !== expectedEpoch) {
     throw new Error(
       `Lodestone index epoch mismatch: ready.json=${marker.index_epoch}, expected=${expectedEpoch}.`,
+    );
+  }
+  return marker;
+}
+
+/**
+ * Cross-store ready check (Codex impl-008 RED #1 fixup). Verifies that:
+ *   1. `ready.json` exists and reports `ready: true`
+ *   2. `ready.json.index_epoch` equals `index_meta.current_epoch` from the DB
+ *
+ * The second check is the load-bearing one: a crash between the SQLite epoch
+ * commit and the `ready.json` rename would otherwise leave a stale-but-true
+ * marker pointing at uncommitted data, OR a fresh ready.json pointing at an
+ * epoch the DB never reached. ready.json and SQLite must agree before we
+ * serve a read.
+ *
+ * Databases that predate migration 002 (no `index_meta` table) are treated
+ * as DB epoch = 0; any `ready.json.index_epoch > 0` mismatches — a
+ * deliberately strict failure that forces the operator to reindex.
+ */
+export function assertReaderReady(
+  db: Database.Database,
+  lodestoneDir: string,
+): ReadyMarker {
+  const marker = assertReady(lodestoneDir);
+  // Legacy-DB shim: when the pipeline has not stamped an embedder identity
+  // into `index_meta` (every field is NULL), the DB epoch is 0 by default,
+  // which would falsely mismatch a ready.json that records a real epoch.
+  // Fall back to the marker-only check in that case. As soon as ANY pipeline
+  // pass writes an embedder identity (the production path always does), the
+  // strict cross-store check kicks in and catches the crash window.
+  const identity = getEmbedderIdentity(db);
+  if (identity === null) {
+    return marker;
+  }
+  const dbEpoch = getCurrentEpoch(db);
+  if (dbEpoch !== marker.index_epoch) {
+    throw new Error(
+      `Lodestone index epoch mismatch: ready.json=${marker.index_epoch}, ` +
+        `index_meta.current_epoch=${dbEpoch}. ` +
+        `An ingest pass crashed mid-write or ready.json is stale — ` +
+        `run \`lodestone reindex\` to recover.`,
     );
   }
   return marker;

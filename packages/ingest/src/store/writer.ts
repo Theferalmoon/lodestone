@@ -18,12 +18,15 @@ import type {
 } from "@lodestone/shared";
 
 import type { LodestoneGraph } from "../graph/builder.js";
+import { getEmbedderIdentity } from "./index-meta.js";
 import { VECTOR_DIM } from "./sqlite.js";
 
 /** Embedding row passed into writeEmbeddings - one per symbol id. */
 export interface EmbeddingRow {
   symbol_id: string;
-  /** float32 array of length VECTOR_DIM. */
+  /** float32 array whose length must match the active embedder dim
+   * (see index_meta.embedder_dim); falls back to VECTOR_DIM when no
+   * embedder identity has been recorded yet. */
   vector: Float32Array;
 }
 
@@ -34,10 +37,25 @@ export interface SymbolWriteContext {
   commit?: string | null;
 }
 
-const CREATE_VEC_TABLE_SQL = `CREATE VIRTUAL TABLE IF NOT EXISTS symbol_embeddings USING vec0(
+/**
+ * vec0 virtual-table DDL. Vector dim must be baked into the CREATE — vec0
+ * does not support a runtime-variable dim. We consult the recorded
+ * `index_meta.embedder_dim` first and fall back to the legacy `VECTOR_DIM`
+ * constant only when no embedder identity has been recorded yet (fresh
+ * bootstrap, tests that hand-roll a DB).
+ *
+ * Switching embedder dim on an existing index is NOT supported in-place —
+ * `beginReindex` clears the rows but the schema sticks. To switch dim, the
+ * operator runs `lodestone reindex --reset` which physically removes the
+ * sqlite file. Silently tolerating a dim swap would leave dead vectors keyed
+ * by the old dim that vec0 cannot evict.
+ */
+function createVecTableSql(dim: number): string {
+  return `CREATE VIRTUAL TABLE IF NOT EXISTS symbol_embeddings USING vec0(
   symbol_id TEXT PRIMARY KEY,
-  embedding FLOAT[${VECTOR_DIM}]
+  embedding FLOAT[${dim}]
 )`;
+}
 
 /**
  * Insert or update symbols. Every row inherits index_epoch and (optionally)
@@ -173,9 +191,12 @@ export function writePagerank(
 }
 
 /**
- * Insert class-inheritance triples. Conflicts on class_id replace the row
- * (each class has exactly one base in the v0 model; multiple-inheritance
- * languages would need a second key column - out of scope for v0).
+ * Insert class-inheritance triples. Conflicts on (class_id, base_name)
+ * refresh the `base_path`. Migration 003 (Codex impl-008 §08 YELLOW) widened
+ * the PK from `class_id` alone to the composite, so multi-inheritance
+ * languages (TypeScript `extends X implements Y, Z`, Python `class C(A,
+ * B):`) now retain every base instead of collapsing to whichever triple was
+ * written last.
  */
 export function writeClassInheritance(
   db: Database.Database,
@@ -184,8 +205,7 @@ export function writeClassInheritance(
   const stmt = db.prepare(
     `INSERT INTO class_inheritance (class_id, base_name, base_path)
      VALUES (@class_id, @base_name, @base_path)
-     ON CONFLICT(class_id) DO UPDATE SET
-       base_name = excluded.base_name,
+     ON CONFLICT(class_id, base_name) DO UPDATE SET
        base_path = excluded.base_path`,
   );
   const rows: ClassInheritanceRow[] = triples.map((t) => ({
@@ -201,36 +221,53 @@ export function writeClassInheritance(
 }
 
 /**
- * Ensure the sqlite-vec virtual table exists. Idempotent - a missing vec0
- * table is created with the canonical name + dim. Callers that want a fresh
- * index can DROP first.
+ * Resolve the active vector dim — `index_meta.embedder_dim` if a pipeline
+ * pass has stamped one, else the legacy `VECTOR_DIM` constant.
+ */
+function resolveVectorDim(db: Database.Database): number {
+  const embedder = getEmbedderIdentity(db);
+  return embedder?.dim ?? VECTOR_DIM;
+}
+
+/**
+ * Ensure the sqlite-vec virtual table exists. Idempotent — a missing vec0
+ * table is created with the recorded embedder dim (falls back to
+ * `VECTOR_DIM`). Callers that want a fresh index can DROP first or use
+ * `beginReindex`, which clears every per-pass row including the vec0 table.
  *
  * The symbol-body vector table lives outside the canonical migrations file
  * because vec0 is a virtual-table extension; baking it into 001-initial.sql
  * would require sqlite-vec to be loaded at every bootstrap (which it is, but
- * keeping the DDL programmatic makes the dependency explicit at the call site).
+ * keeping the DDL programmatic makes the dependency explicit at the call
+ * site AND lets us splice the active embedder dim into the CREATE).
  */
 export function ensureSymbolEmbeddingsTable(db: Database.Database): void {
-  db.exec(CREATE_VEC_TABLE_SQL);
+  const dim = resolveVectorDim(db);
+  // db.exec is the better-sqlite3 multi-statement runner — NOT child process.
+  db.exec(createVecTableSql(dim));
 }
 
 /**
- * Replace embeddings for the given symbol ids. Each row vector must be of
- * exact length VECTOR_DIM; a mismatch throws a descriptive error.
+ * Replace embeddings for the given symbol ids. Each row vector must match
+ * the active embedder dim — read from `index_meta.embedder_dim` when set,
+ * else the legacy `VECTOR_DIM` (768). A mismatch throws a descriptive error
+ * naming the offending symbol AND both dims so the caller knows whether the
+ * ingest pipeline forgot to stamp identity (impl-008 RED #3 fixup).
  */
 export function writeEmbeddings(
   db: Database.Database,
   rows: readonly EmbeddingRow[],
 ): number {
   ensureSymbolEmbeddingsTable(db);
+  const expectedDim = resolveVectorDim(db);
   const insertStmt = db.prepare(
     `INSERT OR REPLACE INTO symbol_embeddings (symbol_id, embedding) VALUES (?, ?)`,
   );
   const tx = db.transaction(() => {
     for (const r of rows) {
-      if (r.vector.length !== VECTOR_DIM) {
+      if (r.vector.length !== expectedDim) {
         throw new Error(
-          `Embedding for ${r.symbol_id} has length ${r.vector.length}, expected ${VECTOR_DIM}.`,
+          `Embedding for ${r.symbol_id} has length ${r.vector.length}, expected ${expectedDim}.`,
         );
       }
       // sqlite-vec accepts a Buffer view of a Float32Array as a vector blob.
