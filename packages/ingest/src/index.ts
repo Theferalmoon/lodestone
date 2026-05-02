@@ -135,3 +135,20 @@ export type {
   ConfidenceInputs,
   PersistResult,
 } from "./skill-emitter/index.js";
+
+// Seed skills — section 11. Deterministic high-confidence Skills derived
+// from §06 ParseResults (class_inheritance triples + import edges). Each
+// emitted Skill carries `maturity: "deterministic_seed"` and is ready for
+// the §10 emit pathway (writeSkill / writeSkills).
+export {
+  seedSkillsFor,
+  detectErrorHierarchy,
+  detectFrameworks,
+  SEED_CONFIDENCE,
+} from "./seed-skills/index.js";
+export type {
+  SeedSkillInput,
+  SeedSkillRecord,
+  SeedSkillsConfig,
+  SeedSkillSource,
+} from "./seed-skills/index.js";

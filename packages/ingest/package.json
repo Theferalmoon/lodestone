@@ -43,6 +43,10 @@
     "./skill-emitter": {
       "types": "./dist/skill-emitter/index.d.ts",
       "default": "./dist/skill-emitter/index.js"
+    },
+    "./seed-skills": {
+      "types": "./dist/seed-skills/index.d.ts",
+      "default": "./dist/seed-skills/index.js"
     }
   },
   "scripts": {
