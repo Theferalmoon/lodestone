@@ -17,7 +17,18 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_DIR = REPO_ROOT / "docs" / "cmndi"
 OUT_HTML = SRC_DIR / "index.html"
 
-REQUIRED = [
+# All known doc slots, in render order. Whether each is REQUIRED vs
+# OPTIONAL depends on the repo tier per CMNDI-DOCS-MANDATE-001 §2:
+#  - Tier C (customer-facing): 01..05 required; 06 required ONLY if
+#    the repo is private. Public-Apache repos (lodestone) MUST NOT
+#    publish 06 per the §2 carve-out.
+#  - Tier I (internal): 02 + 03 required; 01/04/05/06 optional.
+# The builder adapts to whatever source files are PRESENT — missing
+# files are skipped silently, present-but-unexpected names are
+# ignored. This keeps one script usable across tiers without per-repo
+# forks. The minimum viable build is 02+03 (Tier I floor); anything
+# less prints a clear error.
+ALL_DOCS = [
     ("01-executive-1pager.md", "Executive 1-Pager", "exec"),
     ("02-technical-spec.md", "Technical Specification", "tech"),
     ("03-end-user-guide.md", "Operator Guide", "user"),
@@ -25,6 +36,8 @@ REQUIRED = [
     ("05-talking-points.md", "Talking Points", "talking"),
     ("06-ip-summary.md", "IP Summary", "ip"),
 ]
+# Floor: every CMNDI tier requires at least 02 + 03.
+MIN_REQUIRED = {"02-technical-spec.md", "03-end-user-guide.md"}
 
 
 def slugify(text: str) -> str:
@@ -346,14 +359,21 @@ def main() -> int:
     if not SRC_DIR.is_dir():
         print(f"error: {SRC_DIR} does not exist", file=sys.stderr)
         return 2
-    missing = [name for name, _, _ in REQUIRED if not (SRC_DIR / name).exists()]
-    if missing:
-        print(f"error: missing required files: {', '.join(missing)}", file=sys.stderr)
+    # Tier-aware: require only the floor (02 + 03), include any other
+    # ALL_DOCS entry that happens to be PRESENT, skip the rest silently.
+    missing_floor = [name for name in MIN_REQUIRED if not (SRC_DIR / name).exists()]
+    if missing_floor:
+        print(
+            f"error: missing tier-floor required files: {', '.join(missing_floor)}",
+            file=sys.stderr,
+        )
         return 2
+    present = [(name, title, doc_id) for name, title, doc_id in ALL_DOCS
+               if (SRC_DIR / name).exists()]
 
     docs_html: list[str] = []
     full_toc: list[tuple[str, str, list[tuple[int, str, str]]]] = []
-    for name, title, doc_id in REQUIRED:
+    for name, title, doc_id in present:
         md = (SRC_DIR / name).read_text(encoding="utf-8")
         body, toc = md_to_html(md, doc_id)
         section_anchor = f"section-{doc_id}"
