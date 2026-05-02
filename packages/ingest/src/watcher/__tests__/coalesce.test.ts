@@ -393,6 +393,69 @@ describe("Coalescer", () => {
     expect(last.kinds!["a.ts"]).toBe("add");
   });
 
+  // Codex r2 §12 PARTIAL — flood-batching and queue-depth backpressure must
+  // compose: a single huge flush larger than maxBatchPaths * maxQueueDepth
+  // must NOT bypass the cap by enqueueing every slice up-front. The unflushed
+  // slices spill back into the pending map and re-flush on the next debounce.
+  it("flood splits respect maxQueueDepth cap (Codex r2 §12 PARTIAL)", async () => {
+    vi.useRealTimers();
+    const batches: FileBatch[] = [];
+    const c = new Coalescer({
+      debounceMs: 10,
+      maxQueueDepth: 2,
+      maxBatchPaths: 3,
+      dispatch: async (b) => {
+        // Each dispatch is slow so the queue actually fills.
+        await new Promise((r) => setTimeout(r, 50));
+        batches.push(b);
+      },
+    });
+    // 10 paths / 3 per batch = 4 slices needed. Pre-r2: all 4 enqueued
+    // immediately even though maxQueueDepth=2, blowing the cap. Post-r2:
+    // first 2 enqueue, next 2 spill into pending and re-flush after.
+    for (const p of [
+      "a.ts",
+      "b.ts",
+      "c.ts",
+      "d.ts",
+      "e.ts",
+      "f.ts",
+      "g.ts",
+      "h.ts",
+      "i.ts",
+      "j.ts",
+    ]) {
+      c.push(p, "change");
+    }
+    // Sample queueDepth across the lifetime — must never exceed cap.
+    const seenDepths: number[] = [];
+    let maxSeen = 0;
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 15));
+      seenDepths.push(c.queueDepth);
+      if (c.queueDepth > maxSeen) maxSeen = c.queueDepth;
+    }
+    await c.stop();
+    expect(maxSeen).toBeLessThanOrEqual(2);
+    // All 10 paths must drain across multiple batches; nothing dropped.
+    const allPaths = batches.flatMap((b) => b.paths).sort();
+    expect(allPaths).toEqual([
+      "a.ts",
+      "b.ts",
+      "c.ts",
+      "d.ts",
+      "e.ts",
+      "f.ts",
+      "g.ts",
+      "h.ts",
+      "i.ts",
+      "j.ts",
+    ]);
+    // Sanity: more than 2 batches must have been emitted (the spill drove
+    // additional flushes beyond the initial 2).
+    expect(batches.length).toBeGreaterThanOrEqual(4);
+  });
+
   it("queueDepth + pendingCount + inflightCount expose state", async () => {
     vi.useRealTimers();
     const c = new Coalescer({

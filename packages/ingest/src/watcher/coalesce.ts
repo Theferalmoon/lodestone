@@ -189,13 +189,41 @@ export class Coalescer {
       this.opts.onFlood(entries.length, cap);
     }
 
-    // Codex impl-012 YELLOW — split the snapshot at maxBatchPaths so a
-    // pause-spanning flood (e.g. `git pull` rewriting 10k files) doesn't
-    // hand the dispatcher one giant batch.
+    // Codex impl-012 YELLOW + r2 PARTIAL — split the snapshot at
+    // maxBatchPaths so a pause-spanning flood (e.g. `git pull` rewriting
+    // 10k files) doesn't hand the dispatcher one giant batch. Each split
+    // slice goes through the SAME backpressure check arm() uses: enqueue
+    // only while queueDepth < maxQueueDepth; spill the remaining slices
+    // back into the pending map and re-arm. This composes flood-batching
+    // with queue-depth backpressure (pre-r2 the slices bypassed the cap).
     const ts = new Date(this.opts.now()).toISOString();
+    const slices: Array<Array<[string, PendingEntry]>> = [];
     for (let i = 0; i < entries.length; i += cap) {
-      const slice = entries.slice(i, i + cap);
-      this.enqueue(this.buildBatch(slice, ts));
+      slices.push(entries.slice(i, i + cap));
+    }
+
+    let i = 0;
+    for (; i < slices.length; i++) {
+      if (this.queueDepth >= this.opts.maxQueueDepth) break;
+      this.enqueue(this.buildBatch(slices[i]!, ts));
+    }
+
+    if (i < slices.length) {
+      // Spill the rest back into the pending map. They will fold with any
+      // newly-arrived events on the next debounce cycle. arm() re-checks
+      // the cap before flushing again, so spill + flood + new events all
+      // compose under the same producer-side backpressure.
+      for (let j = i; j < slices.length; j++) {
+        for (const [p, v] of slices[j]!) {
+          // Preserve the most recent kind/ts; if a new event for the
+          // same path arrived while spilled, keep the newer one.
+          const existing = this.pending.get(p);
+          if (!existing || existing.ts <= v.ts) {
+            this.pending.set(p, v);
+          }
+        }
+      }
+      this.arm();
     }
   }
 
