@@ -100,6 +100,75 @@ describe("detectErrorHierarchy", () => {
     expect(detectErrorHierarchy({ parseResults: [] })).toBeNull();
   });
 
+  it("Codex v0.1.1 §11 RED #2 — climbs the inheritance chain to count transitive descendants", () => {
+    // Real-world pattern: AppError extends Error, then NotFoundError +
+    // ValidationError extend AppError. Only AppError's `base_name` is "Error";
+    // the descendants don't reach a built-in root in one hop. Prior to the
+    // fix, only AppError counted (1 member -> below threshold -> no card).
+    const result = detectErrorHierarchy({
+      parseResults: [
+        mkClassParseResult([
+          { id: "src/errors.ts::AppError", path: "src/errors.ts", base: "Error" },
+          { id: "src/errors.ts::NotFoundError", path: "src/errors.ts", base: "AppError" },
+          { id: "src/errors.ts::ValidationError", path: "src/errors.ts", base: "AppError" },
+          { id: "src/errors.ts::AuthError", path: "src/errors.ts", base: "AppError" },
+        ]),
+      ],
+    });
+    expect(result).not.toBeNull();
+    expect(result!.evidence_count).toBe(4);
+    expect(result!.body).toContain("AppError");
+    expect(result!.body).toContain("NotFoundError");
+  });
+
+  it("Codex v0.1.1 §11 RED #2 — handles deep multi-level chains (root -> mid -> leaf -> leaf2)", () => {
+    const result = detectErrorHierarchy({
+      parseResults: [
+        mkClassParseResult([
+          { id: "src/errors.ts::AppError", path: "src/errors.ts", base: "Exception", language: "python" },
+          { id: "src/errors.ts::DBError", path: "src/errors.ts", base: "AppError", language: "python" },
+          { id: "src/errors.ts::TimeoutError", path: "src/errors.ts", base: "DBError", language: "python" },
+          { id: "src/errors.ts::ConnectError", path: "src/errors.ts", base: "DBError", language: "python" },
+          { id: "src/errors.ts::SlowError", path: "src/errors.ts", base: "TimeoutError", language: "python" },
+        ]),
+      ],
+    });
+    expect(result).not.toBeNull();
+    expect(result!.evidence_count).toBe(5);
+  });
+
+  it("Codex v0.1.1 §11 RED #3 — Rust impl Error for Type yields the implementing struct, not synthetic impl id", () => {
+    // The Rust parser stores `impl Error for MyError` as a synthetic class
+    // with id `impl_Error_for_MyError`. Prior to the fix, the seed scanner
+    // surfaced that synthetic id verbatim ("MyError" was lost behind
+    // "impl_Error_for_MyError"). The fix should detect the impl_<Trait>_for_<Type>
+    // shape and use <Type> as the displayed class name.
+    const result = detectErrorHierarchy({
+      parseResults: [
+        mkClassParseResult([
+          {
+            id: "src/errors.rs::impl_Error_for_MyError",
+            path: "src/errors.rs",
+            base: "Error",
+            language: "rust",
+          },
+          {
+            id: "src/errors.rs::impl_Error_for_NotFoundError",
+            path: "src/errors.rs",
+            base: "Error",
+            language: "rust",
+          },
+        ]),
+      ],
+    });
+    expect(result).not.toBeNull();
+    expect(result!.evidence_count).toBe(2);
+    // The body must mention the real types, not the synthetic impl name.
+    expect(result!.body).toContain("MyError");
+    expect(result!.body).toContain("NotFoundError");
+    expect(result!.body).not.toContain("impl_Error_for_");
+  });
+
   it("recognises Python Exception family", () => {
     const result = detectErrorHierarchy({
       parseResults: [
