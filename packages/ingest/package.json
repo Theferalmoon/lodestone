@@ -35,6 +35,10 @@
     "./store/sqlite": {
       "types": "./dist/store/sqlite.d.ts",
       "default": "./dist/store/sqlite.js"
+    },
+    "./clusterer": {
+      "types": "./dist/clusterer/index.d.ts",
+      "default": "./dist/clusterer/index.js"
     }
   },
   "scripts": {
@@ -53,6 +57,7 @@
     "better-sqlite3": "^12.4.1",
     "chokidar": "^3.6.0",
     "graphology": "^0.25.4",
+    "graphology-communities-louvain": "2.0.2",
     "graphology-metrics": "^2.4.0",
     "ignore": "^5.3.2",
     "onnxruntime-node": "^1.18.0",
