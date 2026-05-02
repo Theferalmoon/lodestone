@@ -51,6 +51,7 @@ import {
   provenanceFromReady,
   resolveCwd,
   resolveDbPath,
+  toMcpInputSchema,
 } from "./_shared.js";
 
 export const description =
@@ -77,6 +78,10 @@ export const inputSchema = z.object({
 });
 
 export type QueryInput = z.infer<typeof inputSchema>;
+
+/** Pre-computed JSON-Schema-7 view of `inputSchema` for the MCP `tools/list`
+ * surface. Pre-compute at module load — see `toMcpInputSchema` JSDoc. */
+export const jsonSchema = toMcpInputSchema(inputSchema);
 
 /** Permissive parsing layer that mirrors the public schema but allows top_k
  * over 50 so we can clamp + record `diagnostics.clamped: true` instead of

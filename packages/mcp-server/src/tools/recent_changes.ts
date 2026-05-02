@@ -30,7 +30,12 @@ import {
   type LodestoneToolResponseV13,
 } from "../envelope.js";
 import { openReader, type SqliteReadonlyDb } from "../client/sqlite.js";
-import { provenanceFromReady, resolveCwd, resolveDbPath } from "./_shared.js";
+import {
+  provenanceFromReady,
+  resolveCwd,
+  resolveDbPath,
+  toMcpInputSchema,
+} from "./_shared.js";
 
 export const description =
   "List symbols (functions, methods, classes) most recently touched by git commits in the project. Optional ISO-8601 `since` filter narrows to a time window; default top_k=20 returns the freshest changes. Useful when the agent needs to orient on what just changed before answering a question, debugging a regression, or summarizing the day's work. Reads from the SQLite `symbols.updated_at_commit` index — no shell-out to git on the request path.";
@@ -43,6 +48,10 @@ export const inputSchema = z.object({
 });
 
 export type RecentChangesInput = z.infer<typeof inputSchema>;
+
+/** Pre-computed JSON-Schema-7 view of `inputSchema` for the MCP `tools/list`
+ * surface. Pre-compute at module load — see `toMcpInputSchema` JSDoc. */
+export const jsonSchema = toMcpInputSchema(inputSchema);
 
 /** Permissive schema that allows top_k > 50 so we can clamp + report it via
  * `diagnostics.clamped` per POST-CODEX-001 amendment 4. */

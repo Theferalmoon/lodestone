@@ -10,6 +10,9 @@
 
 import path from "node:path";
 
+import type { ZodTypeAny } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+
 import {
   canonicalLodestoneDir,
   lodestoneSubpath,
@@ -19,6 +22,45 @@ import {
 import type { ReadyMarker } from "@lodestone/ingest/store";
 
 import { openReader, type ReaderHandle } from "../client/sqlite.js";
+
+/**
+ * Loose JSON-Schema-7 shape for an MCP `inputSchema` payload. We keep this
+ * narrow enough to be useful at the registration site (the SDK accepts any
+ * JSON-serializable object) but explicit enough that downstream callers can
+ * assert `type: "object"` + `additionalProperties: false` without further
+ * casts. Matches what `zod-to-json-schema(z.object(...), {target:'jsonSchema7'})`
+ * actually emits in v3.x.
+ */
+export interface JsonSchemaObject {
+  type: "object";
+  properties?: Record<string, unknown>;
+  required?: string[];
+  additionalProperties?: boolean;
+  $schema?: string;
+  // Extra JSON-Schema fields are allowed; the SDK passes the object through
+  // unchanged.
+  [extra: string]: unknown;
+}
+
+/**
+ * Convert a zod schema to a JSON-Schema-7 representation suitable for the
+ * MCP `inputSchema` field. Pre-compute at module load — `zodToJsonSchema` is
+ * sync + cheap, so paying the cost once at import keeps the per-call
+ * `tools/list` handler O(1).
+ *
+ * Closes impl-013 open question: previously the server registered every tool
+ * with a `{ type:"object", additionalProperties:true }` placeholder, so MCP
+ * clients (Claude Code, Cursor, Cline) saw no schema-level validation hints.
+ * This helper makes the actual zod shape visible to clients while keeping the
+ * runtime safeParse() inside each handler as the trust boundary.
+ */
+export function toMcpInputSchema(schema: ZodTypeAny): JsonSchemaObject {
+  // `target: jsonSchema7` matches the JSON-Schema dialect MCP clients accept.
+  // The default "openApi3" dialect drops `additionalProperties: false` and
+  // would re-introduce the very placeholder we are replacing.
+  const out = zodToJsonSchema(schema, { target: "jsonSchema7" }) as JsonSchemaObject;
+  return out;
+}
 
 /**
  * Project cwd resolution. The MCP server is launched per-project (the CLI cd's

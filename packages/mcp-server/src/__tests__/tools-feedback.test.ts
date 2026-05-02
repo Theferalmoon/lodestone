@@ -21,6 +21,7 @@ import type { FeedbackRow } from "@lodestone/shared";
 import { lodestoneSubpath } from "@lodestone/shared";
 
 import {
+  _resetCachedWriters,
   description,
   handler as productionHandler,
   inputSchema,
@@ -44,9 +45,13 @@ beforeEach(() => {
   bootstrap(w);
   closeDb(w);
   _resetWriterRegistry();
+  _resetCachedWriters();
 });
 
 afterEach(() => {
+  // Release the cached feedback writer FIRST so the §08 registry reset finds
+  // an empty pool (the cached writer holds an entry in the registry).
+  _resetCachedWriters();
   _resetWriterRegistry();
   try {
     rmSync(workdir, { recursive: true, force: true });
@@ -267,22 +272,21 @@ describe("handler — validation failures return structured envelopes (never thr
   });
 });
 
-describe("handler — trust boundary (writer is short-lived, not held open)", () => {
-  it("releases the writer after each call so a second call from another caller can open one", async () => {
+describe("handler — writer caching + serialization (v0.1.1, impl-017 B2)", () => {
+  it("re-opens after an external close (handle stays valid for the lifetime of the handler module)", async () => {
+    // v0.1.1 contract: the handler caches a writer at module scope and reuses
+    // it across calls. If the cached writer is externally closed (test reset,
+    // signal handler), the next handler call lazily re-opens — verified here
+    // by calling handler twice, with a deliberate cache flush in between.
     const handler = makeHandler({ cwd: workdir });
     await handler({ tool: "query", request_id: "a", signal: "useful" });
 
-    // If the handler kept its writer registered, this would throw "writer
-    // already open". Instead the writer must have been closed in `finally`.
-    const w = openWriter(dbPath);
-    try {
-      expect(w.open).toBe(true);
-    } finally {
-      closeDb(w);
-      _resetWriterRegistry();
-    }
+    // Simulate the writer being torn down (e.g. server shutdown then restart
+    // within the same process). The cached writer entry must be re-opened on
+    // the next call.
+    _resetCachedWriters();
+    _resetWriterRegistry();
 
-    // And we can still write more feedback through the handler afterwards.
     await handler({ tool: "query", request_id: "b", signal: "useful" });
     expect(readAllRows()).toHaveLength(2);
   });
@@ -291,7 +295,9 @@ describe("handler — trust boundary (writer is short-lived, not held open)", ()
     const h1 = makeHandler({ cwd: workdir });
     await h1({ tool: "query", request_id: "first", signal: "useful" });
 
-    // Drop the registry as if the server process exited and restarted.
+    // Drop the cached writer + the §08 registry as if the server process
+    // exited and restarted. The next handler call must lazily re-open.
+    _resetCachedWriters();
     _resetWriterRegistry();
 
     const h2 = makeHandler({ cwd: workdir });
@@ -299,6 +305,57 @@ describe("handler — trust boundary (writer is short-lived, not held open)", ()
 
     const rows = readAllRows();
     expect(rows.map((r) => r.request_id)).toEqual(["first", "second"]);
+  });
+
+  it("ten concurrent calls all land — no §08 writerRegistry collision (impl-017 B2 spec)", async () => {
+    // The §17 original implementation opened a writer per call. Two calls
+    // racing each other tripped the §08 writerRegistry "writer already open"
+    // guard. v0.1.1 fixes this by caching the writer module-scope and
+    // serializing writes through a per-path Promise chain.
+    const handler = makeHandler({ cwd: workdir });
+    const concurrent = Array.from({ length: 10 }, (_, i) =>
+      handler({
+        tool: "query",
+        request_id: `concurrent-${i}`,
+        signal: "useful",
+      }),
+    );
+    const envelopes = (await Promise.all(concurrent)) as LodestoneToolResponseV13<FeedbackAck>[];
+
+    for (const env of envelopes) {
+      expect(env.results).toHaveLength(1);
+      expect(env.results[0]?.ack).toBe(true);
+      // Validate no warning leaked from a writer collision.
+      const warnings = env.diagnostics.warnings ?? [];
+      expect(warnings.some((w) => /writer already open|contention/i.test(w))).toBe(false);
+    }
+
+    // Every call must have produced a row; ids must be unique.
+    const rows = readAllRows();
+    expect(rows).toHaveLength(10);
+    const ids = new Set(rows.map((r) => r.id));
+    expect(ids.size).toBe(10);
+    // request_id linkage must round-trip — load-bearing for v0.5.
+    const requestIds = new Set(rows.map((r) => r.request_id));
+    expect(requestIds.size).toBe(10);
+    for (let i = 0; i < 10; i++) {
+      expect(requestIds.has(`concurrent-${i}`)).toBe(true);
+    }
+  });
+
+  it("subsequent calls reuse the cached writer (no second openWriter)", async () => {
+    // After the first call resolves, the cached writer entry is in the §08
+    // registry. A direct openWriter on the same path MUST still throw the
+    // "writer already open" error — proof that we are NOT closing per call
+    // anymore.
+    const handler = makeHandler({ cwd: workdir });
+    await handler({ tool: "query", request_id: "kept-open-1", signal: "useful" });
+
+    expect(() => openWriter(dbPath)).toThrow(/writer already open/i);
+
+    // The handler can still serve subsequent calls because it owns that entry.
+    await handler({ tool: "query", request_id: "kept-open-2", signal: "useful" });
+    expect(readAllRows()).toHaveLength(2);
   });
 });
 

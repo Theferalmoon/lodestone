@@ -22,7 +22,7 @@ import {
   wrapOk,
   type LodestoneToolResponseV13,
 } from "../envelope.js";
-import { openProjectReader } from "./_shared.js";
+import { openProjectReader, toMcpInputSchema } from "./_shared.js";
 
 export const description =
   "Return the reverse-reachability set for a file or symbol: all callers, all transitive importers, the clusters they live in, and a rough blast-radius score. Use this BEFORE editing a function to understand what might break, or AFTER seeing a test fail to find related call sites. Backed by a recursive CTE over the SQLite `edges` table — bounded by depth and result count to keep response size sane.";
@@ -33,6 +33,10 @@ export const inputSchema = z.object({
 });
 
 export type ImpactInput = z.infer<typeof inputSchema>;
+
+/** Pre-computed JSON-Schema-7 view of `inputSchema` for the MCP `tools/list`
+ * surface. Pre-compute at module load — see `toMcpInputSchema` JSDoc. */
+export const jsonSchema = toMcpInputSchema(inputSchema);
 
 /** Polite cap; §15 spec sets 100. §13 truncate.ts is the hard safety net. */
 const MAX_IMPACT_RESULTS = 100;

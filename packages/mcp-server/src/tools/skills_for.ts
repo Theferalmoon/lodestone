@@ -36,6 +36,7 @@ import {
   type LodestoneToolResponseV13,
 } from "../envelope.js";
 import { openReader, type ReaderHandle } from "../client/sqlite.js";
+import { toMcpInputSchema } from "./_shared.js";
 
 export const description =
   "Return the most relevant skill cards for a coding task. Skill cards are codebase-specific patterns Lodestone learned from the project — error-handling conventions, dependency-injection style, testing idioms, naming conventions, lint-preferred imports — surfaced as concise, actionable summaries with example symbol references and a maturity tag (seed | emerging | mature). The agent should consult these BEFORE writing code so its output matches the project's house style. Top_k defaults to 5; semantic match against a task description.";
@@ -56,6 +57,10 @@ export const inputSchema = z.object({
 });
 
 export type SkillsForInput = z.infer<typeof inputSchema>;
+
+/** Pre-computed JSON-Schema-7 view of `inputSchema` for the MCP `tools/list`
+ * surface. Pre-compute at module load — see `toMcpInputSchema` JSDoc. */
+export const jsonSchema = toMcpInputSchema(inputSchema);
 
 /**
  * Pluggable dependencies. The default handler resolves these from

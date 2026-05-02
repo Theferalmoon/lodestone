@@ -43,6 +43,7 @@ import {
   type LodestoneToolResponseV13,
 } from "../envelope.js";
 import { openReader, type ReaderHandle } from "../client/sqlite.js";
+import { toMcpInputSchema } from "./_shared.js";
 
 export const description =
   "Return the architectural cluster (community) matching a name or natural-language query. Each cluster is a Louvain-detected group of symbols representing an emergent module — auth, payments, ingest, etc. The response carries the cluster's heuristic name, its name_status (heuristic vs human-confirmed), an agent_instruction string telling the calling agent how to interact with the cluster, naming_evidence (top tokens / files / signature snippets that drove the name), and the member symbol IDs. Granularity selects between Louvain resolution levels (fine | medium | coarse). This is the core moat surface for code-aware agents.";
@@ -54,6 +55,10 @@ export const inputSchema = z.object({
 });
 
 export type ClusterInput = z.infer<typeof inputSchema>;
+
+/** Pre-computed JSON-Schema-7 view of `inputSchema` for the MCP `tools/list`
+ * surface. Pre-compute at module load — see `toMcpInputSchema` JSDoc. */
+export const jsonSchema = toMcpInputSchema(inputSchema);
 
 /**
  * Granularity → member cap mapping. Spec uses tight/default/wide; the §13

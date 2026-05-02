@@ -88,10 +88,13 @@ export function createServer(opts: CreateServerOptions): CreatedServer {
       tools: activeTools.map((t) => ({
         name: t.name,
         description: t.description,
-        // Provide a permissive JSON-Schema since v0 validates with zod inside
-        // the handler — the SDK accepts an empty object schema and lets the
-        // handler do the real validation. §14+ may swap to zod-to-json-schema.
-        inputSchema: { type: "object" as const, additionalProperties: true },
+        // v0.1.1: real zod-derived JSON-Schema-7 (closes impl-013 placeholder).
+        // Each tool pre-computes `jsonSchema` at module load via
+        // `toMcpInputSchema(inputSchema)`. Closed shape — `additionalProperties:
+        // false` — so MCP clients (Claude Code, Cursor, Cline) get
+        // schema-level validation UX, while the in-handler safeParse() remains
+        // the trust boundary on the request path.
+        inputSchema: t.jsonSchema,
       })),
     };
   });

@@ -25,11 +25,19 @@ import * as clusterTool from "./cluster.js";
 import * as skillsForTool from "./skills_for.js";
 import * as feedbackTool from "./feedback.js";
 import * as sqlTool from "./sql.js";
+import type { JsonSchemaObject } from "./_shared.js";
 
 export interface ToolEntry {
   name: McpToolName;
   description: string;
+  /** Runtime validator. Handlers safeParse() this on every call — the trust
+   * boundary lives in the handler, not in the wire schema. */
   inputSchema: ZodTypeAny;
+  /** Pre-computed JSON-Schema-7 view of `inputSchema`. Surfaced to MCP clients
+   * (Claude Code, Cursor, Cline) via `tools/list` so they get schema-level
+   * validation UX before dispatch. Pre-computed at module load by each tool —
+   * see `toMcpInputSchema` in `_shared.ts`. Closes impl-013 placeholder. */
+  jsonSchema: JsonSchemaObject;
   handler: (input: unknown) => Promise<LodestoneToolResponseV13<unknown>>;
   /** True only for `sql`. Server gates registration on the dangerous_tools_enabled flag. */
   dangerous?: boolean;
@@ -45,48 +53,56 @@ export const TOOL_REGISTRY: Readonly<Record<McpToolName, ToolEntry>> = Object.fr
     name: "cluster",
     description: clusterTool.description,
     inputSchema: clusterTool.inputSchema,
+    jsonSchema: clusterTool.jsonSchema,
     handler: clusterTool.handler,
   },
   context: {
     name: "context",
     description: contextTool.description,
     inputSchema: contextTool.inputSchema,
+    jsonSchema: contextTool.jsonSchema,
     handler: contextTool.handler,
   },
   feedback: {
     name: "feedback",
     description: feedbackTool.description,
     inputSchema: feedbackTool.inputSchema,
+    jsonSchema: feedbackTool.jsonSchema,
     handler: feedbackTool.handler,
   },
   impact: {
     name: "impact",
     description: impactTool.description,
     inputSchema: impactTool.inputSchema,
+    jsonSchema: impactTool.jsonSchema,
     handler: impactTool.handler,
   },
   query: {
     name: "query",
     description: queryTool.description,
     inputSchema: queryTool.inputSchema,
+    jsonSchema: queryTool.jsonSchema,
     handler: queryTool.handler,
   },
   recent_changes: {
     name: "recent_changes",
     description: recentChangesTool.description,
     inputSchema: recentChangesTool.inputSchema,
+    jsonSchema: recentChangesTool.jsonSchema,
     handler: recentChangesTool.handler,
   },
   skills_for: {
     name: "skills_for",
     description: skillsForTool.description,
     inputSchema: skillsForTool.inputSchema,
+    jsonSchema: skillsForTool.jsonSchema,
     handler: skillsForTool.handler,
   },
   sql: {
     name: "sql",
     description: sqlTool.description,
     inputSchema: sqlTool.inputSchema,
+    jsonSchema: sqlTool.jsonSchema,
     handler: sqlTool.handler,
     dangerous: true,
   },

@@ -24,7 +24,7 @@ import {
   wrapOk,
   type LodestoneToolResponseV13,
 } from "../envelope.js";
-import { openProjectReader } from "./_shared.js";
+import { openProjectReader, toMcpInputSchema } from "./_shared.js";
 
 export const description =
   "Execute an arbitrary SQL query against the project's read-only Lodestone SQLite index. Returns rows as JSON. DANGEROUS: only registered when `[mcp].dangerous_tools_enabled = true`. The connection is opened readonly at the driver level so write attempts (INSERT, UPDATE, DELETE, DROP) throw — but the operator should still treat exposing this tool as a power-user feature, not a default. Use for ad-hoc graph traversals beyond the canned `query` / `context` / `impact` / `cluster` tools, or for debugging the index itself.";
@@ -35,6 +35,10 @@ export const inputSchema = z.object({
 });
 
 export type SqlInput = z.infer<typeof inputSchema>;
+
+/** Pre-computed JSON-Schema-7 view of `inputSchema` for the MCP `tools/list`
+ * surface. Pre-compute at module load — see `toMcpInputSchema` JSDoc. */
+export const jsonSchema = toMcpInputSchema(inputSchema);
 
 export const dangerous = true;
 
