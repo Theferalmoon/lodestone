@@ -38,13 +38,25 @@ describe("output sink", () => {
     expect(printed).not.toContain("\n");
   });
 
-  it("with NO_COLOR set, output is pure ASCII (no ANSI sequences, no Unicode glyphs)", () => {
-    const prev = process.env.NO_COLOR;
-    process.env.NO_COLOR = "1";
+  it("when picocolors reports color disabled, output is pure ASCII (no ANSI sequences, no Unicode glyphs)", async () => {
+    // picocolors snapshots `isColorSupported` at module load (NO_COLOR vs
+    // FORCE_COLOR vs CI vs TTY). We can't reliably re-evaluate that mid-test
+    // — so we mock the dep directly to assert the contract: if picocolors
+    // returns the input unchanged, output.ts emits ASCII-only.
+    vi.resetModules();
+    vi.doMock("picocolors", () => ({
+      default: {
+        green: (s: string) => s,
+        yellow: (s: string) => s,
+        red: (s: string) => s,
+        isColorSupported: false,
+      },
+    }));
     try {
-      output.success("colored?");
-      output.warn("careful");
-      output.error("oops");
+      const { output: noColorOutput } = await import("../ui/output.js");
+      noColorOutput.success("colored?");
+      noColorOutput.warn("careful");
+      noColorOutput.error("oops");
       const allOutput = [
         ...logSpy.mock.calls.flat(),
         ...errSpy.mock.calls.flat(),
@@ -62,8 +74,8 @@ describe("output sink", () => {
       expect(allOutput).toContain("[warn]");
       expect(allOutput).toContain("[err]");
     } finally {
-      if (prev === undefined) delete process.env.NO_COLOR;
-      else process.env.NO_COLOR = prev;
+      vi.doUnmock("picocolors");
+      vi.resetModules();
     }
   });
 });
