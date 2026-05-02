@@ -284,12 +284,41 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     ).toBe(true);
   });
 
-  it("does not destroy an unparseable .mcp.json — warns and continues", async () => {
+  it("does not destroy an unparseable .mcp.json — fatal surface, preserves .lodestone/ for retry (Codex r2 §19 PARTIAL #1)", async () => {
+    // v0.1.2 treated this as warn-not-fatal and continued to delete
+    // .lodestone/. That violates §19's "only delete manifest AFTER all
+    // referenced files confirmed gone" promise for the MCP surface — once
+    // the manifest is gone, a retry has no provenance to undo the
+    // (still-present) lodestone-mcp entry that the unparseable file may
+    // contain. v0.1.3 escalates unparseable-when-init-authored to a fatal
+    // partial failure that preserves .lodestone/ for retry.
     runInstallSteps(tmp, { writeClaudeMd: false });
     const garbage = "{this is not json at all";
     writeFileSync(path.join(tmp, ".mcp.json"), garbage);
 
-    expect(await uninstall([])).toBe(0);
+    expect(await uninstall([])).toBe(1);
+    // File untouched (the existing safety guarantee — we never overwrite
+    // an unparseable file).
+    expect(readFileSync(path.join(tmp, ".mcp.json"), "utf8")).toBe(garbage);
+    // Manifest + .lodestone/ preserved so a re-run after fixing the JSON
+    // can resume from recorded provenance.
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(true);
+    expect(
+      existsSync(path.join(tmp, ".lodestone", "install-manifest.json"))
+    ).toBe(true);
+    const stderr = err.mock.calls.flat().join("\n");
+    expect(stderr.toLowerCase()).toMatch(/unparseable|preserved/);
+  });
+
+  it("conservative mode (no manifest) + unparseable .mcp.json: still fatal — file untouched, no .lodestone/ to preserve", async () => {
+    // No manifest means we can't be sure init authored the .mcp.json
+    // entry, BUT we still won't shred a file we can't parse, AND we
+    // surface the failure so the operator knows the .mcp.json hasn't
+    // been touched.
+    const garbage = "{this is not json at all";
+    writeFileSync(path.join(tmp, ".mcp.json"), garbage);
+
+    expect(await uninstall([])).toBe(1);
     expect(readFileSync(path.join(tmp, ".mcp.json"), "utf8")).toBe(garbage);
     const stderr = err.mock.calls.flat().join("\n");
     expect(stderr.toLowerCase()).toMatch(/unparseable/);

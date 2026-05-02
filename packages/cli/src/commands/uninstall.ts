@@ -102,9 +102,17 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
   const mcpRes = removeMcpEntry(cwd, { dryRun: opts.dryRun });
   reportMcp(mcpRes, opts.dryRun);
   if (mcpRes.action === "unparseable") {
-    // Unparseable .mcp.json is a warn-not-fatal — friend's hand-edit is
-    // probably in flight; we'd rather leave their config intact than shred it.
-    // No exit-code escalation.
+    // Codex r2 §19 PARTIAL #1: `.mcp.json` removal failures are part of
+    // the fatal-surface set. The original safety guarantee is preserved
+    // — we still don't overwrite a file we can't parse — but we no
+    // longer fall through to deleting `.lodestone/`. Without this
+    // escalation the manifest would be shredded while the unparseable
+    // `.mcp.json` may still contain a `lodestone-mcp` entry pointing at
+    // the just-deleted runtime; a re-run would then have no provenance
+    // to clean up that entry. Treating this as fatal preserves
+    // `.lodestone/` (and the manifest inside it) so a friend can fix
+    // the JSON and re-run `lodestone uninstall` to finish the job.
+    exitCode = 1;
   }
 
   // Codex §19 RED: only delete `.lodestone/` (and the manifest inside it)
