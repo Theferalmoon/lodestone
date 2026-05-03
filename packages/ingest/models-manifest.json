@@ -1,9 +1,9 @@
 {
   "note": "Pinned sha256 hashes for bundled embedder weights. Updated by scripts/bundle-models.mjs --update-manifest.",
-  "generatedAt": "2026-05-03T20:38:00.000Z",
+  "generatedAt": "2026-05-03T23:13:12.572Z",
   "models": {
     "nomic-text-v1.5": {
-      "hfRepoId": "Xenova/nomic-embed-text-v1.5",
+      "hfRepoId": "nomic-ai/nomic-embed-text-v1.5",
       "hfRevision": "main",
       "files": {
         "onnx/model_quantized.onnx": {
@@ -23,12 +23,35 @@
           "size": 2538
         }
       }
+    },
+    "snowflake-arctic-embed-s": {
+      "hfRepoId": "Snowflake/snowflake-arctic-embed-xs",
+      "hfRevision": "main",
+      "files": {
+        "onnx/model_quantized.onnx": {
+          "sha256": "e6aa5e656466a73d7c3111e9a3378bd13e5b93af30eaac2b3f13fd56692589a1",
+          "sizeBytes": 22972992,
+          "sourceUrl": "https://huggingface.co/Snowflake/snowflake-arctic-embed-xs/resolve/main/onnx/model_quantized.onnx"
+        },
+        "tokenizer.json": {
+          "sha256": "91f1def9b9391fdabe028cd3f3fcc4efd34e5d1f08c3bf2de513ebb5911a1854",
+          "sizeBytes": 711649,
+          "sourceUrl": "https://huggingface.co/Snowflake/snowflake-arctic-embed-xs/resolve/main/tokenizer.json"
+        },
+        "tokenizer_config.json": {
+          "sha256": "9ca59277519f6e3692c8685e26b94d4afca2d5438deff66483db495e48735810",
+          "sizeBytes": 1433,
+          "sourceUrl": "https://huggingface.co/Snowflake/snowflake-arctic-embed-xs/resolve/main/tokenizer_config.json"
+        },
+        "config.json": {
+          "sha256": "d7d071046ab952af96b7abad788db7ab3fc997b465e1b9914ff39707092254ec",
+          "sizeBytes": 737,
+          "sourceUrl": "https://huggingface.co/Snowflake/snowflake-arctic-embed-xs/resolve/main/config.json"
+        }
+      }
     }
   },
-  "deferredModels": {
-    "snowflake-arctic-embed-s": {
-      "status": "deferred-to-v0.1.x",
-      "reason": "v0.1 ships nomic-text-v1.5 default only. Snowflake low-RAM fallback requires HF auth to download; add to bundle in a v0.1.x patch release once an HF token is provisioned for the maintainer build pipeline."
-    }
+  "_deferredModels_resolved": {
+    "snowflake-arctic-embed-s": "Resolved 2026-05-03 — Snowflake passed §00.5 supply-chain gate (Apache-2.0, US-origin verified org, no trust_remote_code). Source switched from removed Xenova/snowflake-arctic-embed-xs to upstream Snowflake/snowflake-arctic-embed-xs. Bundled at 22.97 MB."
   }
 }
