@@ -7,9 +7,38 @@
 // Per spec §19 "removing the only entry": the file is left as
 // `{ "mcpServers": {} }\n`, NOT deleted — preserves the friend's file
 // structure and any external tooling that expects `.mcp.json` to exist.
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { writeFileAtomic } from "../install/atomic.js";
+
+/**
+ * Path-equal that survives platform symlink quirks (notably macOS
+ * `/var` → `/private/var`). Two paths are equal iff:
+ *  (a) string-equal, OR
+ *  (b) realpath of both equal, OR
+ *  (c) realpath of their PARENT dirs equal AND basenames equal (used when
+ *      one of the paths is a placeholder for a file that may not yet
+ *      exist — e.g. the runtime entrypoint that §05 / §13 stages later).
+ *
+ * Falls back to string-equal if any realpath call throws (e.g. the
+ * parent dir was unlinked between the readdir and the comparison).
+ */
+function pathsEqual(a: string, b: string): boolean {
+  if (a === b) return true;
+  try {
+    if (realpathSync(a) === realpathSync(b)) return true;
+  } catch {
+    /* one or both don't exist — fall through */
+  }
+  try {
+    return (
+      realpathSync(path.dirname(a)) === realpathSync(path.dirname(b)) &&
+      path.basename(a) === path.basename(b)
+    );
+  } catch {
+    return false;
+  }
+}
 
 export interface RemoveMcpResult {
   /**
@@ -110,7 +139,7 @@ export function removeMcpEntry(
       entry && typeof entry === "object" && typeof entry.command === "string"
         ? entry.command
         : null;
-    if (actualCommand !== opts.expectedRuntimeCommand) {
+    if (actualCommand === null || !pathsEqual(actualCommand, opts.expectedRuntimeCommand)) {
       return {
         action: "foreign-entry",
         path: mcpPath,
