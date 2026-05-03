@@ -26,6 +26,8 @@ import { writeFileAtomic } from "../install/atomic.js";
 import { augmentClaudeMd, type AugmentClaudeMdResult } from "../install/claude-md.js";
 import { updateGitignore, type UpdateGitignoreResult } from "../install/gitignore.js";
 import { writeMcpJson, type McpConfigResult } from "../install/mcp-config.js";
+import { installRuntime } from "../install/runtime.js";
+import { writeLodestoneToml } from "../install/toml.js";
 import { printClaudeMdSnippet } from "../install/snippet.js";
 import { runReindex, isBundledModelMissing } from "./reindex.js";
 import { output } from "../ui/output.js";
@@ -137,6 +139,14 @@ export function runInstallSteps(
   // Each surface: do the work, update the manifest, persist. The interim
   // writes are cheap (one small JSON file) and let uninstall reverse a
   // partial install precisely.
+  // Write the minimal lodestone.toml the MCP server boot path requires.
+  // v0.1.4 fix — prior init never wrote it; MCP server crashed on first
+  // boot with ENOENT. Idempotent: preserves an operator-edited file.
+  writeLodestoneToml(repoRoot);
+  // Install runtime shim FIRST so the path .mcp.json points at actually
+  // exists by the time the editor reads .mcp.json. v0.1.4 fix — prior
+  // builds wrote .mcp.json with a command path that was never created.
+  installRuntime(repoRoot);
   manifest.mcp_json = writeMcpJson(repoRoot);
   writeManifest();
 

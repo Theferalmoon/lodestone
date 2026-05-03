@@ -51,6 +51,9 @@ importers:
       '@lodestone/ingest':
         specifier: workspace:*
         version: link:../ingest
+      '@lodestone/mcp-server':
+        specifier: workspace:*
+        version: link:../mcp-server
       '@lodestone/shared':
         specifier: workspace:*
         version: link:../shared
