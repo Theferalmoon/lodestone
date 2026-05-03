@@ -85,7 +85,11 @@ const MODELS = [
   {
     id: "nomic-text-v1.5",
     dir: "nomic",
-    hfRepoId: "Xenova/nomic-embed-text-v1.5",
+    // 2026-05-03: switched from Xenova/nomic-embed-text-v1.5 (removed
+    // from HF) to nomic-ai/nomic-embed-text-v1.5 (official org). Verified
+    // sha256 of onnx/model_quantized.onnx is byte-identical to the
+    // pre-existing locally-bundled file (Xenova was a re-host).
+    hfRepoId: "nomic-ai/nomic-embed-text-v1.5",
     hfRevision: "main",
     files: [
       { filename: "onnx/model_quantized.onnx", remotePath: "onnx/model_quantized.onnx" },
@@ -97,11 +101,11 @@ const MODELS = [
   {
     id: "snowflake-arctic-embed-s",
     dir: "snowflake",
-    // Xenova mirrors the Snowflake embedder family with quantized ONNX.
-    // The `-xs` variant is ~33 MB and is what the §05 spec budgets for the
-    // low-RAM fallback. If a different size is preferred later, swap repo
-    // id here and bump the manifest with `--update-manifest`.
-    hfRepoId: "Xenova/snowflake-arctic-embed-xs",
+    // 2026-05-03: switched from Xenova/snowflake-arctic-embed-xs
+    // (removed from HF) to Snowflake/snowflake-arctic-embed-xs (official
+    // org). Same onnx/model_quantized.onnx layout — INT8 quantized,
+    // ~23 MB — fits the §05 low-RAM tier budget.
+    hfRepoId: "Snowflake/snowflake-arctic-embed-xs",
     hfRevision: "main",
     files: [
       { filename: "onnx/model_quantized.onnx", remotePath: "onnx/model_quantized.onnx" },
@@ -174,11 +178,37 @@ function fmtBytes(bytes) {
  */
 async function downloadTo(url, destPath) {
   const tmpPath = `${destPath}.partial`;
+  const headers = {
+    // Identify ourselves to the HF CDN for traceability.
+    "user-agent": "lodestone-bundle-models/0.1 (+https://github.com/cmnd-institute/lodestone)",
+  };
+  // 2026-05-03: HF now requires auth for model downloads even on public
+  // repos. Read token from $HF_TOKEN env first, then fall back to the
+  // huggingface-cli cache file. Maintainer-only (this script never runs
+  // on a friend machine).
+  const hfToken =
+    process.env.HF_TOKEN ||
+    process.env.HUGGING_FACE_HUB_TOKEN ||
+    (() => {
+      try {
+        const fs = require("node:fs");
+        const path = require("node:path");
+        const cacheToken = path.join(
+          process.env.HOME || "/root",
+          ".cache",
+          "huggingface",
+          "token",
+        );
+        return fs.existsSync(cacheToken) ? fs.readFileSync(cacheToken, "utf8").trim() : null;
+      } catch {
+        return null;
+      }
+    })();
+  if (hfToken) {
+    headers.Authorization = `Bearer ${hfToken}`;
+  }
   const res = await fetch(url, {
-    headers: {
-      // Identify ourselves to the HF CDN for traceability.
-      "user-agent": "lodestone-bundle-models/0.1 (+https://github.com/cmnd-institute/lodestone)",
-    },
+    headers,
     // Default redirect handling is fine — HF returns a 302 to the CDN.
     redirect: "follow",
   });
