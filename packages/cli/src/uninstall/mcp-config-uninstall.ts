@@ -12,32 +12,37 @@ import path from "node:path";
 import { writeFileAtomic } from "../install/atomic.js";
 
 /**
+ * Resolve the deepest existing ancestor of `p` via realpath, then re-append
+ * the trailing non-existing segments. Handles the case where `p` is a
+ * placeholder for a file that hasn't been staged yet (e.g. the runtime
+ * entrypoint at `<repoRoot>/.lodestone/runtime/lodestone-mcp` — init only
+ * writes the path string into `.mcp.json`; §05 / §13 create the file
+ * later). On macOS, `/var/folders/...` paths returned by `mkdtempSync`
+ * resolve to `/private/var/folders/...` via the platform symlink — without
+ * this normalization, init-side and uninstall-side comparisons disagree.
+ */
+function realpathDeepestExisting(p: string): string {
+  let head = p;
+  let tail = "";
+  while (head !== path.dirname(head)) {
+    try {
+      const real = realpathSync(head);
+      return tail === "" ? real : path.join(real, tail);
+    } catch {
+      tail = tail === "" ? path.basename(head) : path.join(path.basename(head), tail);
+      head = path.dirname(head);
+    }
+  }
+  return p;
+}
+
+/**
  * Path-equal that survives platform symlink quirks (notably macOS
- * `/var` → `/private/var`). Two paths are equal iff:
- *  (a) string-equal, OR
- *  (b) realpath of both equal, OR
- *  (c) realpath of their PARENT dirs equal AND basenames equal (used when
- *      one of the paths is a placeholder for a file that may not yet
- *      exist — e.g. the runtime entrypoint that §05 / §13 stages later).
- *
- * Falls back to string-equal if any realpath call throws (e.g. the
- * parent dir was unlinked between the readdir and the comparison).
+ * `/var` → `/private/var`) AND handles paths whose leaf may not yet exist.
  */
 function pathsEqual(a: string, b: string): boolean {
   if (a === b) return true;
-  try {
-    if (realpathSync(a) === realpathSync(b)) return true;
-  } catch {
-    /* one or both don't exist — fall through */
-  }
-  try {
-    return (
-      realpathSync(path.dirname(a)) === realpathSync(path.dirname(b)) &&
-      path.basename(a) === path.basename(b)
-    );
-  } catch {
-    return false;
-  }
+  return realpathDeepestExisting(a) === realpathDeepestExisting(b);
 }
 
 export interface RemoveMcpResult {
