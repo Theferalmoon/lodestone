@@ -5,8 +5,22 @@
   "type": "module",
   "description": "Shared types, config schema, path resolver, and SQLite schema definitions for the Lodestone monorepo.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/Theferalmoon/lodestone#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Theferalmoon/lodestone.git",
+    "directory": "packages/shared"
+  },
+  "bugs": {
+    "url": "https://github.com/Theferalmoon/lodestone/issues"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

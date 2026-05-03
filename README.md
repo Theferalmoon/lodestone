@@ -6,11 +6,23 @@ A project-local code-aware Knowledge Graph for coding agents.
 
 **Your code never leaves your machine.**
 
+## Install (one-liner)
+
+In any project directory, run:
+
 ```bash
-npx lodestone init
+curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
 ```
 
-See [`docs/README.md`](./docs/README.md) for the friend onboarding guide (authored as part of the documentation pass).
+This pulls the latest release tarballs from GitHub, installs them into `./node_modules`, and runs `lodestone init` for you. The Nomic embedder weights (~150 MB) are bundled inside the install — there are no runtime network calls.
+
+To pin a specific version:
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | LODESTONE_VERSION=v0.1.4 bash
+```
+
+See [`docs/README.md`](./docs/README.md) for the full friend onboarding guide.
 
 ## Developer bootstrap (clean machine)
 

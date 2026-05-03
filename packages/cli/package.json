@@ -5,8 +5,22 @@
   "type": "module",
   "description": "The `lodestone` CLI binary. Routes subcommands; status implemented; init/reindex/doctor/seed-skills/upgrade/uninstall stubbed for later sections.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/Theferalmoon/lodestone#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Theferalmoon/lodestone.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Theferalmoon/lodestone/issues"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "lodestone": "./dist/bin/lodestone.js"
   },

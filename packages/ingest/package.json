@@ -5,8 +5,22 @@
   "type": "module",
   "description": "Lodestone ingest pipeline runtimes — embedder (transformers.js + ONNX), parsers (tree-sitter), graph builder. Section 05 ships only the embedder runtime.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/Theferalmoon/lodestone#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Theferalmoon/lodestone.git",
+    "directory": "packages/ingest"
+  },
+  "bugs": {
+    "url": "https://github.com/Theferalmoon/lodestone/issues"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

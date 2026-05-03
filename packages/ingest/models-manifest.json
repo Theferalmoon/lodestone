@@ -1,0 +1,34 @@
+{
+  "note": "Pinned sha256 hashes for bundled embedder weights. Updated by scripts/bundle-models.mjs --update-manifest.",
+  "generatedAt": "2026-05-03T20:38:00.000Z",
+  "models": {
+    "nomic-text-v1.5": {
+      "hfRepoId": "Xenova/nomic-embed-text-v1.5",
+      "hfRevision": "main",
+      "files": {
+        "onnx/model_quantized.onnx": {
+          "sha256": "b4342336debaea79de872370664b0aaeb67dea4605513d00ee236ea871a81f27",
+          "size": 137296292
+        },
+        "tokenizer.json": {
+          "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+          "size": 711396
+        },
+        "tokenizer_config.json": {
+          "sha256": "d7e0000bcc80134debd2222220427e6bf5fa20a669f40a0d0d1409cc18e0a9bc",
+          "size": 1191
+        },
+        "config.json": {
+          "sha256": "9ab00bd92cee80a569f708140b7b6c1661a65891ff3765b1519e181ba2f2c92b",
+          "size": 2538
+        }
+      }
+    }
+  },
+  "deferredModels": {
+    "snowflake-arctic-embed-s": {
+      "status": "deferred-to-v0.1.x",
+      "reason": "v0.1 ships nomic-text-v1.5 default only. Snowflake low-RAM fallback requires HF auth to download; add to bundle in a v0.1.x patch release once an HF token is provisioned for the maintainer build pipeline."
+    }
+  }
+}
