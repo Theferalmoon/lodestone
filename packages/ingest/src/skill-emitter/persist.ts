@@ -106,7 +106,13 @@ export async function writeSkills(
   let embeddings: (Buffer | null)[] = skills.map(() => null);
   if (opts.embedder && skills.length > 0) {
     const texts = skills.map((entry) => entry.skill.description);
-    const vectors = await opts.embedder.embed(texts);
+    // Chunk by embedder.maxBatch — see clusterer/persist.ts for context.
+    const maxBatch = Math.max(1, opts.embedder.maxBatch);
+    const vectors: Float32Array[] = [];
+    for (let i = 0; i < texts.length; i += maxBatch) {
+      const slice = await opts.embedder.embed(texts.slice(i, i + maxBatch));
+      vectors.push(...slice);
+    }
     embeddings = vectors.map((vec) =>
       vec ? Buffer.from(vec.buffer, vec.byteOffset, vec.byteLength) : null,
     );

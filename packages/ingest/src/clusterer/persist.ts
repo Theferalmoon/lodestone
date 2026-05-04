@@ -42,7 +42,15 @@ export async function persistClusters(
   let embeddings: (Buffer | null)[] = clusters.map(() => null);
   if (opts.embedder && clusters.length > 0) {
     const texts = clusters.map((c) => c.description ?? "");
-    const vectors = await opts.embedder.embed(texts);
+    // Chunk by embedder.maxBatch — the snowflake/nomic embedders enforce a
+    // hard cap and reject single-call inputs longer than that. Real repos
+    // produce thousands of clusters, far past any embedder's max batch.
+    const maxBatch = Math.max(1, opts.embedder.maxBatch);
+    const vectors: Float32Array[] = [];
+    for (let i = 0; i < texts.length; i += maxBatch) {
+      const slice = await opts.embedder.embed(texts.slice(i, i + maxBatch));
+      vectors.push(...slice);
+    }
     embeddings = vectors.map((vec) =>
       vec ? Buffer.from(vec.buffer, vec.byteOffset, vec.byteLength) : null,
     );
