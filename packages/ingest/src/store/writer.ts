@@ -260,17 +260,31 @@ export function writeEmbeddings(
 ): number {
   ensureSymbolEmbeddingsTable(db);
   const expectedDim = resolveVectorDim(db);
+  // sqlite-vec's vec0 virtual table treats a duplicate symbol_id as a hard
+  // UNIQUE-constraint failure even when the writer uses `INSERT OR REPLACE`.
+  // Parsers can emit colliding symbol IDs (anonymous functions, `default`
+  // exports, name-shadowed locals across files). Dedupe by symbol_id before
+  // insert (last-write-wins) so the embed pass survives those collisions.
+  const dedup = new Map<string, EmbeddingRow>();
+  for (const r of rows) dedup.set(r.symbol_id, r);
+  // Per-row delete-then-insert acts as a safe upsert in vec0. Cheap on a
+  // freshly-wiped table (index-meta.ts wipes before the pipeline embed pass);
+  // bounded cost on incremental re-runs.
+  const deleteStmt = db.prepare(
+    `DELETE FROM symbol_embeddings WHERE symbol_id = ?`,
+  );
   const insertStmt = db.prepare(
-    `INSERT OR REPLACE INTO symbol_embeddings (symbol_id, embedding) VALUES (?, ?)`,
+    `INSERT INTO symbol_embeddings (symbol_id, embedding) VALUES (?, ?)`,
   );
   const tx = db.transaction(() => {
-    for (const r of rows) {
+    for (const r of dedup.values()) {
       if (r.vector.length !== expectedDim) {
         throw new Error(
           `Embedding for ${r.symbol_id} has length ${r.vector.length}, expected ${expectedDim}.`,
         );
       }
       // sqlite-vec accepts a Buffer view of a Float32Array as a vector blob.
+      deleteStmt.run(r.symbol_id);
       insertStmt.run(
         r.symbol_id,
         Buffer.from(r.vector.buffer, r.vector.byteOffset, r.vector.byteLength),
@@ -278,7 +292,7 @@ export function writeEmbeddings(
     }
   });
   tx();
-  return rows.length;
+  return dedup.size;
 }
 
 function symbolToRow(s: LodestoneSymbol, ctx: SymbolWriteContext): SymbolRow {

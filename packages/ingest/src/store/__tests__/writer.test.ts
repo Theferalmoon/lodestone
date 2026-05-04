@@ -270,6 +270,47 @@ describe("writeEmbeddings", () => {
     }
   });
 
+  it("dedupes duplicate symbol_ids in the input batch (last-write-wins)", () => {
+    // Regression: parsers can emit colliding symbol IDs (anonymous functions,
+    // `default` exports, name-shadowed locals). vec0 does not honor `INSERT
+    // OR REPLACE`, so the writer must dedupe before inserting or the embed
+    // pass dies with `UNIQUE constraint failed on symbol_embeddings`.
+    const db = openWriter(dbPath);
+    try {
+      bootstrap(db);
+      writeSymbols(db, [makeSymbol({ symbol: "dup", path: "x.ts" })], {
+        index_epoch: 1,
+      });
+      const v1 = new Float32Array(768);
+      v1.fill(0.1);
+      const v2 = new Float32Array(768);
+      v2.fill(0.9);
+      const written = writeEmbeddings(db, [
+        { symbol_id: "dup", vector: v1 },
+        { symbol_id: "dup", vector: v2 },
+      ]);
+      expect(written).toBe(1);
+      const count = db
+        .prepare("SELECT COUNT(*) AS c FROM symbol_embeddings")
+        .get() as { c: number };
+      expect(count.c).toBe(1);
+      // last-write-wins: v2 (0.9) should win over v1 (0.1)
+      const probe = new Float32Array(768);
+      probe.fill(0.9);
+      const rows = db
+        .prepare(
+          "SELECT symbol_id, distance FROM symbol_embeddings WHERE embedding MATCH ? AND k = 1",
+        )
+        .all(
+          Buffer.from(probe.buffer, probe.byteOffset, probe.byteLength),
+        ) as Array<{ symbol_id: string; distance: number }>;
+      expect(rows[0]?.symbol_id).toBe("dup");
+      expect(rows[0]?.distance).toBeLessThan(0.01); // near-zero — matched v2
+    } finally {
+      closeDb(db);
+    }
+  });
+
   it("persists vectors and supports KNN search via vec0 MATCH", () => {
     const db = openWriter(dbPath);
     try {
