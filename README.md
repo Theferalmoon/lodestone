@@ -11,7 +11,7 @@ A project-local code-aware Knowledge Graph for coding agents.
 In any project directory, run:
 
 ```bash
-curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
+curl -sSfL https://lodestone.cmndi.ai/install | bash
 ```
 
 This pulls the latest release tarballs from GitHub, installs them into `./node_modules`, and runs `lodestone init` for you. The embedder weights are bundled inside the install — there are no runtime network calls.
@@ -19,7 +19,7 @@ This pulls the latest release tarballs from GitHub, installs them into `./node_m
 **Profiles.** The default `lite` profile uses the Snowflake 384d embedder; the tarball download is ~16 MB. For advanced setups that want the larger Nomic 768d embedder, pass `LODESTONE_PROFILE=full` (~178 MB tarball download):
 
 ```bash
-curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | LODESTONE_PROFILE=full bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 ```
 
 **Disk footprint.** The numbers above are what you actually download from the GitHub release. After `npm install`, the full `./node_modules` tree — Lodestone plus its transitive npm dependencies (tree-sitter parsers, `better-sqlite3`, `onnxruntime-node`, ~240 others) — is **~1 GB** in either profile. The bulk on disk is the npm dep tree, not Lodestone itself. Plan accordingly on metered/slow connections.
@@ -27,10 +27,10 @@ curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts
 **Pinning.** To pin a specific version:
 
 ```bash
-curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | LODESTONE_VERSION=v0.1.4 bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.4 bash
 ```
 
-**Access.** The `Theferalmoon/lodestone` repo is currently public, so no GitHub auth is required to fetch this installer or the release tarballs. If you got `https://lodestone.cmndi.ai/install` from somewhere — that shortlink is planned but not yet wired; use the raw-GitHub URL above today.
+**Access.** The `Theferalmoon/lodestone` repo is currently public, so no GitHub auth is required to fetch this installer or the release tarballs. The `lodestone.cmndi.ai/install` URL is a 302 redirect to `https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh` — if Cloudflare is unreachable for any reason, you can use the raw-GitHub URL directly.
 
 See [`docs/README.md`](./docs/README.md) for the friend onboarding guide. (Note: that doc still references `npx lodestone init`, which is the v0.5 npm path; today's working install path is the curl one-liner above.)
 

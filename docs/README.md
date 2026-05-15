@@ -12,7 +12,7 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 > from the [top-level README](../README.md#install-one-liner):
 >
 > ```bash
-> curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
+> curl -sSfL https://lodestone.cmndi.ai/install | bash
 > ```
 >
 > Everything else in this guide (MCP tool surface, the "first 60 seconds"
@@ -26,7 +26,7 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 npx lodestone init
 
 # Today (v0.1.4, what actually works):
-curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
+curl -sSfL https://lodestone.cmndi.ai/install | bash
 ```
 
 Either command does the magic-moment work: detects your project's languages, writes `.lodestone/lodestone.toml`, scaffolds the SQLite + sqlite-vec store, downloads zero models on the default profile (the embedder is bundled), runs the first ingest pass, and writes a `.mcp.json` snippet your coding agent can pick up. Then open Claude Code (or Cursor, or any other MCP-aware client) in the same directory and ask:
@@ -54,7 +54,7 @@ Full reference (request shapes, response shapes, examples): [`MCP-TOOLS.md`](./M
 
 ```bash
 $ cd ~/code/your-project
-$ curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
+$ curl -sSfL https://lodestone.cmndi.ai/install | bash
 [lodestone-install] profile = lite
 [lodestone-install] latest = v0.1.4
 [lodestone-install] downloading tarballs ... (4 files, ~16 MB)

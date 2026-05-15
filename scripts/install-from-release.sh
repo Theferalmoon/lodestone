@@ -8,16 +8,17 @@
 # One-line usage:
 #
 #   # Lite (default — Snowflake 384d embedder; ~16 MB to download)
-#   curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
+#   curl -sSfL https://lodestone.cmndi.ai/install | bash
 #
 #   # Full (Nomic 768d embedder; ~178 MB to download — advanced setups)
-#   curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | LODESTONE_PROFILE=full bash
+#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 #
 #   # Pin a specific version
-#   curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | LODESTONE_VERSION=v0.1.4 LODESTONE_PROFILE=lite bash
+#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.4 LODESTONE_PROFILE=lite bash
 #
-# (A friendly https://lodestone.cmndi.ai/install shortlink is planned but not
-# yet wired up — use the raw-GitHub URL above today.)
+# (lodestone.cmndi.ai/install is a 302 redirect to the canonical script at
+# raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh
+# — if Cloudflare is down for any reason, use that raw-GitHub URL directly.)
 #
 # What it does:
 #   1. Resolves the version (env LODESTONE_VERSION, or "latest").
