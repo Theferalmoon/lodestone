@@ -7,41 +7,52 @@
 #
 # One-line usage:
 #
-#   # Lite (default — Snowflake 384d embedder, ~16 MB total install)
-#   curl -sSfL https://lodestone.cmndi.ai/install | bash
-#   # Or via raw GitHub URL:
+#   # Lite (default — Snowflake 384d embedder; ~16 MB to download)
 #   curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
 #
-#   # Full (Nomic 768d embedder, ~178 MB — for advanced setups)
-#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
+#   # Full (Nomic 768d embedder; ~178 MB to download — advanced setups)
+#   curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | LODESTONE_PROFILE=full bash
 #
 #   # Pin a specific version
-#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.4 LODESTONE_PROFILE=lite bash
+#   curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | LODESTONE_VERSION=v0.1.4 LODESTONE_PROFILE=lite bash
+#
+# (A friendly https://lodestone.cmndi.ai/install shortlink is planned but not
+# yet wired up — use the raw-GitHub URL above today.)
 #
 # What it does:
 #   1. Resolves the version (env LODESTONE_VERSION, or "latest").
 #   2. Resolves the profile (env LODESTONE_PROFILE, default "lite").
-#   3. Downloads the tarballs from the GH release into a temp dir
-#      (uses GH_TOKEN env if the repo is private and you have access).
+#   3. Downloads the tarballs from the GH release into a temp dir.
 #   4. Installs them into ./node_modules using `npm install ./*.tgz`.
 #   5. Runs the lodestone bin's `init` against the current dir.
+#
+# Disk footprint (lite profile verified e2e 2026-05-15 against v0.1.4 on Node 22;
+# full profile sizes from the published GitHub release assets):
+#   • Tarball download (what your bandwidth pays for):
+#         ~16 MB (lite)   /   ~178 MB (full)
+#   • ./node_modules total after install, with transitive deps:
+#         ~1 GB in either profile (tree-sitter parsers, better-sqlite3,
+#         onnxruntime-node, ~240 other packages)
+#   The bulk on disk is the npm dep tree, not Lodestone itself.
 #
 # Requires: curl, node ≥20, npm. Cleans up its temp dir on success or failure.
 #
 # Privacy: lodestone bundles its embedder weights inside the
 # `@lodestone/ingest` tarball. After this install, no network call is
 # needed at runtime. The single network use is THIS install pulling
-# from github.com/Theferalmoon/lodestone (which you already trust).
+# from github.com/Theferalmoon/lodestone (a public repo).
 #
-# Tech gating: the lodestone GitHub repo is PRIVATE. To download release
-# tarballs you must either (a) have `gh auth login` configured with a
-# GitHub account that's a collaborator on the repo, or (b) pass
-# GH_TOKEN=<personal-access-token> as an env var. The operator sends
-# friends a short-lived invite token via Discord/email.
+# Access: github.com/Theferalmoon/lodestone is currently a public
+# repository, so no auth is required to fetch this script or the release
+# tarballs. If the operator later flips the repo private for a specific
+# release, this installer will fall back to `gh release download` when
+# `gh auth login` has been run, or to an explicit `GH_TOKEN=<pat>` env
+# var; see the asset-download block below.
 #
-# Compliance: NIST 800-53 SA-12, CM-6, CM-7; SOC 2 CC6.6; CMNDI supply
-# chain — Apache-2.0 deps, US-origin embedders (gate-approved per
-# §00.5 mandate).
+# Compliance summary (friend-facing): Apache-2.0 license; bundled
+# embedders are US-origin (NVIDIA / IBM / Snowflake / Nomic English
+# family) and vetted against the CMNDI supply-chain policy; no runtime
+# model fetch.
 
 set -euo pipefail
 

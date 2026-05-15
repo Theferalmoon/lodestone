@@ -14,15 +14,25 @@ In any project directory, run:
 curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
 ```
 
-This pulls the latest release tarballs from GitHub, installs them into `./node_modules`, and runs `lodestone init` for you. The Nomic embedder weights (~150 MB) are bundled inside the install — there are no runtime network calls.
+This pulls the latest release tarballs from GitHub, installs them into `./node_modules`, and runs `lodestone init` for you. The embedder weights are bundled inside the install — there are no runtime network calls.
 
-To pin a specific version:
+**Profiles.** The default `lite` profile uses the Snowflake 384d embedder; the tarball download is ~16 MB. For advanced setups that want the larger Nomic 768d embedder, pass `LODESTONE_PROFILE=full` (~178 MB tarball download):
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | LODESTONE_PROFILE=full bash
+```
+
+**Disk footprint.** The numbers above are what you actually download from the GitHub release. After `npm install`, the full `./node_modules` tree — Lodestone plus its transitive npm dependencies (tree-sitter parsers, `better-sqlite3`, `onnxruntime-node`, ~240 others) — is **~1 GB** in either profile. The bulk on disk is the npm dep tree, not Lodestone itself. Plan accordingly on metered/slow connections.
+
+**Pinning.** To pin a specific version:
 
 ```bash
 curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | LODESTONE_VERSION=v0.1.4 bash
 ```
 
-See [`docs/README.md`](./docs/README.md) for the full friend onboarding guide.
+**Access.** The `Theferalmoon/lodestone` repo is currently public, so no GitHub auth is required to fetch this installer or the release tarballs. If you got `https://lodestone.cmndi.ai/install` from somewhere — that shortlink is planned but not yet wired; use the raw-GitHub URL above today.
+
+See [`docs/README.md`](./docs/README.md) for the friend onboarding guide. (Note: that doc still references `npx lodestone init`, which is the v0.5 npm path; today's working install path is the curl one-liner above.)
 
 ## Developer bootstrap (clean machine)
 
@@ -42,9 +52,9 @@ pnpm test
 
 ## Maintainer-only: bundling embedder weights before publish
 
-Lodestone ships its embedders (Nomic 768d default + Snowflake 384d low-RAM fallback) **inside the npm tarball** so that friends never make a runtime network call to Hugging Face. This is what makes the "your code never leaves your machine" promise defensible.
+Lodestone ships its embedders (Nomic 768d for the `full` profile, Snowflake 384d for the `lite` profile) **inside the per-profile `@lodestone/ingest` tarball** so that friends never make a runtime network call to Hugging Face. This is what makes the "your code never leaves your machine" promise defensible. Each release ships two ingest tarballs (`-lite` and `-full`); `scripts/pack-profile.sh` strips the OTHER profile's `dist/models/` subdir from the package before `npm pack` so friends only download the weights they actually use.
 
-The weights live under `packages/ingest/models/` (gitignored, ~185 MB) and are copied into `packages/ingest/dist/models/` at build time. Maintainers populate them once before publishing:
+Both embedder dirs live under `packages/ingest/models/` in the workspace (gitignored, ~185 MB combined). They are copied into `packages/ingest/dist/models/` at build time, then split per-profile at pack time. Maintainers populate them once before publishing:
 
 ```bash
 # 1. Download both bundled embedders from Hugging Face into packages/ingest/models/
