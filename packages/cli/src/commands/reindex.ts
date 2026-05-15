@@ -94,6 +94,16 @@ export async function runReindex(repoRoot: string): Promise<PipelineSummary> {
     output.info(`  clusters:            ${summary.clusterCount}`);
     output.info(`  seed skills:         ${summary.skillCount}`);
     output.info(`  embeddings:          ${summary.embeddingCount}`);
+    if (summary.filesParsed === 0) {
+      // Friend-mode footgun: curl-bash installer run in an empty or wrong dir
+      // (Downloads/, ~/, scratch) silently produces an empty KG. Surface a
+      // visible hint so the next-step editor agent doesn't conclude Lodestone
+      // is broken. Exit code stays 0 — advisory only.
+      output.warn(
+        "0 source files were parsed — did you mean to run `lodestone init` inside a code directory? " +
+          "Lodestone looks for .ts/.tsx/.js/.jsx/.mjs/.cjs/.py/.pyi/.go/.rs files (configurable in lodestone.toml).",
+      );
+    }
     return summary;
   } finally {
     try {

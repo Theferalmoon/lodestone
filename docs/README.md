@@ -6,13 +6,30 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 
 **Your code never leaves your machine.** Embeddings, the call graph, cluster names, skill cards, feedback events — everything is written to `.lodestone/` inside your project, locally. There is no telemetry, no upload step, and no remote service to call. See [`PRIVACY.md`](./PRIVACY.md) for the implementation details and the build-time grep audit that enforces it.
 
+> **Note (v0.1.4).** The `npx lodestone init` flow described below is the
+> v0.5+ npm-publish path and is **not yet wired** — `@lodestone/cli` is not
+> on the npm registry. Today's working install is the curl-bash one-liner
+> from the [top-level README](../README.md#install-one-liner):
+>
+> ```bash
+> curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
+> ```
+>
+> Everything else in this guide (MCP tool surface, the "first 60 seconds"
+> question, where-to-go-next links) still applies after the curl install
+> finishes — only the literal first command differs.
+
 ## Install
 
 ```bash
+# v0.5+ (not yet wired):
 npx lodestone init
+
+# Today (v0.1.4, what actually works):
+curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
 ```
 
-That command does the magic-moment work: detects your project's languages, writes `.lodestone/lodestone.toml`, scaffolds the SQLite + sqlite-vec store, downloads zero models on the default profile (the embedder is bundled), runs the first ingest pass, and writes a `.mcp.json` snippet your coding agent can pick up. Then open Claude Code (or Cursor, or any other MCP-aware client) in the same directory and ask:
+Either command does the magic-moment work: detects your project's languages, writes `.lodestone/lodestone.toml`, scaffolds the SQLite + sqlite-vec store, downloads zero models on the default profile (the embedder is bundled), runs the first ingest pass, and writes a `.mcp.json` snippet your coding agent can pick up. Then open Claude Code (or Cursor, or any other MCP-aware client) in the same directory and ask:
 
 > *what are the main subsystems of this codebase?*
 
@@ -37,13 +54,20 @@ Full reference (request shapes, response shapes, examples): [`MCP-TOOLS.md`](./M
 
 ```bash
 $ cd ~/code/your-project
-$ npx lodestone init
-[lodestone] detected languages: typescript, javascript
-[lodestone] wrote .lodestone/lodestone.toml
-[lodestone] bootstrapping SQLite + sqlite-vec store ...
-[lodestone] first ingest: 1247 files, 8932 symbols, 14217 edges (12.4s)
-[lodestone] wrote .mcp.json snippet — restart your MCP-aware editor to pick it up
-[lodestone] done. Run `lodestone status` for index health.
+$ curl -sSfL https://raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh | bash
+[lodestone-install] profile = lite
+[lodestone-install] latest = v0.1.4
+[lodestone-install] downloading tarballs ... (4 files, ~16 MB)
+[lodestone-install] installing into ./node_modules ...
+[lodestone-install] running 'lodestone init' ...
+[ok] Lodestone install complete.
+  .mcp.json:        created
+  install manifest: .lodestone/install-manifest.json
+[ok] Reindex complete.
+  files parsed:        1247
+  symbols indexed:     8932
+  edges (resolved):    14217
+  embeddings:          8932
 ```
 
 Open Claude Code (or any MCP client) in the same directory. Ask: *what are the main subsystems of this codebase?* The agent should call `cluster()` and read back the Louvain communities.

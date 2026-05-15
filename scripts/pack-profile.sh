@@ -3,11 +3,13 @@
 #
 # pack-profile.sh — produce lodestone tarballs for a specific install profile.
 #
-# Lodestone ships two friend-facing profiles:
-#   * lite — Snowflake 384d embedder, ~33 MB. For friends with low-RAM laptops
-#            or limited bandwidth. Default for friend distribution.
-#   * full — Nomic 768d embedder, 132 MB. For operator + Ryan + advanced
-#            setups that want the higher-quality embedder.
+# Lodestone ships two friend-facing profiles (tarball download sizes from
+# the published v0.1.4 GitHub release assets):
+#   * lite — Snowflake 384d embedder, ~16 MB tarball. For friends with
+#            low-RAM laptops or limited bandwidth. Default for friend
+#            distribution.
+#   * full — Nomic 768d embedder, ~178 MB tarball. For operator + Ryan +
+#            advanced setups that want the higher-quality embedder.
 #
 # Both profiles ship the same shared/cli/mcp-server tarballs; only the ingest
 # tarball differs (which embedder dir is included under dist/models/).

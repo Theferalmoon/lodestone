@@ -70,7 +70,7 @@ fi
 WAIVED_COUNT=0
 for f in $STAGED; do
   [ -f "$f" ] || continue
-  c=$(grep -c "HAYS-WAIVED" "$f" 2>/dev/null || echo 0)
+  c=$(grep -c "HAYS-WAIVED" "$f" 2>/dev/null) || c=0
   WAIVED_COUNT=$((WAIVED_COUNT + c))
 done
 if [ "$WAIVED_COUNT" -gt 0 ]; then
