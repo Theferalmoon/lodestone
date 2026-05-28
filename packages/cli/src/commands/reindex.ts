@@ -10,7 +10,9 @@
 // CMMC L2 SI.L2-3.14.1; SOC 2 CC7.2; ISO 27001 A.12.1.2; FedRAMP Mod SI-7.
 
 import type { PipelineSummary } from "@lodestone/ingest";
-import type { EmbedderHandle } from "@lodestone/ingest/embed";
+import type { EmbedderHandle, LoadOptions } from "@lodestone/ingest/embed";
+import type { LodestoneConfig } from "@lodestone/shared";
+import { loadConfig } from "../config/load.js";
 import { output } from "../ui/output.js";
 
 /**
@@ -18,38 +20,71 @@ import { output } from "../ui/output.js";
  * pulling the real nomic/snowflake weights. Production calls `load()`.
  * Cleared by tests in afterEach via `__setEmbedderLoaderForTests(null)`.
  */
-type EmbedderLoader = () => Promise<EmbedderHandle>;
+type EmbedderLoader = (opts?: LoadOptions) => Promise<EmbedderHandle>;
 let testLoader: EmbedderLoader | null = null;
 
 export function __setEmbedderLoaderForTests(loader: EmbedderLoader | null): void {
   testLoader = loader;
 }
 
-async function loadEmbedder(): Promise<EmbedderHandle> {
-  if (testLoader !== null) return testLoader();
+async function loadEmbedder(opts: LoadOptions = {}): Promise<EmbedderHandle> {
+  if (testLoader !== null) return testLoader(opts);
   // Lazy dynamic import so `lodestone init --no-reindex` does NOT pay the
   // graphology / better-sqlite3 / onnxruntime load cost (or trip on
   // graphology's CJS-named-export ESM interop quirk under Node).
-  const mod = (await import("@lodestone/ingest/embed")) as { load: () => Promise<EmbedderHandle> };
-  return mod.load();
+  const mod = (await import("@lodestone/ingest/embed")) as {
+    load: (opts?: LoadOptions) => Promise<EmbedderHandle>;
+  };
+  return mod.load(opts);
 }
 
 export interface ReindexOptions {
   /** Don't actually run; just print what would happen. */
   dryRun: boolean;
+  /** Print command help without touching the index. */
+  help: boolean;
 }
 
 export function parseReindexArgv(argv: readonly string[]): ReindexOptions {
   return {
     dryRun: argv.includes("--dry-run"),
+    help: argv.includes("--help") || argv.includes("-h"),
   };
+}
+
+export function printReindexHelp(): void {
+  console.log(
+    [
+      "lodestone reindex — rebuild this project's Lodestone index.",
+      "",
+      "USAGE",
+      "  lodestone reindex [--dry-run]",
+      "  lodestone reindex --help",
+      "",
+      "OPTIONS",
+      "  --dry-run   Show what would happen without touching .lodestone/.",
+      "  -h, --help  Show this help message.",
+      "",
+      "CONFIG",
+      "  Reads .lodestone/lodestone.toml before loading the embedder.",
+      "  [embedder].profile = \"tiny\" pins snowflake-arctic-embed-s for index-time embeddings.",
+    ].join("\n")
+  );
+}
+
+export function embedderLoadOptionsForProfile(
+  profile: LodestoneConfig["embedder"]["profile"]
+): LoadOptions {
+  if (process.env.LODESTONE_EMBEDDER) return {};
+  if (profile === "tiny") return { force: "snowflake-arctic-embed-s" };
+  return {};
 }
 
 /**
  * Embedder identity used in ready.json. The runtime `EmbedderHandle` shape
  * doesn't carry `quant`, so the loader caller passes it explicitly. v0 ships
- * nomic-text-v1.5 (int8 / fp32) and snowflake-arctic-embed-s; both report
- * dim=768. The exact quant tag isn't load-bearing for v0 status — when the
+ * nomic-text-v1.5 and snowflake-arctic-embed-s. The exact quant tag isn't
+ * load-bearing for v0 status — when the
  * runtime gains a `quant` getter on EmbedderHandle, plumb it through here.
  */
 function identityFor(id: string, dim: number): { id: string; dim: number; quant: string } {
@@ -62,8 +97,10 @@ function identityFor(id: string, dim: number): { id: string; dim: number; quant:
  * (init handles those before calling runReindex).
  */
 export async function runReindex(repoRoot: string): Promise<PipelineSummary> {
+  const config = await loadConfig(repoRoot);
+  const embedderOptions = embedderLoadOptionsForProfile(config.embedder.profile);
   output.info("Loading embedder…");
-  const embedder = await loadEmbedder();
+  const embedder = await loadEmbedder(embedderOptions);
   try {
     output.info(`Indexing repository at ${repoRoot}`);
     // Lazy import — see loadEmbedder() comment.
@@ -117,6 +154,11 @@ export async function runReindex(repoRoot: string): Promise<PipelineSummary> {
 export async function reindex(argv: readonly string[]): Promise<number> {
   const opts = parseReindexArgv(argv);
   const cwd = process.cwd();
+
+  if (opts.help) {
+    printReindexHelp();
+    return 0;
+  }
 
   if (opts.dryRun) {
     output.info("--dry-run set; would walk + parse + embed + persist under .lodestone/.");

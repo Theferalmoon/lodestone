@@ -80,6 +80,8 @@ Which embedding model and how it batches.
 | `profile` | enum | `"default"` | `"default"` uses the bundled `nomic-embed-text-v1.5` ONNX int8 (~150 MB, no fetch). `"tiny"` uses `snowflake-arctic-embed-s` (smaller, fetched on first use unless `LODESTONE_OFFLINE=1`). `"pro"` is reserved for v0.5+ and currently behaves like `"default"`. |
 | `batch_size` | int (≥1) | `16` | Symbols per inference batch. Higher uses more RAM during ingest; lower is friendlier on small machines. The pipeline auto-clamps when free RAM is low. |
 
+`lodestone reindex` reads this profile before loading the embedder. Set `profile = "tiny"` to pin index-time embeddings to `snowflake-arctic-embed-s`; an explicit `LODESTONE_EMBEDDER` environment override still wins for operator debugging.
+
 ## `[cluster]`
 
 Community detection over the symbol-and-call graph.
