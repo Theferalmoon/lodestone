@@ -6,7 +6,7 @@ Open issues carried for the v0.1.x line, with impact assessment and workaround n
 
 ## Production dependency audit status
 
-As of the v0.1.5 friend-install release prep on 2026-06-08, `pnpm audit --prod` is clean after root-level package overrides for patched transitive releases of `hono`, `ip-address`, `protobufjs`, and `qs`.
+As of the v0.1.5 friend-install release prep on 2026-06-08, `pnpm audit --prod` is clean after root-level package overrides for patched transitive releases of `hono`, `ip-address`, `protobufjs`, and `qs`. The public friend installer also adds a root npm override for `protobufjs@7.5.8` before installation because npm consumers do not inherit this monorepo's pnpm overrides.
 
 Because registry advisories can change after a release, treat `pnpm audit --prod` as a live verification command rather than a permanent guarantee.
 

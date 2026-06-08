@@ -218,8 +218,10 @@ status</h2>
 <p>As of the v0.1.5 friend-install release prep on 2026-06-08,
 <code>pnpm audit --prod</code> is clean after root-level package
 overrides for patched transitive releases of <code>hono</code>,
-<code>ip-address</code>, <code>protobufjs</code>, and
-<code>qs</code>.</p>
+<code>ip-address</code>, <code>protobufjs</code>, and <code>qs</code>.
+The public friend installer also adds a root npm override for
+<code>protobufjs@7.5.8</code> before installation because npm consumers
+do not inherit this monorepo's pnpm overrides.</p>
 <p>Because registry advisories can change after a release, treat
 <code>pnpm audit --prod</code> as a live verification command rather
 than a permanent guarantee.</p>
@@ -239,7 +241,7 @@ numbered-migrations runner ships in v0.5 alongside the embedder-dim swap
 option.</p>
 
       </article>
-      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-08 23:53 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>
