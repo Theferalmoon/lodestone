@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MCP Tools | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a class="active" href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="mcp-tool-reference">MCP tool reference</h1>
+<p>Lodestone exposes eight tools over the Model Context Protocol. Your
+editor's coding agent (Claude Code, Cursor, Cline, etc.) discovers them
+through the <code>.mcp.json</code> snippet that
+<code>lodestone init</code> writes. This document covers the universal
+response envelope, then each tool one by one.</p>
+<h2 id="the-universal-envelope">The universal envelope</h2>
+<p>Every Lodestone tool returns the same outer shape:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> LodestoneToolResponse<span class="op">&lt;</span>T<span class="op">&gt;</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  request_id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span>       <span class="co">// UUID v7, server-generated. Used by feedback() to reference this call.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  results<span class="op">:</span> T[]<span class="op">;</span>             <span class="co">// Per-tool payload. Always an array, even for &quot;context&quot; (one symbol).</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  provenance<span class="op">:</span> Provenance<span class="op">;</span>   <span class="co">// Git + index state at the moment the tool ran. Lets the agent reason about staleness.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  diagnostics<span class="op">:</span> Diagnostics<span class="op">;</span> <span class="co">// Coverage, warnings, truncation/clamp flags.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><code>Provenance</code> carries the head commit, the indexed commit,
+dirty-tree flags, upstream-branch state, the staleness in seconds, and a
+<code>source</code> field set to <code>"live"</code>,
+<code>"stale"</code>, or <code>"not_ready"</code>. When
+<code>source === "not_ready"</code> the index has not finished its first
+ingest pass — the agent should treat the response as preliminary. The
+full schema (with sentinel values for never-indexed and non-git
+directories) is in
+<code>packages/shared/src/types/envelope.ts</code>.</p>
+<p><code>Diagnostics</code> carries <code>coverage</code> (0..1,
+files-indexed-vs-non-ignored), an optional <code>warnings</code> array,
+an optional <code>truncated</code> flag (set when the response was
+clipped to fit <code>[mcp].max_response_kb</code>), and an optional
+<code>clamped</code> flag (set when an input parameter like
+<code>top_k</code> was silently capped).</p>
+<p>The agent should learn the envelope once. Per-tool sections below
+describe only the <code>T</code> payload.</p>
+<h2 id="tools-by-purpose">Tools by purpose</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Search</td>
+<td><code>query</code>, <code>recent_changes</code></td>
+</tr>
+<tr>
+<td>Graph</td>
+<td><code>context</code>, <code>impact</code>, <code>sql</code></td>
+</tr>
+<tr>
+<td>Moat</td>
+<td><code>cluster</code>, <code>skills_for</code></td>
+</tr>
+<tr>
+<td>Write</td>
+<td><code>feedback</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="query"><code>query</code></h2>
+<p>Hybrid semantic + keyword + graph search over the project's symbols.
+Returns the top-K most relevant functions, methods, classes, interfaces,
+types, modules, or constants for a natural-language question. Combines
+vector similarity (sqlite-vec), BM25 keyword match, and
+PageRank-weighted graph proximity. Use this as the default discovery
+tool when the agent needs to find code by intent rather than by exact
+name.</p>
+<p><strong>Input:</strong></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  question<span class="op">:</span> <span class="dt">string</span><span class="op">;</span>             <span class="co">// required, non-empty</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  top_k<span class="op">?:</span> <span class="dt">number</span><span class="op">;</span>               <span class="co">// 1..50, default 10. Over-cap is silently clamped (diagnostics.clamped=true).</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  filters<span class="op">?:</span> {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    paths<span class="op">?:</span> <span class="dt">string</span>[]<span class="op">;</span>           <span class="co">// glob patterns, e.g. [&quot;src/auth/**&quot;]</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    languages<span class="op">?:</span> <span class="dt">string</span>[]<span class="op">;</span>       <span class="co">// e.g. [&quot;typescript&quot;, &quot;python&quot;]</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    since<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span>             <span class="co">// ISO-8601, only symbols touched since this date</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Example request / response:</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;question&quot;</span><span class="fu">:</span> <span class="st">&quot;where is the rate limiter?&quot;</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;top_k&quot;</span><span class="fu">:</span> <span class="dv">3</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01939c6a-1234-7abc-9def-0123456789ab&quot;</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;results&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:src/middleware/rate-limit.ts:RateLimiter&quot;</span><span class="fu">,</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;RateLimiter&quot;</span><span class="fu">,</span> <span class="dt">&quot;kind&quot;</span><span class="fu">:</span> <span class="st">&quot;class&quot;</span><span class="fu">,</span> <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;src/middleware/rate-limit.ts&quot;</span><span class="fu">,</span> <span class="dt">&quot;score&quot;</span><span class="fu">:</span> <span class="fl">0.91</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:src/middleware/rate-limit.ts:checkBucket&quot;</span><span class="fu">,</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;checkBucket&quot;</span><span class="fu">,</span> <span class="dt">&quot;kind&quot;</span><span class="fu">:</span> <span class="st">&quot;function&quot;</span><span class="fu">,</span> <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;src/middleware/rate-limit.ts&quot;</span><span class="fu">,</span> <span class="dt">&quot;score&quot;</span><span class="fu">:</span> <span class="fl">0.78</span> <span class="fu">}</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;provenance&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;is_git_repo&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;head_commit&quot;</span><span class="fu">:</span> <span class="st">&quot;abc1234&quot;</span><span class="fu">,</span> <span class="dt">&quot;indexed_commit&quot;</span><span class="fu">:</span> <span class="st">&quot;abc1234&quot;</span><span class="fu">,</span> <span class="dt">&quot;dirty_at_index&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;dirty_now&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;commits_since_index&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;has_upstream&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;upstream_branch&quot;</span><span class="fu">:</span> <span class="st">&quot;origin/main&quot;</span><span class="fu">,</span> <span class="dt">&quot;commits_behind_upstream&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;indexed_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-05-01T14:00:00Z&quot;</span><span class="fu">,</span> <span class="dt">&quot;staleness_seconds&quot;</span><span class="fu">:</span> <span class="dv">12</span><span class="fu">,</span> <span class="dt">&quot;index_epoch&quot;</span><span class="fu">:</span> <span class="dv">47</span><span class="fu">,</span> <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;live&quot;</span> <span class="fu">},</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;diagnostics&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;coverage&quot;</span><span class="fu">:</span> <span class="fl">0.98</span><span class="fu">,</span> <span class="dt">&quot;coverage_basis&quot;</span><span class="fu">:</span> <span class="st">&quot;files-indexed-vs-non-ignored&quot;</span> <span class="fu">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>When NOT to use:</strong> if the agent already has a
+fully-qualified symbol (<code>pkg::Type::method</code>), call
+<code>context</code> directly — <code>query</code> will work but
+<code>context</code> is faster and returns richer per-symbol detail.</p>
+<h2 id="recent_changes"><code>recent_changes</code></h2>
+<p>List symbols (functions, methods, classes) most recently touched by
+git commits in the project. Optional ISO-8601 <code>since</code> filter
+narrows to a time window; default <code>top_k=20</code> returns the
+freshest changes. Useful when the agent needs to orient on what just
+changed before answering a question, debugging a regression, or
+summarizing the day's work. Reads from the SQLite
+<code>symbols.updated_at_commit</code> index — no shell-out to git on
+the request path.</p>
+<p><strong>Input:</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  since<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span>   <span class="co">// ISO-8601, e.g. &quot;2026-04-30T00:00:00Z&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  top_k<span class="op">?:</span> <span class="dt">number</span><span class="op">;</span>   <span class="co">// 1..50, default 20</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Example request / response:</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;since&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-04-29T00:00:00Z&quot;</span><span class="fu">,</span> <span class="dt">&quot;top_k&quot;</span><span class="fu">:</span> <span class="dv">5</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01939c6a-2222-7abc-9def-0123456789ab&quot;</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;results&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:src/auth/session.ts:rotateToken&quot;</span><span class="fu">,</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;rotateToken&quot;</span><span class="fu">,</span> <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;src/auth/session.ts&quot;</span><span class="fu">,</span> <span class="dt">&quot;last_commit&quot;</span><span class="fu">:</span> <span class="st">&quot;def5678&quot;</span><span class="fu">,</span> <span class="dt">&quot;last_commit_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-04-30T11:23:00Z&quot;</span> <span class="fu">}</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;provenance&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;is_git_repo&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;head_commit&quot;</span><span class="fu">:</span> <span class="st">&quot;def5678&quot;</span><span class="fu">,</span> <span class="dt">&quot;indexed_commit&quot;</span><span class="fu">:</span> <span class="st">&quot;def5678&quot;</span><span class="fu">,</span> <span class="dt">&quot;dirty_at_index&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;dirty_now&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;commits_since_index&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;has_upstream&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;upstream_branch&quot;</span><span class="fu">:</span> <span class="st">&quot;origin/main&quot;</span><span class="fu">,</span> <span class="dt">&quot;commits_behind_upstream&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;indexed_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-04-30T11:24:00Z&quot;</span><span class="fu">,</span> <span class="dt">&quot;staleness_seconds&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span> <span class="dt">&quot;index_epoch&quot;</span><span class="fu">:</span> <span class="dv">51</span><span class="fu">,</span> <span class="dt">&quot;source&quot;</span><span class="fu">:</span> <span class="st">&quot;live&quot;</span> <span class="fu">},</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;diagnostics&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;coverage&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">&quot;coverage_basis&quot;</span><span class="fu">:</span> <span class="st">&quot;files-indexed-vs-non-ignored&quot;</span> <span class="fu">}</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>When NOT to use:</strong> for "what was changed in commit X"
+use git directly; this tool is symbol-keyed, not commit-keyed.</p>
+<h2 id="context"><code>context</code></h2>
+<p>Return the architectural context surrounding a specific symbol: its
+callers, callees, the cluster it belongs to, the cluster's purpose,
+sibling symbols inside the same cluster, and any skill cards that
+mention it. Use this when the agent has a candidate symbol (from
+<code>query</code> or from a stack trace) and needs to understand how it
+fits into the codebase before editing. Pulls from SQLite edges,
+clusters, and skills tables in a single bounded read pass.</p>
+<p><strong>Input:</strong></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  symbol<span class="op">:</span> <span class="dt">string</span><span class="op">;</span>   <span class="co">// required. Three resolution paths:</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                    <span class="co">//   - contains &quot;::&quot;    → fully-qualified, single-symbol lookup</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                    <span class="co">//   - contains &quot;/&quot; or .ext → file-path, file-level summary</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                    <span class="co">//   - otherwise        → bare-name; returns SymbolMatches with hint</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Example request / response:</strong></p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;symbol&quot;</span><span class="fu">:</span> <span class="st">&quot;src/auth/session.ts::rotateToken&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01939c6a-3333-7abc-9def-0123456789ab&quot;</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;results&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;symbol&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:src/auth/session.ts:rotateToken&quot;</span><span class="fu">,</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;rotateToken&quot;</span><span class="fu">,</span> <span class="dt">&quot;kind&quot;</span><span class="fu">:</span> <span class="st">&quot;function&quot;</span><span class="fu">,</span> <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;src/auth/session.ts&quot;</span><span class="fu">,</span> <span class="dt">&quot;range&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;start_line&quot;</span><span class="fu">:</span> <span class="dv">42</span><span class="fu">,</span> <span class="dt">&quot;end_line&quot;</span><span class="fu">:</span> <span class="dv">71</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;callers&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:src/api/login.ts:handleLogin&quot;</span><span class="fu">,</span> <span class="dt">&quot;pagerank&quot;</span><span class="fu">:</span> <span class="fl">0.012</span> <span class="fu">}</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;callees&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:src/auth/jwt.ts:sign&quot;</span><span class="fu">,</span> <span class="dt">&quot;pagerank&quot;</span><span class="fu">:</span> <span class="fl">0.008</span> <span class="fu">}</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;cluster&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">7</span><span class="fu">,</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Auth &amp; Sessions&quot;</span><span class="fu">,</span> <span class="dt">&quot;name_status&quot;</span><span class="fu">:</span> <span class="st">&quot;heuristic&quot;</span> <span class="fu">}</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;provenance&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;...&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;diagnostics&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;coverage&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">&quot;coverage_basis&quot;</span><span class="fu">:</span> <span class="st">&quot;files-indexed-vs-non-ignored&quot;</span> <span class="fu">}</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Caller/callee lists are capped at 50 each.</p>
+<p><strong>When NOT to use:</strong> for blast-radius analysis ("what
+would break if I change this?") use <code>impact</code>.
+<code>context</code> is one hop deep; <code>impact</code> is
+recursive.</p>
+<h2 id="impact"><code>impact</code></h2>
+<p>Return the reverse-reachability set for a file or symbol: all
+callers, all transitive importers, the clusters they live in, and a
+rough blast-radius score. Use this BEFORE editing a function to
+understand what might break, or AFTER seeing a test fail to find related
+call sites. Backed by a recursive CTE over the SQLite <code>edges</code>
+table, bounded by depth (5) and result count (100) to keep response size
+sane.</p>
+<p><strong>Input:</strong></p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  file_or_symbol<span class="op">:</span> <span class="dt">string</span><span class="op">;</span>   <span class="co">// required. File path or fully-qualified symbol id.</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Example request / response:</strong></p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;file_or_symbol&quot;</span><span class="fu">:</span> <span class="st">&quot;src/auth/session.ts::rotateToken&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01939c6a-4444-7abc-9def-0123456789ab&quot;</span><span class="fu">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;results&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:src/api/login.ts:handleLogin&quot;</span><span class="fu">,</span> <span class="dt">&quot;depth&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;pagerank&quot;</span><span class="fu">:</span> <span class="fl">0.012</span><span class="fu">,</span> <span class="dt">&quot;cluster&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;API handlers&quot;</span> <span class="fu">}</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:src/middleware/auth-required.ts:guard&quot;</span><span class="fu">,</span> <span class="dt">&quot;depth&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="dt">&quot;pagerank&quot;</span><span class="fu">:</span> <span class="fl">0.009</span><span class="fu">,</span> <span class="dt">&quot;cluster&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;API handlers&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;provenance&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;...&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;diagnostics&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;coverage&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">&quot;coverage_basis&quot;</span><span class="fu">:</span> <span class="st">&quot;files-indexed-vs-non-ignored&quot;</span> <span class="fu">}</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>When NOT to use:</strong> for forward dependencies of a
+symbol (what does it call?) use <code>context</code> and read its
+<code>callees</code> field.</p>
+<h2 id="cluster-moat"><code>cluster</code> (moat)</h2>
+<p>Return the architectural cluster (community) matching a name or
+natural-language query. Each cluster is a Louvain-detected group of
+symbols representing an emergent module — auth, payments, ingest, etc.
+The response carries the cluster's heuristic name, its
+<code>name_status</code> (heuristic vs human-confirmed), an
+<code>agent_instruction</code> string telling the calling agent how to
+interact with the cluster, <code>naming_evidence</code> (anchor symbol,
+members sampled), and the member symbol IDs. Granularity selects between
+Louvain resolution levels (fine | medium | coarse). This is the core
+moat surface for code-aware agents.</p>
+<p><strong>Input:</strong></p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  name_or_query<span class="op">:</span> <span class="dt">string</span><span class="op">;</span>                            <span class="co">// required, non-empty</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  granularity<span class="op">?:</span> <span class="st">&quot;fine&quot;</span> <span class="op">|</span> <span class="st">&quot;medium&quot;</span> <span class="op">|</span> <span class="st">&quot;coarse&quot;</span><span class="op">;</span>      <span class="co">// default &quot;medium&quot;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Example request / response:</strong></p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;name_or_query&quot;</span><span class="fu">:</span> <span class="st">&quot;auth&quot;</span><span class="fu">,</span> <span class="dt">&quot;granularity&quot;</span><span class="fu">:</span> <span class="st">&quot;medium&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01939c6a-5555-7abc-9def-0123456789ab&quot;</span><span class="fu">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;results&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="dv">7</span><span class="fu">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;Auth &amp; Sessions&quot;</span><span class="fu">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name_status&quot;</span><span class="fu">:</span> <span class="st">&quot;heuristic&quot;</span><span class="fu">,</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;agent_instruction&quot;</span><span class="fu">:</span> <span class="st">&quot;synthesize_name_from_members&quot;</span><span class="fu">,</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;naming_evidence&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;anchor_symbol&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:src/auth/session.ts:rotateToken&quot;</span><span class="fu">,</span> <span class="dt">&quot;members_sampled&quot;</span><span class="fu">:</span> <span class="dv">23</span> <span class="fu">},</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;members&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;ts:src/auth/session.ts:rotateToken&quot;</span><span class="ot">,</span> <span class="st">&quot;ts:src/auth/jwt.ts:sign&quot;</span><span class="ot">,</span> <span class="st">&quot;ts:src/auth/jwt.ts:verify&quot;</span><span class="ot">]</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;provenance&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;...&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;diagnostics&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;coverage&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">&quot;coverage_basis&quot;</span><span class="fu">:</span> <span class="st">&quot;files-indexed-vs-non-ignored&quot;</span> <span class="fu">}</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The <code>agent_instruction</code> field is load-bearing: when
+<code>name_status === "heuristic"</code> it says
+<code>"synthesize_name_from_members"</code>, telling the agent to treat
+the cluster name as a starting hint and re-derive its own label from the
+member list. When a human has confirmed the name (via the
+<code>feedback</code> tool), <code>name_status === "human"</code> and
+<code>agent_instruction === "use_as_is"</code>.</p>
+<p><strong>When NOT to use:</strong> if the agent wants per-symbol
+detail rather than a group view, use <code>query</code> or
+<code>context</code>.</p>
+<h2 id="skills_for-moat"><code>skills_for</code> (moat)</h2>
+<p>Return the most relevant skill cards for a coding task. Skill cards
+are codebase-specific patterns Lodestone learned from the project —
+error-handling conventions, dependency-injection style, testing idioms,
+naming conventions, lint-preferred imports — surfaced as concise,
+actionable summaries with example symbol references and a maturity tag
+(<code>seed | emerging | mature</code>). The agent should consult these
+BEFORE writing code so its output matches the project's house style.
+<code>top_k</code> defaults to 5; semantic match against a task
+description.</p>
+<p><strong>Input:</strong></p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  task_description<span class="op">:</span> <span class="dt">string</span><span class="op">;</span>   <span class="co">// required, non-empty</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  top_k<span class="op">?:</span> <span class="dt">number</span><span class="op">;</span>             <span class="co">// ≥1, default 5. Over-cap is silently clamped.</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Example request / response:</strong></p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;task_description&quot;</span><span class="fu">:</span> <span class="st">&quot;add a new API handler for user profile updates&quot;</span><span class="fu">,</span> <span class="dt">&quot;top_k&quot;</span><span class="fu">:</span> <span class="dv">3</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01939c6a-6666-7abc-9def-0123456789ab&quot;</span><span class="fu">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;results&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;API handlers follow router-handler-service-repo&quot;</span><span class="fu">,</span> <span class="dt">&quot;maturity&quot;</span><span class="fu">:</span> <span class="st">&quot;emerging&quot;</span><span class="fu">,</span> <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.74</span><span class="fu">,</span> <span class="dt">&quot;anchor_symbols&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;ts:src/api/login.ts:handleLogin&quot;</span><span class="ot">,</span> <span class="st">&quot;ts:src/api/users.ts:handleGetUser&quot;</span><span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;body_excerpt&quot;</span><span class="fu">:</span> <span class="st">&quot;Handlers parse the request, delegate to a service, and never touch the repo layer directly...&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Errors use AppError subclass family&quot;</span><span class="fu">,</span> <span class="dt">&quot;maturity&quot;</span><span class="fu">:</span> <span class="st">&quot;mature&quot;</span><span class="fu">,</span> <span class="dt">&quot;confidence&quot;</span><span class="fu">:</span> <span class="fl">0.91</span><span class="fu">,</span> <span class="dt">&quot;anchor_symbols&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;ts:src/errors/app-error.ts:AppError&quot;</span><span class="ot">,</span> <span class="st">&quot;ts:src/errors/auth-error.ts:AuthError&quot;</span><span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;body_excerpt&quot;</span><span class="fu">:</span> <span class="st">&quot;Throw a typed AppError subclass; the global handler maps to HTTP status...&quot;</span> <span class="fu">}</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;provenance&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;...&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;diagnostics&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;coverage&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">&quot;coverage_basis&quot;</span><span class="fu">:</span> <span class="st">&quot;files-indexed-vs-non-ignored&quot;</span> <span class="fu">}</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>Honest framing:</strong> <code>skills_for</code> is the
+emerging moat. Best results come after the index has watched the
+codebase for ≥7 days — the skill emitter requires
+<code>min_age_days</code> of cluster stability before promoting a card.
+Fresh installs return seed skills (deterministic patterns extracted at
+init time: error hierarchies, framework signatures). They are useful but
+less rich than emitted cards. As the index lives with the project
+longer, cards mature from <code>seed</code> → <code>emerging</code> →
+<code>mature</code> based on confirmation signals.</p>
+<p><strong>When NOT to use:</strong> for "find me a function that does
+X" use <code>query</code>. <code>skills_for</code> is for project
+conventions, not for symbol discovery.</p>
+<h2 id="feedback-write-tool"><code>feedback</code> (write tool)</h2>
+<p>Record agent feedback on a prior Lodestone tool call. Required
+fields: the tool name (<code>query</code>, <code>cluster</code>,
+<code>context</code>, etc.), the prior call's <code>request_id</code>
+(UUID v7 from the prior envelope), and a <code>signal</code> literal
+(<code>useful</code> | <code>not_useful</code> | <code>wrong</code> |
+<code>stale</code>). Optional <code>note</code> (≤2 KB) explains why.
+Feedback is the training signal Lodestone uses to improve cluster names,
+skill cards, and ranking — call this whenever a prior tool call was
+meaningfully helpful or unhelpful.</p>
+<p><strong>Input:</strong></p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  tool<span class="op">:</span> <span class="dt">string</span><span class="op">;</span>                                          <span class="co">// required, e.g. &quot;cluster&quot;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  request_id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span>                                    <span class="co">// required, UUID from the prior envelope</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  signal<span class="op">:</span> <span class="st">&quot;useful&quot;</span> <span class="op">|</span> <span class="st">&quot;not_useful&quot;</span> <span class="op">|</span> <span class="st">&quot;wrong&quot;</span> <span class="op">|</span> <span class="st">&quot;stale&quot;</span><span class="op">;</span>   <span class="co">// required</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  note<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span>                                         <span class="co">// optional, truncated to 2 KB</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Example request / response:</strong></p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tool&quot;</span><span class="fu">:</span> <span class="st">&quot;cluster&quot;</span><span class="fu">,</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01939c6a-5555-7abc-9def-0123456789ab&quot;</span><span class="fu">,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;signal&quot;</span><span class="fu">:</span> <span class="st">&quot;useful&quot;</span><span class="fu">,</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;note&quot;</span><span class="fu">:</span> <span class="st">&quot;Cluster name &#39;Auth &amp; Sessions&#39; matched the team&#39;s mental model exactly.&quot;</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01939c6a-7777-7abc-9def-0123456789ab&quot;</span><span class="fu">,</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;results&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span> <span class="dt">&quot;recorded_at&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-05-01T14:01:33Z&quot;</span> <span class="fu">}</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;provenance&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;...&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;diagnostics&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;coverage&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">&quot;coverage_basis&quot;</span><span class="fu">:</span> <span class="st">&quot;files-indexed-vs-non-ignored&quot;</span> <span class="fu">}</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>This is the only Lodestone tool that writes. Feedback events live in
+the SQLite <code>feedback</code> table and feed downstream re-ranking +
+the cluster-name-promotion pipeline. There is no PII sent anywhere; the
+event stays on disk in <code>.lodestone/</code>.</p>
+<p><strong>When NOT to use:</strong> never call <code>feedback</code>
+without a <code>request_id</code> from a prior call — the tool will
+reject the request. The <code>request_id</code> is how Lodestone
+correlates the signal to the call it should learn from.</p>
+<h2 id="sql-gated"><code>sql</code> (gated)</h2>
+<p>Execute an arbitrary SQL query against the project's read-only
+Lodestone SQLite index. Returns rows as JSON.
+<strong>DANGEROUS:</strong> only registered when
+<code>[mcp].dangerous_tools_enabled = true</code> AND <code>"sql"</code>
+is in <code>[mcp].expose</code>. The connection is opened readonly at
+the driver level so write attempts (INSERT, UPDATE, DELETE, DROP) throw
+— but the operator should still treat exposing this tool as a power-user
+feature, not a default. Use for ad-hoc graph traversals beyond the
+canned <code>query</code> / <code>context</code> / <code>impact</code> /
+<code>cluster</code> tools, or for debugging the index itself.</p>
+<p><strong>Input:</strong></p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  query<span class="op">:</span> <span class="dt">string</span><span class="op">;</span>   <span class="co">// required, non-empty SQL</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p><strong>Example request / response:</strong></p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;query&quot;</span><span class="fu">:</span> <span class="st">&quot;SELECT name, kind, path FROM symbols WHERE kind = &#39;class&#39; ORDER BY pagerank DESC LIMIT 5&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;request_id&quot;</span><span class="fu">:</span> <span class="st">&quot;01939c6a-8888-7abc-9def-0123456789ab&quot;</span><span class="fu">,</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;results&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;RateLimiter&quot;</span><span class="fu">,</span> <span class="dt">&quot;kind&quot;</span><span class="fu">:</span> <span class="st">&quot;class&quot;</span><span class="fu">,</span> <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;src/middleware/rate-limit.ts&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;AuthError&quot;</span><span class="fu">,</span>   <span class="dt">&quot;kind&quot;</span><span class="fu">:</span> <span class="st">&quot;class&quot;</span><span class="fu">,</span> <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;src/errors/auth-error.ts&quot;</span> <span class="fu">}</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;provenance&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;...&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;diagnostics&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;coverage&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">&quot;coverage_basis&quot;</span><span class="fu">:</span> <span class="st">&quot;files-indexed-vs-non-ignored&quot;</span> <span class="fu">}</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The schema is in <code>packages/shared/src/schema/</code>. Useful
+tables: <code>symbols</code>, <code>edges</code>, <code>clusters</code>,
+<code>cluster_members</code>, <code>class_inheritance</code>,
+<code>skills</code>, <code>feedback</code>,
+<code>symbol_embeddings</code> (sqlite-vec virtual table).</p>
+<blockquote>
+<p>Historical note: this tool was originally specced as
+<code>cypher</code> against a KuzuDB graph engine. The §08
+implementation collapsed to SQLite; the tool was renamed
+<code>sql</code> in the POST-CODEX-001 amendment block. The schema
+rejects <code>cypher</code> outright — use <code>sql</code>.</p>
+</blockquote>
+<p><strong>When NOT to use:</strong> if the canned tools cover your
+case, prefer them. They have caps, response truncation, and rank
+ordering that <code>sql</code> does not.</p>
+
+      </article>
+      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

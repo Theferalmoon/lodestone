@@ -85,7 +85,7 @@ This is intentional — it forces every developer on a project to opt in to the 
 lodestone reindex --from-scratch
 ```
 
-That nukes `.lodestone/store/` and rebuilds from scratch. v0 has no migration runner; that is v0.5+ work. Until then, treat `.lodestone/` as a regenerable cache: a from-scratch reindex on a 10k-symbol repo takes under a minute. For the schema-bump path (e.g. embedder dim changes between versions), see [`UPGRADE.md`](./UPGRADE.md).
+That rebuilds `.lodestone/lodestone.sqlite` from scratch. v0 has no migration runner; that is v0.5+ work. Until then, treat `.lodestone/` as a regenerable cache: a from-scratch reindex on a 10k-symbol repo takes under a minute. For the schema-bump path (e.g. embedder dim changes between versions), see [`UPGRADE.md`](./UPGRADE.md).
 
 ## `lodestone init` says "Pro mode is v0.5+ work"
 

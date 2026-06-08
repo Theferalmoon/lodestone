@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Technical Docs Overview | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a class="active" href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="lodestone">Lodestone</h1>
+<p>A project-local, code-aware Knowledge Graph for coding agents.
+Lodestone watches one repository, parses every source file with
+tree-sitter, builds a symbol-and-call graph, embeds each symbol locally
+with a bundled ONNX model, clusters the graph into emergent
+architectural modules, emits SKILL.md cards for the patterns it sees,
+and exposes the whole thing to your editor's coding agent over MCP. It's
+for engineers who want their AI assistant to actually understand the
+codebase it's editing — not just read the file in front of it.</p>
+<p><strong>Your code never leaves your machine.</strong> Embeddings, the
+call graph, cluster names, skill cards, feedback events — everything is
+written to <code>.lodestone/</code> inside your project, locally. There
+is no telemetry, no upload step, and no remote service to call. See <a
+href="./PRIVACY.md"><code>PRIVACY.md</code></a> for the implementation
+details and the build-time grep audit that enforces it.</p>
+<blockquote>
+<p><strong>Note (v0.1.5).</strong> The <code>npx lodestone init</code>
+flow described below is the v0.5+ npm-publish path and is <strong>not
+yet wired</strong> — <code>@lodestone/cli</code> is not on the npm
+registry. Today's working install is the curl-bash one-liner from the <a
+href="../README.md#install-one-liner">top-level README</a>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<p>That command downloads the approved release tarballs, verifies their
+SHA-256 checksums, installs Lodestone into the current project, and runs
+<code>lodestone init</code>. See <a
+href="./FRIEND-INSTALL.md"><code>FRIEND-INSTALL.md</code></a> for the
+plain-English download-only handoff.</p>
+</blockquote>
+<h2 id="install">Install</h2>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># v0.5+ (not yet wired):</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> lodestone init</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Today (download-only friend install):</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<p>Either command does the magic-moment work: detects your project's
+languages, writes <code>.lodestone/lodestone.toml</code>, scaffolds the
+SQLite + sqlite-vec store, downloads zero models on the default profile
+(the embedder is bundled), runs the first ingest pass, and writes a
+<code>.mcp.json</code> snippet your coding agent can pick up. Then open
+Claude Code (or Cursor, or any other MCP-aware client) in the same
+directory and ask:</p>
+<blockquote>
+<p><em>what are the main subsystems of this codebase?</em></p>
+</blockquote>
+<p>The agent will call <code>cluster()</code> and read back the Louvain
+communities Lodestone discovered. That's the moment that justifies the
+install.</p>
+<h2 id="what-you-get">What you get</h2>
+<p>Eight MCP tools, all returning a uniform
+<code>LodestoneToolResponse&lt;T&gt;</code> envelope with
+<code>request_id</code>, <code>provenance</code>, and
+<code>diagnostics</code> so the agent always knows how stale the data
+is:</p>
+<ul>
+<li><strong><code>query(question, top_k=10, filters?)</code></strong> —
+hybrid semantic + lexical + PageRank-weighted search across
+symbols.</li>
+<li><strong><code>recent_changes(since?, top_k=20)</code></strong> —
+git-aware "what just changed" without shelling out to git on the request
+path.</li>
+<li><strong><code>context(symbol)</code></strong> — the 360 view of one
+symbol: definition, callers, callees, the cluster it belongs to.</li>
+<li><strong><code>impact(file_or_symbol)</code></strong> — reverse
+blast-radius via a recursive CTE on the edges table. Run before you
+edit.</li>
+<li><strong><code>cluster(name_or_query, granularity?)</code></strong> —
+the moat. Surfaces emergent architectural modules with naming
+evidence.</li>
+<li><strong><code>skills_for(task_description, top_k=5)</code></strong>
+— emerging moat. Returns codebase-specific SKILL.md cards
+(error-handling style, test idioms, naming conventions). Best results
+after the index has watched the repo for ≥7 days; fresh installs get
+seed skills.</li>
+<li><strong><code>feedback(tool, request_id, signal, note?)</code></strong>
+— the single write tool. Agent thumbs-up / thumbs-down on prior calls
+feeds the training signal.</li>
+<li><strong><code>sql(query)</code></strong> — gated escape hatch.
+Read-only SQLite queries against the project index. Only registered when
+<code>[mcp].dangerous_tools_enabled = true</code>. Use for ad-hoc graph
+traversals beyond the canned tools.</li>
+</ul>
+<p>Full reference (request shapes, response shapes, examples): <a
+href="./MCP-TOOLS.md"><code>MCP-TOOLS.md</code></a>.</p>
+<h2 id="the-first-60-seconds">The first 60 seconds</h2>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ~/code/your-project</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> curl <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> profile = lite</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> latest = v0.1.5</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> downloading tarballs ... <span class="er">(</span><span class="ex">4</span> files, ~16 MB<span class="kw">)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> installing into ./node_modules ...</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> running <span class="st">&#39;lodestone init&#39;</span> ...</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">[ok]</span> Lodestone install complete.</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">.mcp.json:</span>        created</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install</span> manifest: .lodestone/install-manifest.json</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">[ok]</span> Reindex complete.</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="ex">files</span> parsed:        1247</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="ex">symbols</span> indexed:     8932</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="ex">edges</span> <span class="er">(</span><span class="ex">resolved</span><span class="kw">)</span><span class="bu">:</span>    14217</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="ex">embeddings:</span>          8932</span></code></pre></div>
+<p>Open Claude Code (or any MCP client) in the same directory. Ask:
+<em>what are the main subsystems of this codebase?</em> The agent should
+call <code>cluster()</code> and read back the Louvain communities.</p>
+<h2 id="where-to-go-next">Where to go next</h2>
+<table>
+<thead>
+<tr>
+<th>Doc</th>
+<th>What's in it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a
+href="./friend/lodestone-feature-brochure.md"><code>friend/lodestone-feature-brochure.md</code></a></td>
+<td>Friend-facing feature brochure, differentiators, use cases, and
+honest limits.</td>
+</tr>
+<tr>
+<td><a
+href="./friend/lodestone-installation-guide.md"><code>friend/lodestone-installation-guide.md</code></a></td>
+<td>Layperson install guide for the two supported install options:
+<code>lite</code> and <code>full</code>.</td>
+</tr>
+<tr>
+<td><a
+href="./friend/lodestone-technical-guide.md"><code>friend/lodestone-technical-guide.md</code></a></td>
+<td>Standard technical documentation for the friend install, package
+layout, privacy, operations, and support checklist.</td>
+</tr>
+<tr>
+<td><a href="./site/index.html"><code>site/index.html</code></a></td>
+<td>Generated HTML copy of the documentation published at
+<code>https://lodestone.cmndi.ai/docs/</code>.</td>
+</tr>
+<tr>
+<td><a href="./ARCHITECTURE.md"><code>ARCHITECTURE.md</code></a></td>
+<td>Stack choices (Node-only, Louvain not Leiden, SQLite + sqlite-vec,
+KuzuDB deferred), the <code>packages/*</code> monorepo layout,
+friend-mode vs Pro-mode.</td>
+</tr>
+<tr>
+<td><a href="./CONFIG.md"><code>CONFIG.md</code></a></td>
+<td>Every key in <code>lodestone.toml</code> with its type, default,
+allowed values, and one-line explanation. Plus environment variable
+overrides.</td>
+</tr>
+<tr>
+<td><a href="./MCP-TOOLS.md"><code>MCP-TOOLS.md</code></a></td>
+<td>The 8 MCP tools — request shapes, response shapes, JSON examples,
+when to use each.</td>
+</tr>
+<tr>
+<td><a href="./PRIVACY.md"><code>PRIVACY.md</code></a></td>
+<td>The "never leaves your machine" claim, what it actually means, and
+the build-time enforcement.</td>
+</tr>
+<tr>
+<td><a href="./SUPPLY-CHAIN.md"><code>SUPPLY-CHAIN.md</code></a></td>
+<td>Why these specific models and libraries — license, origin, audit
+posture.</td>
+</tr>
+<tr>
+<td><a
+href="./TROUBLESHOOTING.md"><code>TROUBLESHOOTING.md</code></a></td>
+<td>WSL2 paths, corp proxies, Apple Silicon, missing prebuilds, parse
+failures, big repos.</td>
+</tr>
+<tr>
+<td><a href="./UPGRADE.md"><code>UPGRADE.md</code></a></td>
+<td>How to upgrade the CLI, schema-version expectations, and the v0 →
+v0.5 migration path.</td>
+</tr>
+<tr>
+<td><a href="./DEMO-REPO.md"><code>DEMO-REPO.md</code></a></td>
+<td>The synthetic demo repo at <code>e2e/synthetic-demo-repo/</code>,
+why it exists, and how to use it as a teaching example.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="status">Status</h2>
+<p>Lodestone v0.1.0 is the first ship. Sections §01 through §20 of the
+implementation plan are landed and tested (790 unit + e2e tests). Pro
+mode (multi-repo / shared index) is deferred to v0.5+; the
+<code>lodestone init --pro</code> flag returns a clear "v0.5+ work"
+message and exits cleanly.</p>
+<h2 id="license">License</h2>
+<p>Apache-2.0. See <a href="../LICENSE"><code>../LICENSE</code></a>, <a
+href="../NOTICE"><code>../NOTICE</code></a>, and <a
+href="../LICENSE-AUTHORIZATION.md"><code>../LICENSE-AUTHORIZATION.md</code></a>.</p>
+
+      </article>
+      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

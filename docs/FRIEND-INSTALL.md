@@ -22,6 +22,24 @@ Your code stays on your machine. Lodestone does not upload your source code.
 The installer may still download normal npm package dependencies during
 installation.
 
+## Documentation
+
+Online documentation:
+
+```text
+https://lodestone.cmndi.ai/docs/
+```
+
+If your package set includes installed docs, they are available in your project
+after install at:
+
+```text
+./node_modules/@lodestone/cli/docs/
+```
+
+Start with `README.md`, then read the installation guide if you want the
+plain-English walkthrough.
+
 ## Install
 
 Run this from the project where you want Lodestone installed:

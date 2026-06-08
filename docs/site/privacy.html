@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a class="active" href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="privacy">Privacy</h1>
+<p><strong>Your code never leaves your machine.</strong></p>
+<p>Lodestone is a project-local tool. Everything it produces —
+embeddings, the call graph, cluster names, SKILL.md cards, feedback
+events, the SQLite index — is written to <code>.lodestone/</code> inside
+your project on disk. There is no telemetry endpoint. There is no upload
+step. There is no remote service to call. The MCP server runs locally
+over stdio and only your editor talks to it.</p>
+<h2 id="what-stays-local">What stays local</h2>
+<table>
+<thead>
+<tr>
+<th>Thing</th>
+<th>Where it lives</th>
+<th>Who can read it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source code</td>
+<td>Your repo, like always</td>
+<td>You</td>
+</tr>
+<tr>
+<td>Symbol embeddings (vectors)</td>
+<td><code>.lodestone/lodestone.sqlite</code> (sqlite-vec virtual
+table)</td>
+<td>The Lodestone process, opened read-only by MCP</td>
+</tr>
+<tr>
+<td>The call graph (symbols, edges, PageRank)</td>
+<td><code>.lodestone/lodestone.sqlite</code></td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Cluster names + naming evidence</td>
+<td><code>.lodestone/lodestone.sqlite</code> (<code>clusters</code>
+table)</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>SKILL.md cards</td>
+<td><code>.lodestone/skills/*.md</code></td>
+<td>You; agents read via <code>skills_for()</code></td>
+</tr>
+<tr>
+<td>Feedback events (the agent's thumbs-up / thumbs-down)</td>
+<td><code>.lodestone/lodestone.sqlite</code> (<code>feedback</code>
+table)</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Watcher state, ready marker</td>
+<td><code>.lodestone/runtime/</code>,
+<code>.lodestone/ready.json</code></td>
+<td>Same</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-leaves-the-machine">What leaves the machine</h2>
+<p>In friend mode, <strong>nothing</strong> leaves the machine at
+runtime for the packaged <code>lite</code> and <code>full</code>
+profiles. Once installed, Lodestone runs entirely offline unless the
+operator explicitly invokes a consent-gated model setup path.</p>
+<p>The two scenarios where bytes might leave your machine are:</p>
+<ol type="1">
+<li><strong>Installing or upgrading Lodestone itself.</strong> The
+friend installer downloads pinned Lodestone release tarballs from GitHub
+and lets npm resolve normal package dependencies. Future npm-published
+paths will hit the public npm registry. This is normal package
+installation traffic, not runtime code upload.</li>
+<li><strong>Consent-gated model setup.</strong> If an operator runs
+<code>lodestone setup-models --allow-download</code>, Lodestone can
+fetch a pinned model file and cache it locally. Setting
+<code>LODESTONE_OFFLINE=1</code> blocks this path with a clear error.
+The packaged <code>lite</code> and <code>full</code> friend profiles
+already bundle their model weights, so normal friend runtime does not
+need this fetch.</li>
+</ol>
+<p>That is the complete list. There is no third path.</p>
+<h2 id="the-lodestone_offline1-guard">The
+<code>LODESTONE_OFFLINE=1</code> guard</h2>
+<p>If you want a hard guarantee, set <code>LODESTONE_OFFLINE=1</code> in
+your shell or in your editor's MCP config. This wires the chokepoint in
+<code>@lodestone/shared/net/fetch</code>: every outbound network call
+inside the Lodestone process passes through
+<code>assertNetworkAllowed()</code>, which throws
+<code>NetworkBlockedError</code> (with the call site named) when offline
+mode is active. Embedder fetches, model downloads, anything — they all
+go through this gate. Once on, network calls are not silently degraded;
+they fail loudly with a message naming the caller.</p>
+<p><code>lodestone doctor</code> reports the current offline-mode status
+so you can verify it without restarting your editor.</p>
+<h2 id="the-opt-in-setup-models-path">The opt-in
+<code>setup-models</code> path</h2>
+<p>There is exactly one runtime-fetch path Lodestone exposes to the
+friend, and it is gated by <strong>two</strong> consents that both have
+to say yes:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Default behavior: refuses to do anything network-side.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> setup-models nomic-embed-text-v1.5</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># → exits non-zero with &quot;model download is opt-in; pass --allow-download</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   or set LODESTONE_ALLOW_MODEL_DOWNLOAD=1&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Opt in explicitly:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> setup-models nomic-embed-text-v1.5 <span class="at">--allow-download</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># → still hits assertNetworkAllowed(&quot;setup-models: nomic-embed-text-v1.5&quot;)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#   and so still fails when LODESTONE_OFFLINE=1.</span></span></code></pre></div>
+<p>The two gates:</p>
+<ol type="1">
+<li><strong>Operator opt-in.</strong> The <code>--allow-download</code>
+flag (or the equivalent <code>LODESTONE_ALLOW_MODEL_DOWNLOAD=1</code>
+env var) — the friend has to say "yes, fetch this." Without it, the
+command refuses.</li>
+<li><strong>Repo-wide chokepoint.</strong>
+<code>assertNetworkAllowed("setup-models: &lt;id&gt;")</code> from
+<code>@lodestone/shared/net/fetch</code>. When
+<code>LODESTONE_OFFLINE=1</code> is set anywhere in the environment,
+this throws — the operator opt-in is overridden by the offline
+guard.</li>
+</ol>
+<p>This is the only deliberate path that touches the network at runtime.
+Weights land per-project at
+<code>&lt;repoRoot&gt;/.lodestone/models/&lt;id&gt;/</code>, never in a
+shared global cache, so one friend's <code>setup-models</code> cannot
+leak weights into another friend's project.</p>
+<p>The implementation lives in
+<code>packages/cli/src/commands/setup-models.ts</code>. The full list of
+URLs <code>setup-models</code> is permitted to contact is in <a
+href="../network-manifest.json"><code>network-manifest.json</code></a>
+at the repo root.</p>
+<h2 id="the-build-time-grep-audit">The build-time grep audit</h2>
+<p>We enforce the "no outbound URLs" claim at release time, not just at
+runtime. Every CI build runs a grep over the shipped <code>dist/</code>
+directory looking for <code>https://</code> URLs. Any URL that appears
+must be on a documented allowlist; anything new fails the build.</p>
+<p>The allowlist lives in two places that have to agree:</p>
+<ul>
+<li><a
+href="../network-manifest.json"><code>network-manifest.json</code></a>
+at the repo root — the human-readable, reviewer-facing list of every URL
+pattern Lodestone is allowed to contact at install, build, or setup
+time, paired with the chokepoint that gates each one.</li>
+<li><code>packages/shared/src/net/__tests__/no-outbound-urls.test.ts</code>
+— the machine-readable allowlist consumed by the audit. Every entry
+carries a <code>reason</code> field. The test walks every shipped
+<code>dist/</code> directory, regex-matches every
+<code>http(s)://</code> literal, and fails on anything not on the
+list.</li>
+</ul>
+<p>Today the allowlist is:</p>
+<ul>
+<li><code>https://registry.npmjs.org/</code> — the npm registry, used
+only by <code>npm install</code> / <code>pnpm install</code> itself, not
+by the running tool.</li>
+<li><code>https://huggingface.co/Xenova/nomic-embed-text-v1.5/</code> —
+the default embedder, fetched only via the opt-in
+<code>setup-models</code> path above.</li>
+<li><code>https://huggingface.co/Snowflake/snowflake-arctic-embed-s/</code>
+— the tiny-profile fallback embedder, fetched only via the opt-in
+<code>setup-models</code> path above.</li>
+<li><code>https://huggingface.co/nomic-ai/</code>,
+<code>https://huggingface.co/ibm-granite/</code> — pre-approved
+maintainer orgs reserved for future bundled embedder variants. Currently
+unused in code; pre-listing them means the §05 / §10 follow-on work does
+not have to amend the manifest at the same time as it ships code.</li>
+<li><code>https://spdx.org/licenses/</code> — license-identifier comment
+root. Inert, never contacted at runtime.</li>
+</ul>
+<p>The audit runs in two places, both as gates:</p>
+<ol type="1">
+<li><strong>Locally</strong>, inside <code>pnpm -r test</code> — every
+developer hits it before pushing.</li>
+<li><strong>In CI</strong>, as a dedicated
+<code>Privacy audit — no outbound URLs in dist/</code> step inside
+<code>.github/workflows/ci.yml</code>. The step exists separately from
+the bulk test run so the privacy claim shows up as its own named check
+on every PR. If you ever see a Lodestone release that has more URLs in
+its dist than the allowlist, treat it as a bug and file an issue.</li>
+</ol>
+<h2 id="no-telemetry">No telemetry</h2>
+<p>There is no telemetry. No usage events, no error reports, no
+anonymous metrics. The closest thing is the <code>feedback</code> MCP
+tool, which the agent calls voluntarily after a useful or unhelpful tool
+call — but those events are written to your local
+<code>.lodestone/lodestone.sqlite</code> and stay there. Nothing is sent
+anywhere.</p>
+<h2 id="verifying-offline-behavior-locally">Verifying offline behavior
+locally</h2>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Confirm the runtime guard is active.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">LODESTONE_OFFLINE</span><span class="op">=</span>1 <span class="ex">lodestone</span> doctor</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Try forcing a fetch under the guard. The tiny profile is the only path that</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># would normally fetch; with OFFLINE=1 it should fail loudly with a clear error.</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="va">LODESTONE_OFFLINE</span><span class="op">=</span>1 <span class="ex">lodestone</span> reindex <span class="at">--profile</span> tiny <span class="at">--from-scratch</span></span></code></pre></div>
+<p>You can also confirm by network observation: watch your firewall or
+run <code>lodestone init &amp;&amp; lodestone reindex</code> under
+<code>strace -e trace=network</code> (Linux) or Little Snitch (macOS)
+and you will see no outbound traffic on the default profile.</p>
+
+      </article>
+      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

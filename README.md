@@ -20,7 +20,7 @@ This downloads the approved Lodestone release tarballs, verifies their SHA-256 c
 
 Friends do not need collaborator access to this repository. They can download and install Lodestone into their own repo, but they cannot push changes to the canonical Lodestone repo unless the operator explicitly adds them as GitHub collaborators.
 
-**Profiles.** The default `lite` profile uses the Snowflake 384d embedder; the tarball download is ~16 MB. For advanced setups that want the larger Nomic 768d embedder, pass `LODESTONE_PROFILE=full` (~178 MB tarball download):
+**Profiles.** The default `lite` profile uses the Snowflake 384d embedder; the tarball download is ~16 MB. For advanced setups that want the larger Nomic 768d embedder, pass `LODESTONE_PROFILE=full` (~89 MB tarball download):
 
 ```bash
 curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
@@ -28,15 +28,17 @@ curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 
 **Disk footprint.** The numbers above are what you actually download from the GitHub release. After `npm install`, the full `./node_modules` tree — Lodestone plus its transitive npm dependencies (tree-sitter parsers, `better-sqlite3`, `onnxruntime-node`, ~240 others) — is **~1 GB** in either profile. The bulk on disk is the npm dep tree, not Lodestone itself. Plan accordingly on metered/slow connections.
 
-**Pinning.** The friend installer defaults to the approved `v0.1.4` package set. To make that explicit:
+**Pinning.** The friend installer defaults to the approved `v0.1.5` package set. To make that explicit:
 
 ```bash
-curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.4 bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.5 bash
 ```
 
 **Access.** The `Theferalmoon/lodestone` repo is currently public, so no GitHub auth is required to fetch this installer or the release tarballs. The `lodestone.cmndi.ai/install` URL is a brand URL for the installer and should point at an immutable installer ref, not a mutable development branch.
 
 See [`docs/FRIEND-INSTALL.md`](./docs/FRIEND-INSTALL.md) for the plain-English friend onboarding guide and [`docs/README.md`](./docs/README.md) for the technical guide. (Note: the npm `npx lodestone init` path is future work; today's working install path is the curl one-liner above.)
+
+Friend-facing brochure, installation, and technical documents live in [`docs/friend/`](./docs/friend/). HTML copies are generated into [`docs/site/`](./docs/site/) and published at <https://lodestone.cmndi.ai/docs/>. Package builds generated from this docs refresh include installed copies under `./node_modules/@lodestone/cli/docs/` so friends can read the docs from their own project after installation.
 
 ## Developer bootstrap (clean machine)
 
@@ -70,6 +72,14 @@ pnpm -r build
 ```
 
 Friends never run `bundle-models`. The script intentionally bypasses the runtime offline guard (`assertNetworkAllowed()` in `@lodestone/shared/net/fetch`) because it is a build-pipeline-only step that runs on the maintainer's workstation, not in the friend's installed copy. See the header comment in `packages/ingest/scripts/bundle-models.mjs` for the build-time-network-exception rationale.
+
+To rebuild the friend documentation pack:
+
+```bash
+pnpm docs:friend
+```
+
+That command generates Word documents, HTML docs, and package-local docs from the same source Markdown.
 
 To bump a pinned model revision:
 

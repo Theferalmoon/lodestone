@@ -1,0 +1,32 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
+# Lodestone Documentation Pack
+
+This folder contains the friend-facing Lodestone documentation set.
+
+Start here:
+
+- [Feature brochure](./lodestone-feature-brochure.md) - plain-English overview, feature set, and comparison.
+- [Installation guide](./lodestone-installation-guide.md) - step-by-step layperson instructions for the two install options.
+- [Technical guide](./lodestone-technical-guide.md) - standard technical reference for operators and technical reviewers.
+
+Word versions are generated into [word/](./word/).
+
+HTML copies are generated into [../site/](../site/) and published at:
+
+```text
+https://lodestone.cmndi.ai/docs/
+```
+
+When Lodestone is installed from a package set that includes docs, the same
+documentation is available in the target project at:
+
+```text
+./node_modules/@lodestone/cli/docs/
+```
+
+Build the full pack from the repository root:
+
+```bash
+pnpm docs:friend
+```

@@ -14,7 +14,7 @@ For the why-Node-only rationale, the why-Louvain rationale, the why-SQLite ratio
 
 - **Runtime:** Node 20+, TypeScript, ESM throughout.
 - **Parsers:** `web-tree-sitter` (WASM) + `tree-sitter-{typescript,javascript,python,go,rust}`.
-- **Embedder:** `nomic-embed-text-v1.5` ONNX int8, bundled (~150 MB), inferenced via `@xenova/transformers`. Optional `tiny` fallback (`snowflake-arctic-embed-s`) and reserved `pro` profile.
+- **Embedder:** profiled bundled ONNX models, inferenced via `@xenova/transformers`. Friend `lite` bundles Snowflake 384d; friend `full` bundles Nomic 768d. Internal `default`, `tiny`, and reserved `pro` config values remain for runtime selection and forward compatibility.
 - **Storage:** `better-sqlite3` (synchronous) + `sqlite-vec` extension. WAL mode. Foreign keys on. Reader handle opened readonly at the driver layer.
 - **Graph:** `graphology` + `graphology-communities-louvain`.
 - **MCP server:** `@modelcontextprotocol/sdk` over local stdio.
@@ -75,7 +75,7 @@ lodestone/
 
 ## 4. Storage schema
 
-All persisted state lives in a single SQLite database under `.lodestone/store/lodestone.db`. The schema version is recorded in the `schema_version` table and surfaced as `CURRENT_SCHEMA_VERSION` in `@lodestone/shared`. The current value is `3`.
+All persisted database state lives in a single SQLite database at `.lodestone/lodestone.sqlite`. The schema version is recorded in the `schema_version` table and surfaced as `CURRENT_SCHEMA_VERSION` in `@lodestone/shared`. The current value is `3`.
 
 Useful tables:
 
@@ -97,7 +97,7 @@ Schema bumps within v0.x require `lodestone reindex --from-scratch`. The numbere
 
 ## 5. Embedder runtime
 
-The default embedder profile bundles `nomic-embed-text-v1.5` (ONNX int8, ~150 MB) inside `@lodestone/ingest/dist/models/`. The `tiny` profile bundles `snowflake-arctic-embed-s` (smaller, ~33 MB int8). The `pro` profile is reserved for v0.5+ and currently behaves like `default`.
+The friend installer publishes two profiled ingest tarballs. The `lite` profile bundles `snowflake-arctic-embed-s` (ONNX int8, 384 dimensions). The `full` profile bundles `nomic-embed-text-v1.5` (ONNX int8, 768 dimensions). The internal `default`, `tiny`, and `pro` config values are still used by `lodestone.toml`; in profiled release tarballs, the runtime auto-selects the bundled model that is actually present.
 
 Inference goes through `@xenova/transformers` (Apache 2.0; ONNX Runtime under the hood). The runtime path makes zero outbound calls; the operator's machine never speaks to Hugging Face for embedding. The **only** runtime fetch path Lodestone exposes is `lodestone setup-models --allow-download`, gated by two consents (operator `--allow-download` flag plus the `LODESTONE_OFFLINE` chokepoint). Both gates must permit; either can veto. See [`../PRIVACY.md`](../PRIVACY.md) for the full opt-in model.
 

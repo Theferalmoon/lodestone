@@ -11,6 +11,8 @@ coverage/
 # Provenance one-shot token (consumed by pre-commit hook; never commit)
 .provenance-cleared
 .vitest-cache/
+.tmp/
+docs/internal/
 
 # Secret hygiene
 .env

@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supply Chain | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a class="active" href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="supply-chain">Supply chain</h1>
+<p>Lodestone keeps its dependency graph small, predictable, and
+auditable. This document explains why the bundled embedder, the major
+libraries, and the rebuilt dependency tree look the way they do. The
+short version: every bundled model and every load-bearing library is
+permissively licensed (Apache 2.0 or MIT), United States-origin, and
+pulled from an official maintainer organization.</p>
+<h2 id="why-these-specific-models">Why these specific models</h2>
+<h3 id="full-profile-embedder-nomic-embed-text-v15">Full-profile
+embedder: <code>nomic-embed-text-v1.5</code></h3>
+<p>Bundled inside the <code>full</code> <code>@lodestone/ingest</code>
+release tarball as ONNX int8. ~150 MB on disk. No runtime network fetch
+is required when the model is bundled.</p>
+<ul>
+<li><strong>Maintainer:</strong> Nomic AI (United States).</li>
+<li><strong>License:</strong> Apache 2.0.</li>
+<li><strong>Source:</strong> the official <code>nomic-ai</code> Hugging
+Face organization.</li>
+<li><strong>Why bundled:</strong> the privacy claim ("your code never
+leaves your machine") only holds if the install does not phone home at
+runtime. Bundling the weights costs install size; we accept the trade
+for the <code>full</code> profile.</li>
+</ul>
+<h3 id="lite-profile-embedder-snowflake-arctic-embed-s">Lite-profile
+embedder: <code>snowflake-arctic-embed-s</code></h3>
+<p>Bundled inside the <code>lite</code> <code>@lodestone/ingest</code>
+release tarball as ONNX int8. Smaller than the full-profile model and
+used for the default friend install. No runtime network fetch is
+required when the model is bundled. The internal <code>tiny</code>
+config path can still use Snowflake as a fallback in development or
+non-profiled builds.</p>
+<ul>
+<li><strong>Maintainer:</strong> Snowflake (United States).</li>
+<li><strong>License:</strong> Apache 2.0.</li>
+<li><strong>Source:</strong> the official <code>Snowflake</code> Hugging
+Face organization.</li>
+</ul>
+<h3 id="why-no-prc-origin-or-russia-origin-model-weights">Why no
+PRC-origin or Russia-origin model weights</h3>
+<p>We chose to keep the dependency graph predictable and auditable.
+PRC-origin model providers (and their derivatives) were excluded after
+weighing supply-chain risk: opaque training-data provenance, opaque
+tokenizer construction, and the practical difficulty of vetting
+dependencies whose maintainer org we cannot reach. This is a hygiene
+call, not a political one. The same standard rules out any model whose
+base we cannot trace to a permissively-licensed United States or
+allied-jurisdiction maintainer.</p>
+<p>The English-only <code>nomic-embed-text</code> family and Snowflake
+Arctic family meet that bar. The code-aware
+<code>nomic-embed-code</code> model is built on a PRC-origin base and is
+explicitly excluded; if a future profile needs code-aware embeddings,
+the candidate is a Mistral- or Granite-based model from a vetted
+maintainer.</p>
+<h2 id="why-these-specific-libraries">Why these specific libraries</h2>
+<p>Major runtime dependencies, with license and origin:</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>License</th>
+<th>Origin</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vectordb</code> (LanceDB)</td>
+<td>Apache 2.0</td>
+<td>LanceDB (United States)</td>
+<td>Reserved for v0.5+ vector store work. Not on the v0 hot path; v0
+uses sqlite-vec.</td>
+</tr>
+<tr>
+<td><code>kuzu</code></td>
+<td>MIT</td>
+<td>Kuzu Labs (Canada)</td>
+<td>Reserved for v0.5+ graph engine work. Not on the v0 hot path.</td>
+</tr>
+<tr>
+<td><code>web-tree-sitter</code></td>
+<td>MIT</td>
+<td>Tree-sitter project (United States)</td>
+<td>The WASM parser runtime. One library, one AST shape per
+language.</td>
+</tr>
+<tr>
+<td><code>@xenova/transformers</code> (transformers.js)</td>
+<td>Apache 2.0</td>
+<td>Xenova / Hugging Face (Canada)</td>
+<td>ONNX-Runtime-backed inference for the bundled embedder.</td>
+</tr>
+<tr>
+<td><code>graphology</code></td>
+<td>MIT</td>
+<td>Yomguithereal (France)</td>
+<td>The in-process graph data structure used by the clusterer.</td>
+</tr>
+<tr>
+<td><code>graphology-communities-louvain</code></td>
+<td>MIT</td>
+<td>Same maintainer as graphology</td>
+<td>Louvain community detection on top of graphology.</td>
+</tr>
+<tr>
+<td><code>chokidar</code></td>
+<td>MIT</td>
+<td>Paul Miller (United States)</td>
+<td>The file watcher used by <code>@lodestone/ingest/watcher</code>.
+Cross-platform, well-maintained.</td>
+</tr>
+<tr>
+<td><code>@modelcontextprotocol/sdk</code></td>
+<td>MIT</td>
+<td>Anthropic (United States)</td>
+<td>The MCP server surface and stdio transport.</td>
+</tr>
+<tr>
+<td><code>better-sqlite3</code></td>
+<td>MIT</td>
+<td>Joshua Wise (United States)</td>
+<td>Synchronous SQLite driver. Pairs with sqlite-vec for the vector
+store.</td>
+</tr>
+<tr>
+<td><code>sqlite-vec</code></td>
+<td>Apache 2.0</td>
+<td>Alex Garcia (United States)</td>
+<td>The sqlite-vec extension provides the symbol-embedding virtual
+table.</td>
+</tr>
+<tr>
+<td><code>zod</code></td>
+<td>MIT</td>
+<td>Colin McDonnell (United States)</td>
+<td>Schema validation across every package boundary (config, envelope,
+MCP inputs).</td>
+</tr>
+<tr>
+<td><code>smol-toml</code></td>
+<td>MIT</td>
+<td>Cynthia Foxwell (Canada)</td>
+<td>TOML parser used to read <code>lodestone.toml</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The full transitive dependency tree was reviewed before v0.1.0. New
+direct dependencies require a license + origin check; the rule is
+documented in the contributor guidelines.</p>
+<h2 id="apache-20-by-default-mit-where-permissive">Apache 2.0 by
+default; MIT where permissive</h2>
+<p>Every direct dependency is Apache 2.0 or MIT. Lodestone itself is
+Apache 2.0 (see <a href="../LICENSE"><code>../LICENSE</code></a> and <a
+href="../NOTICE"><code>../NOTICE</code></a>). There is no copyleft on
+the dependency graph. There are no proprietary blobs. There is no
+vendored third-party binary outside the bundled ONNX weights, which are
+also Apache 2.0.</p>
+<h2 id="a-note-on-the-rebuilt-dependency-tree">A note on the rebuilt
+dependency tree</h2>
+<p>The v0 dependency graph was rebuilt from scratch — every transitive
+dependency walked, every license read, every maintainer org checked. The
+audit lives in the workspace lockfile (<code>pnpm-lock.yaml</code>) and
+in the per-package <code>package.json</code> files;
+<code>pnpm audit</code> is a CI gate. The v0.1.5 friend-install release
+prep also pins patched transitive releases for packages that were
+advisory-sensitive at release time, so <code>pnpm audit --prod</code> is
+clean as of 2026-06-08.</p>
+<p>If you want to verify any of the above on your machine:
+<code>pnpm why &lt;package&gt;</code> shows where a dep entered the
+graph; <code>pnpm audit</code> lists open advisories; the Hugging Face
+model card pages link directly to the maintainer organization.</p>
+<h2 id="the-network-manifest">The network manifest</h2>
+<p>Every URL Lodestone is allowed to contact — at install, build, or
+runtime — is enumerated in <a
+href="../network-manifest.json"><code>../network-manifest.json</code></a>
+at the repo root, paired with the gate that has to fire before the URL
+is reached. The CI privacy audit (<code>.github/workflows/ci.yml</code>
+→ <code>Privacy audit — no outbound URLs in dist/</code>) treats
+anything not on that list landing in shipped <code>dist/</code> as a
+build failure. See <a href="./PRIVACY.md"><code>PRIVACY.md</code></a>
+for how the two-gate <code>setup-models</code> consent path interacts
+with the manifest.</p>
+
+      </article>
+      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

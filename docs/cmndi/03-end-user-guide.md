@@ -16,7 +16,7 @@ That command does the magic-moment work:
 
 1. Detects your project's languages (TypeScript / JavaScript / Python / Go / Rust).
 2. Writes `.lodestone/lodestone.toml` with sensible defaults.
-3. Scaffolds the SQLite + sqlite-vec store under `.lodestone/store/`.
+3. Scaffolds the SQLite + sqlite-vec database at `.lodestone/lodestone.sqlite`.
 4. Runs the first ingest pass — parses every source file, embeds each symbol locally with the bundled ONNX model (zero outbound calls on the default profile), builds the call graph, computes PageRank, runs Louvain clustering, emits seed SKILL cards.
 5. Writes a `.mcp.json` snippet your editor's coding agent can pick up.
 
@@ -69,7 +69,7 @@ Anything that speaks MCP will work. The `.mcp.json` snippet uses an absolute pat
 | `lodestone init` | First-run install for a project. Idempotent — safe to re-run. |
 | `lodestone status` | Index health: file count, symbol count, last ingest, watcher state, ready-gate status. |
 | `lodestone reindex` | Re-run the affected slice. Safe at any time. |
-| `lodestone reindex --from-scratch` | Nuke `.lodestone/store/` and rebuild. ~1 minute on a 10k-symbol repo. Use after a schema bump or if `.lodestone/` is corrupt. |
+| `lodestone reindex --from-scratch` | Rebuild `.lodestone/lodestone.sqlite`. ~1 minute on a 10k-symbol repo. Use after a schema bump or if `.lodestone/` is corrupt. |
 | `lodestone doctor` | Probe the environment — Node version, git presence, RAM, proxy state, CoreML availability, WSL2 detection, offline-mode status, schema-version agreement between CLI and on-disk store. |
 | `lodestone seed-skills` | Re-run the deterministic seed-skill scanners. Useful after adding new error classes or framework imports. |
 | `lodestone setup-models --allow-download` | Opt-in fetch path. Requires both the flag and absence of `LODESTONE_OFFLINE=1`. |
@@ -83,8 +83,7 @@ Anything that speaks MCP will work. The `.mcp.json` snippet uses an absolute pat
 <your-repo>/.lodestone/
 ├── lodestone.toml          # Project config. Hand-editable.
 ├── ready.json              # Cross-store ready-gate marker. MCP tools check this before responding.
-├── store/
-│   └── lodestone.db        # SQLite + sqlite-vec. Symbols, edges, clusters, skills, embeddings, feedback.
+├── lodestone.sqlite        # SQLite + sqlite-vec. Symbols, edges, clusters, skills, embeddings, feedback.
 ├── runtime/
 │   └── ...                 # Watcher state, MCP server transport bookkeeping.
 ├── skills/
@@ -95,7 +94,7 @@ Anything that speaks MCP will work. The `.mcp.json` snippet uses an absolute pat
 
 Treat `.lodestone/` as a regenerable cache. v0 has no migration runner; if anything gets corrupt, `lodestone reindex --from-scratch` rebuilds in under a minute on most projects.
 
-The `lodestone.toml` and any hand-edited skill cards are preserved across a from-scratch reindex; `.lodestone/store/` is rebuilt fresh.
+The `lodestone.toml` and any hand-edited skill cards are preserved across a from-scratch reindex; `.lodestone/lodestone.sqlite` is rebuilt fresh.
 
 ## 5. Try the synthetic demo first
 
@@ -217,7 +216,7 @@ If the CLI version expects a newer schema than the store has, the doctor prints 
 
 ## 9. Known issues at v0.1.x
 
-- **Transitive CVE in `protobufjs` via `@xenova/transformers`** — does not affect runtime (the protobuf code is only exercised when loading model files, and Lodestone's bundled weights are pinned + integrity-checked + loaded from inside the package). Tracking the upstream pin bump.
+- **Production audit status** — `pnpm audit --prod` is clean as of the v0.1.5 friend-install release prep on 2026-06-08. Registry advisories can change, so rerun the audit as a live check before strict security signoff.
 - **No migration runner** — by design. Schema bumps within v0.x require `lodestone reindex --from-scratch`. v0.5 ships the runner alongside the embedder-dim swap option.
 - **A handful of cosmetic items from the §20 e2e pass** — parser edge resolution edge cases, `LODESTONE_DB_PATH` env-var alignment, init/reindex command split. Tracked in §22 backlog; not happy-path.
 
