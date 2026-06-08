@@ -11,21 +11,21 @@ Lodestone is a project-local tool. Everything it produces — embeddings, the ca
 | Thing | Where it lives | Who can read it |
 |---|---|---|
 | Source code | Your repo, like always | You |
-| Symbol embeddings (vectors) | `.lodestone/store/lodestone.db` (sqlite-vec virtual table) | The Lodestone process, opened read-only by MCP |
-| The call graph (symbols, edges, PageRank) | `.lodestone/store/lodestone.db` | Same |
-| Cluster names + naming evidence | `.lodestone/store/lodestone.db` (`clusters` table) | Same |
+| Symbol embeddings (vectors) | `.lodestone/lodestone.sqlite` (sqlite-vec virtual table) | The Lodestone process, opened read-only by MCP |
+| The call graph (symbols, edges, PageRank) | `.lodestone/lodestone.sqlite` | Same |
+| Cluster names + naming evidence | `.lodestone/lodestone.sqlite` (`clusters` table) | Same |
 | SKILL.md cards | `.lodestone/skills/*.md` | You; agents read via `skills_for()` |
-| Feedback events (the agent's thumbs-up / thumbs-down) | `.lodestone/store/lodestone.db` (`feedback` table) | Same |
+| Feedback events (the agent's thumbs-up / thumbs-down) | `.lodestone/lodestone.sqlite` (`feedback` table) | Same |
 | Watcher state, ready marker | `.lodestone/runtime/`, `.lodestone/ready.json` | Same |
 
 ## What leaves the machine
 
-In friend mode (the default), **nothing**. Once installed, Lodestone runs entirely offline.
+In friend mode, **nothing** leaves the machine at runtime for the packaged `lite` and `full` profiles. Once installed, Lodestone runs entirely offline unless the operator explicitly invokes a consent-gated model setup path.
 
 The two scenarios where bytes might leave your machine are:
 
-1. **Installing or upgrading Lodestone itself.** `npm install -g @lodestone/cli@latest` (or `npx lodestone@latest`) hits the public npm registry to fetch the package. This is a normal package install, no different from any other npm tool you use. The npm registry URL is the only outbound URL allowed in the shipped `dist/` (the build-time grep audit, below, enforces this).
-2. **The `tiny` embedder profile on first use.** If you set `[embedder].profile = "tiny"` in your `lodestone.toml`, the snowflake-arctic-embed-s weights are fetched on first use from Hugging Face and cached locally. Subsequent runs use the cached copy. Setting `LODESTONE_OFFLINE=1` in your environment blocks this fetch with a clear error, in which case the cache must be pre-populated. The default profile bundles its weights — no fetch occurs.
+1. **Installing or upgrading Lodestone itself.** The friend installer downloads pinned Lodestone release tarballs from GitHub and lets npm resolve normal package dependencies. Future npm-published paths will hit the public npm registry. This is normal package installation traffic, not runtime code upload.
+2. **Consent-gated model setup.** If an operator runs `lodestone setup-models --allow-download`, Lodestone can fetch a pinned model file and cache it locally. Setting `LODESTONE_OFFLINE=1` blocks this path with a clear error. The packaged `lite` and `full` friend profiles already bundle their model weights, so normal friend runtime does not need this fetch.
 
 That is the complete list. There is no third path.
 
@@ -84,7 +84,7 @@ The audit runs in two places, both as gates:
 
 ## No telemetry
 
-There is no telemetry. No usage events, no error reports, no anonymous metrics. The closest thing is the `feedback` MCP tool, which the agent calls voluntarily after a useful or unhelpful tool call — but those events are written to your local `.lodestone/store/lodestone.db` and stay there. Nothing is sent anywhere.
+There is no telemetry. No usage events, no error reports, no anonymous metrics. The closest thing is the `feedback` MCP tool, which the agent calls voluntarily after a useful or unhelpful tool call — but those events are written to your local `.lodestone/lodestone.sqlite` and stay there. Nothing is sent anywhere.
 
 ## Verifying offline behavior locally
 

@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuration | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a class="active" href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="configuration-reference">Configuration reference</h1>
+<p>Lodestone reads <code>.lodestone/lodestone.toml</code> from the
+project root. <code>lodestone init</code> writes a sensible default;
+this document describes every key. Defaults match the zod schema in
+<code>packages/shared/src/config/schema.ts</code> — that file is the
+source of truth, and the <code>docs.test.ts</code> schema-walk test will
+fail CI if a key is added there but not documented here.</p>
+<h2 id="canonical-example">Canonical example</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[project]</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">name</span> <span class="op">=</span> <span class="st">&quot;my-project&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">languages</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;typescript&quot;</span><span class="op">,</span> <span class="st">&quot;javascript&quot;</span><span class="op">]</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[ingest]</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">mode</span> <span class="op">=</span> <span class="st">&quot;watch&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">debounce_ms</span> <span class="op">=</span> <span class="dv">600</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="dt">ignore_extra</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;build/&quot;</span><span class="op">,</span> <span class="st">&quot;dist/&quot;</span><span class="op">,</span> <span class="st">&quot;vendor/&quot;</span><span class="op">]</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="dt">inherit_gitignore</span> <span class="op">=</span> <span class="cn">true</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="dt">pause_during_git</span> <span class="op">=</span> <span class="cn">true</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">[embedder]</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="dt">profile</span> <span class="op">=</span> <span class="st">&quot;default&quot;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="dt">batch_size</span> <span class="op">=</span> <span class="dv">16</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">[cluster]</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="dt">algorithm</span> <span class="op">=</span> <span class="st">&quot;louvain&quot;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="dt">schedule</span> <span class="op">=</span> <span class="st">&quot;nightly&quot;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="dt">resolution</span> <span class="op">=</span> <span class="fl">1.5</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="dt">alpha</span> <span class="op">=</span> <span class="fl">0.4</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="dt">beta</span> <span class="op">=</span> <span class="fl">0.05</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="dt">gamma</span> <span class="op">=</span> <span class="fl">0.4</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="dt">min_weight</span> <span class="op">=</span> <span class="fl">0.3</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="kw">[skill_emitter]</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="dt">enabled</span> <span class="op">=</span> <span class="cn">true</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="dt">seed_on_init</span> <span class="op">=</span> <span class="cn">true</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="dt">min_size</span> <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="dt">max_size</span> <span class="op">=</span> <span class="dv">50</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="dt">min_age_days</span> <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="dt">expire_days</span> <span class="op">=</span> <span class="dv">60</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="kw">[mcp]</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="dt">expose</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;query&quot;</span><span class="op">,</span> <span class="st">&quot;context&quot;</span><span class="op">,</span> <span class="st">&quot;impact&quot;</span><span class="op">,</span> <span class="st">&quot;cluster&quot;</span><span class="op">,</span> <span class="st">&quot;skills_for&quot;</span><span class="op">,</span> <span class="st">&quot;recent_changes&quot;</span><span class="op">,</span> <span class="st">&quot;feedback&quot;</span><span class="op">]</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="dt">dangerous_tools_enabled</span> <span class="op">=</span> <span class="cn">false</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="dt">max_in_flight</span> <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="dt">max_response_kb</span> <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="kw">[pro]</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="dt">enabled</span> <span class="op">=</span> <span class="cn">false</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="dt">docker_compose_path</span> <span class="op">=</span> <span class="st">&quot;./pro/docker-compose.yml&quot;</span></span></code></pre></div>
+<h2 id="project"><code>[project]</code></h2>
+<p>Required block. Identifies the project to Lodestone.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td><em>required</em></td>
+<td>Project name. Used in the <code>.mcp.json</code> snippet
+<code>lodestone init</code> writes and in CLI output. Must be
+non-empty.</td>
+</tr>
+<tr>
+<td><code>languages</code></td>
+<td>string[]</td>
+<td><code>[]</code></td>
+<td>Source languages to index. Allowed values:
+<code>"typescript"</code>, <code>"javascript"</code>,
+<code>"python"</code>, <code>"go"</code>, <code>"rust"</code>. Empty
+array means "auto-detect from file extensions during init."</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ingest"><code>[ingest]</code></h2>
+<p>How the ingest pipeline behaves on startup and on file changes.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mode</code></td>
+<td>enum</td>
+<td><code>"watch"</code></td>
+<td><code>"watch"</code> keeps the index live via the file watcher.
+<code>"manual"</code> ingests once and never re-runs until you call
+<code>lodestone reindex</code>.</td>
+</tr>
+<tr>
+<td><code>debounce_ms</code></td>
+<td>int (≥0)</td>
+<td><code>600</code></td>
+<td>Milliseconds the watcher waits after the last file event before
+triggering a re-ingest of the affected slice. Higher = fewer ingests,
+slightly staler index.</td>
+</tr>
+<tr>
+<td><code>ignore_extra</code></td>
+<td>string[]</td>
+<td><code>[]</code></td>
+<td>Additional path patterns (gitignore syntax) to exclude on top of
+<code>.gitignore</code>. Use for build outputs, vendored code, generated
+files.</td>
+</tr>
+<tr>
+<td><code>inherit_gitignore</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>When true, every entry in the project's <code>.gitignore</code> is
+also ignored by the watcher and the ingest scanner.</td>
+</tr>
+<tr>
+<td><code>pause_during_git</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>When true, the watcher pauses re-ingest while a git operation is in
+progress (detected via <code>.git/index.lock</code>). Prevents thrash
+during <code>git checkout</code> / <code>git rebase</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="embedder"><code>[embedder]</code></h2>
+<p>Which embedding model and how it batches.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>profile</code></td>
+<td>enum</td>
+<td><code>"default"</code></td>
+<td><code>"default"</code> prefers bundled
+<code>nomic-embed-text-v1.5</code> when present. In the friend
+<code>lite</code> release tarball, the runtime auto-selects the bundled
+<code>snowflake-arctic-embed-s</code> model instead. <code>"tiny"</code>
+pins Snowflake. <code>"pro"</code> is reserved for v0.5+ and currently
+behaves like <code>"default"</code>.</td>
+</tr>
+<tr>
+<td><code>batch_size</code></td>
+<td>int (≥1)</td>
+<td><code>16</code></td>
+<td>Symbols per inference batch. Higher uses more RAM during ingest;
+lower is friendlier on small machines. The pipeline auto-clamps when
+free RAM is low.</td>
+</tr>
+</tbody>
+</table>
+<p><code>lodestone reindex</code> reads this profile before loading the
+embedder. Set <code>profile = "tiny"</code> to pin index-time embeddings
+to <code>snowflake-arctic-embed-s</code>; an explicit
+<code>LODESTONE_EMBEDDER</code> environment override still wins for
+operator debugging. Friend install profiles
+(<code>LODESTONE_PROFILE=lite|full</code>) control which model is
+packaged into the release tarball; this TOML key controls runtime
+selection inside an installed project.</p>
+<h2 id="cluster"><code>[cluster]</code></h2>
+<p>Community detection over the symbol-and-call graph.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>algorithm</code></td>
+<td>enum</td>
+<td><code>"louvain"</code></td>
+<td><code>"louvain"</code> is the v0 default (Node implementation is
+mature). <code>"leiden"</code> is wired but not exercised in v0; treat
+as deferred.</td>
+</tr>
+<tr>
+<td><code>schedule</code></td>
+<td>string</td>
+<td><code>"nightly"</code></td>
+<td>Pattern: <code>"nightly"</code> (run once per day),
+<code>"manual"</code> (only when <code>lodestone reindex</code> is
+called), or <code>"on_change_threshold:&lt;N&gt;"</code> (re-cluster
+after N changed symbols).</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td>float (&gt;0)</td>
+<td><code>1.5</code></td>
+<td>Louvain resolution parameter. Higher → more, smaller clusters. Lower
+→ fewer, larger clusters.</td>
+</tr>
+<tr>
+<td><code>alpha</code></td>
+<td>float (0..1)</td>
+<td><code>0.4</code></td>
+<td>Edge-weight contribution from call frequency.</td>
+</tr>
+<tr>
+<td><code>beta</code></td>
+<td>float (0..1)</td>
+<td><code>0.05</code></td>
+<td>Edge-weight contribution from file co-location.</td>
+</tr>
+<tr>
+<td><code>gamma</code></td>
+<td>float (0..1)</td>
+<td><code>0.4</code></td>
+<td>Edge-weight contribution from PageRank-weighted shared
+neighbors.</td>
+</tr>
+<tr>
+<td><code>min_weight</code></td>
+<td>float (0..1)</td>
+<td><code>0.3</code></td>
+<td>Minimum edge weight to feed into Louvain. Prunes noisy edges before
+community detection.</td>
+</tr>
+</tbody>
+</table>
+<p><code>alpha + beta + gamma</code> need not sum to 1; they are
+independent multipliers.</p>
+<h2 id="skill_emitter"><code>[skill_emitter]</code></h2>
+<p>Controls which clusters become emitted SKILL.md cards.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>enabled</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Master switch. When false, no SKILL cards are written and
+<code>skills_for()</code> returns empty.</td>
+</tr>
+<tr>
+<td><code>seed_on_init</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>When true, <code>lodestone init</code> runs the deterministic
+seed-skills extractor (error hierarchies, framework detection) so day-1
+<code>skills_for()</code> returns useful results.</td>
+</tr>
+<tr>
+<td><code>min_size</code></td>
+<td>int (≥1)</td>
+<td><code>3</code></td>
+<td>Minimum cluster member count to be eligible for emission. Prevents
+tiny clusters from generating low-signal cards.</td>
+</tr>
+<tr>
+<td><code>max_size</code></td>
+<td>int (≥1)</td>
+<td><code>50</code></td>
+<td>Maximum cluster member count for emission. Larger clusters are
+usually too generic to summarize as a single skill. Must be ≥
+<code>min_size</code>.</td>
+</tr>
+<tr>
+<td><code>min_age_days</code></td>
+<td>int (≥0)</td>
+<td><code>2</code></td>
+<td>A cluster must persist (same membership) for this many days before
+emission. Filters out churn from refactors-in-progress.</td>
+</tr>
+<tr>
+<td><code>expire_days</code></td>
+<td>int (≥0)</td>
+<td><code>60</code></td>
+<td>SKILL cards older than this many days without re-confirmation are
+archived. Must be ≥ <code>min_age_days</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mcp"><code>[mcp]</code></h2>
+<p>How the MCP server presents itself.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>expose</code></td>
+<td>string[]</td>
+<td>see below</td>
+<td>Tool names to register. Allowed values: <code>query</code>,
+<code>context</code>, <code>impact</code>, <code>cluster</code>,
+<code>skills_for</code>, <code>recent_changes</code>,
+<code>feedback</code>, <code>sql</code>. Default exposes everything
+except <code>sql</code>.</td>
+</tr>
+<tr>
+<td><code>dangerous_tools_enabled</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>When false, <code>sql</code> cannot be added to <code>expose</code>
+(the schema rejects it). Set to true to enable the read-only SQLite
+escape hatch.</td>
+</tr>
+<tr>
+<td><code>max_in_flight</code></td>
+<td>int (≥1)</td>
+<td><code>4</code></td>
+<td>Concurrent in-flight tool calls. Excess calls receive a
+<code>BackpressureError</code> rather than queue.</td>
+</tr>
+<tr>
+<td><code>max_response_kb</code></td>
+<td>int (≥1)</td>
+<td><code>256</code></td>
+<td>Per-response size cap. Larger responses are truncated and
+<code>diagnostics.truncated = true</code> is set on the envelope.</td>
+</tr>
+</tbody>
+</table>
+<p>Default <code>expose</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">expose</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;query&quot;</span><span class="op">,</span> <span class="st">&quot;context&quot;</span><span class="op">,</span> <span class="st">&quot;impact&quot;</span><span class="op">,</span> <span class="st">&quot;cluster&quot;</span><span class="op">,</span> <span class="st">&quot;skills_for&quot;</span><span class="op">,</span> <span class="st">&quot;recent_changes&quot;</span><span class="op">,</span> <span class="st">&quot;feedback&quot;</span><span class="op">]</span></span></code></pre></div>
+<p><code>sql</code> is intentionally absent. To enable it both
+<code>dangerous_tools_enabled = true</code> AND <code>"sql"</code> in
+<code>expose</code> are required; the schema enforces both.</p>
+<h2 id="pro"><code>[pro]</code></h2>
+<p>Pro-mode flags. v0 honors only <code>enabled</code>; the rest is
+plumbing for v0.5+.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>enabled</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>When true, <code>lodestone init --pro</code> enters the (deferred)
+Pro setup flow. In v0 this prints "Pro mode is v0.5+ work" and exits
+cleanly.</td>
+</tr>
+<tr>
+<td><code>docker_compose_path</code></td>
+<td>string</td>
+<td><code>"./pro/docker-compose.yml"</code></td>
+<td>Reserved for v0.5+. Path to the Pro-mode Docker Compose file.
+Ignored in v0.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="environment-variable-overrides">Environment variable
+overrides</h2>
+<p>Some runtime flags are env-var-only because they apply across the
+toolchain (CLI, ingest workers, MCP server) and would not fit cleanly
+into TOML.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Values</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LODESTONE_OFFLINE</code></td>
+<td><code>"1"</code> to enable</td>
+<td>Block every outbound network call. The chokepoint in
+<code>@lodestone/shared/net/fetch</code> throws
+<code>NetworkBlockedError</code> with a clear reason. Recommended for
+air-gapped or paranoid setups. See <a
+href="./PRIVACY.md"><code>PRIVACY.md</code></a>.</td>
+</tr>
+<tr>
+<td><code>LODESTONE_LOG_LEVEL</code></td>
+<td><code>error</code> | <code>warn</code> | <code>info</code> |
+<code>debug</code></td>
+<td>CLI and worker log verbosity. Default is <code>info</code>.</td>
+</tr>
+<tr>
+<td><code>LODESTONE_COMMIT_HASH</code></td>
+<td>string</td>
+<td>Build-time injection of the commit hash into the CLI's
+<code>--version</code> output. If unset,
+<code>lodestone --version</code> falls back to a runtime
+<code>git rev-parse</code>, then to <code>dev</code>.</td>
+</tr>
+<tr>
+<td><code>LODESTONE_ALLOW_MODEL_DOWNLOAD</code></td>
+<td><code>"1"</code> to enable</td>
+<td>Reserved for v0.5+. Will gate the larger
+<code>nomic-embed-code</code> weights opt-in. Currently a no-op.</td>
+</tr>
+</tbody>
+</table>
+<p><code>LODESTONE_OFFLINE=1</code> is the load-bearing one for the
+privacy claim. Set it in your shell profile or your editor's MCP config
+block.</p>
+
+      </article>
+      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

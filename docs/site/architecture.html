@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architecture | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a class="active" href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="architecture">Architecture</h1>
+<p>Lodestone v0 is a single-process, project-local Knowledge Graph that
+lives entirely inside <code>.lodestone/</code> in the repository it
+indexes. This document covers the locked v0 stack choices and the repo
+layout. For configuration keys, see <a
+href="./CONFIG.md"><code>CONFIG.md</code></a>. For the MCP surface, see
+<a href="./MCP-TOOLS.md"><code>MCP-TOOLS.md</code></a>.</p>
+<h2 id="locked-v0-decisions">Locked v0 decisions</h2>
+<h3 id="node-only-runtime">Node-only runtime</h3>
+<p>The CLI, the ingest pipeline, the embedder, the storage layer, the
+clusterer, the skill emitter, and the MCP server are all TypeScript on
+Node 20+. There is no Python sidecar, no Go agent, no helper service.
+One <code>npm install</code> (or <code>npx</code>) gets a friend
+running.</p>
+<p>Why: friends already have Node. Adding a Python venv or a
+system-package install would lose half the audience before the first
+<code>init</code>. The cost is that we do not have access to the richer
+Python ML ecosystem at runtime — but we do not need it. Embedding
+inference happens in <code>transformers.js</code> (ONNX Runtime under
+the hood) and the rest of the pipeline is pure data movement.</p>
+<h3 id="tree-sitter-for-parsing-all-five-v0-languages">Tree-sitter for
+parsing, all five v0 languages</h3>
+<p><code>web-tree-sitter</code> (WASM) is the parser. v0 supports:</p>
+<ul>
+<li>TypeScript / TSX</li>
+<li>JavaScript / JSX</li>
+<li>Python</li>
+<li>Go</li>
+<li>Rust</li>
+</ul>
+<p>Adding a language is a matter of dropping in the language's WASM
+grammar and writing a small extractor over the parse tree. We chose
+tree-sitter because it gives us the same AST shape across languages with
+the same library — important for the cross-language graph builder in
+<code>@lodestone/ingest/graph</code>.</p>
+<h3
+id="embedder-bundled-onnx-no-fetch-on-packaged-friend-profiles">Embedder:
+bundled ONNX, no fetch on packaged friend profiles</h3>
+<p>The friend installer ships two packaged profiles. <code>lite</code>
+bundles <code>snowflake-arctic-embed-s</code> (ONNX int8, 384
+dimensions) and is the default friend install. <code>full</code> bundles
+<code>nomic-embed-text-v1.5</code> (ONNX int8, 768 dimensions) for
+advanced users. No network call is required to embed when the selected
+profile's model is bundled.</p>
+<p>The internal config still exposes <code>default</code>,
+<code>tiny</code>, and reserved <code>pro</code> values for development
+and forward compatibility. In a profiled release tarball, the runtime
+auto-selects the bundled model that is actually present so a
+<code>lite</code> install does not try to load the larger Nomic
+model.</p>
+<p>Why bundled: the privacy claim ("your code never leaves your
+machine") only holds if the default install does not phone home. We
+accept the install size cost.</p>
+<h3 id="storage-sqlite-better-sqlite3--wal--sqlite-vec">Storage: SQLite
+(better-sqlite3 + WAL) + sqlite-vec</h3>
+<p>All persisted database state — symbols, edges, PageRank scores, class
+inheritance, clusters, cluster members, skill rows, embeddings, and
+feedback events — lives in a single SQLite database at
+<code>.lodestone/lodestone.sqlite</code>. <code>ready.json</code> lives
+next to it under <code>.lodestone/</code>. The <code>sqlite-vec</code>
+extension provides the <code>symbol_embeddings</code> virtual table for
+vector ANN. WAL mode is on. Foreign keys are enforced. The reader handle
+is opened in <code>readonly</code> mode at the driver layer so MCP tools
+cannot accidentally write.</p>
+<p>Why SQLite over LanceDB + KuzuDB: the original plan was LanceDB for
+vectors and KuzuDB for the graph. After the §08 implementation pass we
+collapsed both into SQLite + sqlite-vec because (a) the graph queries
+Lodestone actually runs (callers, callees, recursive impact) are
+well-served by recursive CTEs over an <code>edges</code> table, and (b)
+keeping one process, one file, and one transaction model dramatically
+simplified the surface for friends installing on macOS, Linux, and
+WSL2.</p>
+<h3 id="clustering-louvain-not-leiden-in-v0">Clustering: Louvain, not
+Leiden, in v0</h3>
+<p><code>graphology</code> +
+<code>graphology-communities-louvain</code>. Modularity-maximizing
+community detection. Run on the symbol-and-call graph weighted by a
+configurable mix of call frequency, file co-location, and PageRank.</p>
+<p>Why Louvain in v0: it has a maintained Node implementation with
+predictable runtime on graphs up to ~50k symbols (the v0 friend-repo
+target). Leiden gives marginally better community quality but the
+available Node bindings are less stable. Leiden is on the Pro-mode
+roadmap.</p>
+<h3 id="mcp-surface-eight-tools">MCP surface, eight tools</h3>
+<p>The MCP server is built on <code>@modelcontextprotocol/sdk</code> and
+runs locally over stdio. Eight tools, all returning a uniform
+<code>LodestoneToolResponse&lt;T&gt;</code> envelope. The
+<code>sql</code> tool (read-only SQLite escape hatch) is gated behind
+<code>[mcp].dangerous_tools_enabled</code> because exposing arbitrary
+read access to the index is a power-user feature, not a default.</p>
+<p>See <a href="./MCP-TOOLS.md"><code>MCP-TOOLS.md</code></a> for
+per-tool contracts.</p>
+<h3 id="friend-mode-vs-pro-mode">Friend mode vs Pro mode</h3>
+<p>v0 ships <strong>friend mode</strong>: one repository, one local
+index, one MCP server. Pro mode (multiple repositories sharing a
+Docker-Compose-orchestrated index, multi-user feedback aggregation,
+periodic re-clustering jobs) is deferred to v0.5+. The
+<code>lodestone init --pro</code> flag is wired to print a clear "Pro
+mode is v0.5+ work" exit message and not crash, so forward-looking
+config files do not break.</p>
+<h2 id="repo-layout">Repo layout</h2>
+<pre><code>lodestone/
+├── packages/
+│   ├── shared/        # Types, schemas, envelope, paths, net chokepoint
+│   ├── cli/           # `lodestone` binary + commands
+│   ├── ingest/        # Embedder + parsers + graph + store + clusterer + skill emitter + watcher
+│   └── mcp-server/    # @lodestone/mcp-server — the 8 MCP tools
+├── e2e/               # End-to-end harness: orchestrator, network interceptor, synthetic demo repo
+├── docs/              # This directory
+├── package.json       # pnpm workspace root
+├── pnpm-workspace.yaml
+└── pnpm-lock.yaml</code></pre>
+<h3 id="per-package-responsibilities">Per-package responsibilities</h3>
+<ul>
+<li><strong><code>@lodestone/shared</code></strong> —
+zero-runtime-dependency type and schema package. Owns
+<code>LodestoneToolResponse&lt;T&gt;</code>, <code>Provenance</code>,
+<code>Diagnostics</code>, the <code>lodestone.toml</code> zod schema,
+<code>LodestoneSymbol</code> / <code>Edge</code> / <code>Cluster</code>
+types, the SQLite schema (canonical row types), and the network
+chokepoint (<code>assertNetworkAllowed</code>,
+<code>LODESTONE_OFFLINE</code> enforcement). Every other package imports
+types from here.</li>
+<li><strong><code>@lodestone/cli</code></strong> — the user-facing
+binary. Owns <code>init</code>, <code>status</code>,
+<code>reindex</code>, <code>doctor</code>, <code>seed-skills</code>,
+<code>upgrade</code>, and <code>uninstall</code>. Routes subcommands;
+renders progress bars; loads <code>lodestone.toml</code>; orchestrates
+ingest pipeline calls.</li>
+<li><strong><code>@lodestone/ingest</code></strong> — the heavy package.
+Subpath exports for <code>embed</code>, <code>parsers</code>,
+<code>graph</code>, <code>store</code>, <code>clusterer</code>,
+<code>skill-emitter</code>, <code>seed-skills</code>, and
+<code>watcher</code>. Each subsystem is independently testable. The MCP
+server reads from this package's <code>store</code> subpath via the
+<code>openReader</code> handle.</li>
+<li><strong><code>@lodestone/mcp-server</code></strong> — the MCP
+protocol surface. Owns the eight tool implementations, the response
+envelope wrapper, the in-flight cap, the response-size truncator, and
+the local-stdio trust assertion. Boots via
+<code>createServer()</code>.</li>
+</ul>
+<h2 id="data-flow">Data flow</h2>
+<pre><code>   ┌─────────┐   parse    ┌──────────┐   build    ┌────────┐
+   │  files  │ ─────────▶ │  ASTs    │ ─────────▶ │ graph  │
+   └─────────┘ tree-sitter└──────────┘ §07 graph  └────────┘
+                                                       │
+                                       PageRank +      │
+                                       resolve edges   ▼
+                                                  ┌────────────┐
+                                                  │ SQLite +   │
+                              embed (bundled)  ─▶ │ sqlite-vec │
+                                                  └────────────┘
+                                                       │
+                                       cluster (Louvain)
+                                                       ▼
+                                                  ┌────────────┐
+                                                  │  clusters  │
+                                                  └────────────┘
+                                                       │
+                                       skill emitter   ▼
+                                                  ┌────────────┐
+                                                  │ SKILL.md   │
+                                                  │   cards    │
+                                                  └────────────┘
+
+   MCP server ─── reads only via openReader (readonly handle) ─▶ agent</code></pre>
+<p><code>init</code> runs the full pipeline once. The watcher
+(<code>@lodestone/ingest/watcher</code>) keeps the index live by
+re-running the affected slice on file changes, debounced by
+<code>[ingest].debounce_ms</code> and paused during git operations when
+<code>[ingest].pause_during_git = true</code>.</p>
+<h2 id="whats-deferred-to-v05">What's deferred to v0.5+</h2>
+<ul>
+<li>Pro mode (multi-repo, Docker-Compose, shared index)</li>
+<li>Leiden clustering as an alternative to Louvain</li>
+<li>A numbered-migrations runner (v0 treats <code>.lodestone/</code> as
+ephemeral; reindex from scratch on schema bumps — see <a
+href="./UPGRADE.md"><code>UPGRADE.md</code></a>)</li>
+<li>KuzuDB as a graph-engine alternative</li>
+<li>The bigger <code>nomic-embed-code</code> weights as an opt-in
+profile (<code>LODESTONE_ALLOW_MODEL_DOWNLOAD=1</code> reserved for
+this)</li>
+<li>GPU acceleration (tracked separately; not in v0 scope)</li>
+</ul>
+
+      </article>
+      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

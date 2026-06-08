@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Repository | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a class="active" href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="the-synthetic-demo-repo">The synthetic demo repo</h1>
+<p><code>e2e/synthetic-demo-repo/</code> is a hand-built, multi-language
+fixture that doubles as a teaching example. The end-to-end test harness
+exercises the full Lodestone pipeline against it
+(<code>pnpm -r test</code>), and you can point your own editor's coding
+agent at it to see the moat tools in action without standing up a real
+project first.</p>
+<h2 id="whats-in-it">What's in it</h2>
+<p>A small five-language project with deterministic call graphs, import
+edges, and class hierarchies. The files are arranged so that the Louvain
+clusterer reliably partitions them into recognizable architectural
+subsystems:</p>
+<ul>
+<li><strong>TypeScript service (<code>src/</code>)</strong> —
+<code>auth.ts</code>, <code>api.ts</code>, <code>db.ts</code>,
+<code>util.ts</code>. The TypeScript subsystem demonstrates the
+canonical router-handler-service-repo split. <code>util.log()</code> is
+referenced by every module, so it tops the PageRank ranking.</li>
+<li><strong>Python scripts (<code>scripts/</code>)</strong> —
+<code>seed.py</code>, <code>migrate.py</code>. Demonstrates a SeedError
+exception family the error-hierarchy seed-skill scanner picks up.</li>
+<li><strong>Go CLI (<code>cli/</code>)</strong> — <code>main.go</code>,
+<code>handler.go</code>. Demonstrates the Go-specific package + import
+graph the parser builds.</li>
+<li>Plus small JavaScript (<code>web/server.js</code>,
+<code>web/routes.js</code> — both import Express, so the
+framework-detector seed skill fires) and Rust (<code>native/</code>)
+modules so all five v0 languages are exercised.</li>
+</ul>
+<p>The TypeScript files also intentionally seed an <code>AppError</code>
+/ <code>AuthError</code> / <code>DbError</code> / <code>ApiError</code>
+hierarchy so the error-hierarchy seed-skill scanner has obvious work to
+do at init time.</p>
+<p><code>FIXTURE_MANIFEST.json</code> declares the predictions the e2e
+test asserts against — expected file count ranges, the three
+architectural subsystems, the expected seed skills, the high-PageRank
+anchors, the expected query results, and the expected MCP tools to be
+registered. Treat it as the contract; if a Lodestone change breaks one
+of those predictions, the e2e fails loudly.</p>
+<h2 id="why-synthetic-and-not-a-real-oss-project">Why synthetic and not
+a real OSS project</h2>
+<p>Three reasons:</p>
+<ol type="1">
+<li><strong>Reproducibility.</strong> Real OSS projects drift. A test
+asserting "X function should be in cluster Y" against a moving target
+rots in weeks. A synthetic repo we control does not drift.</li>
+<li><strong>Predictability.</strong> The cluster names, the seed skills,
+the high-PageRank anchors are all known in advance. We can write tight
+assertions without flake.</li>
+<li><strong>We control the example.</strong> Adding a new language (say,
+Java in v0.5) is one new directory in this fixture, plus one new entry
+in the manifest. No external dependency, no waiting on an upstream
+maintainer.</li>
+</ol>
+<p>The cost is that the demo repo is small and obviously synthetic. It
+is a teaching example, not a representative codebase. For a realistic
+feel, point Lodestone at one of your own real projects after the demo
+flow makes sense.</p>
+<h2 id="how-to-use-it-as-a-teaching-example">How to use it as a teaching
+example</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/<span class="op">&lt;</span>your-org<span class="op">&gt;</span>/lodestone.git</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> lodestone</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> install</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">-r</span> build</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> e2e/synthetic-demo-repo</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> ../../packages/cli/dist/bin/lodestone.js init</span></code></pre></div>
+<p>Now <code>e2e/synthetic-demo-repo/.lodestone/</code> is populated.
+Open Claude Code (or any MCP-aware editor) in that directory; it will
+pick up the <code>.mcp.json</code> snippet <code>init</code> wrote.</p>
+<p>Try:</p>
+<blockquote>
+<p><em>what are the main subsystems of this codebase?</em></p>
+</blockquote>
+<p>The agent should call <code>cluster()</code> and read back at least
+three communities matching the TypeScript service, the Python scripts,
+and the Go CLI. Then:</p>
+<blockquote>
+<p><em>find the user login authentication flow</em></p>
+</blockquote>
+<p>The agent should call <code>query()</code> with a question close to
+that and surface a result whose path contains
+<code>src/auth.ts</code>.</p>
+<blockquote>
+<p><em>what are the conventions for handling errors here?</em></p>
+</blockquote>
+<p>The agent should call <code>skills_for()</code> and surface the
+error-hierarchy seed skill (extracted from the <code>AppError</code>
+family in <code>src/util.ts</code> plus the <code>SeedError</code>
+family in <code>scripts/seed.py</code>).</p>
+<p>If any of those calls return something unexpected on a stock
+checkout, file an issue — the manifest is the contract.</p>
+
+      </article>
+      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

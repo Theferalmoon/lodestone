@@ -1,6 +1,6 @@
 {
   "name": "@lodestone/shared",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "type": "module",
   "description": "Shared types, config schema, path resolver, and SQLite schema definitions for the Lodestone monorepo.",
@@ -42,8 +42,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "@vitest/coverage-v8": "^2.1.0",
+    "@vitest/coverage-v8": "^3.2.6",
     "typescript": "^5.5.0",
-    "vitest": "^2.1.0"
+    "vitest": "^3.2.6"
   }
 }

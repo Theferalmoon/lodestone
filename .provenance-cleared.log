@@ -26,3 +26,7 @@
 2026-05-03T19:13:29Z  Theferalmoon            v0.1.4 cli init fixes — added internal workspace dep @lodestone/mcp-server to @lodestone/cli (sibling package, no external supply chain change)
 2026-05-03T22:02:07Z  Theferalmoon            v0.1.4 deploy prep — files allowlist + repository/bugs/homepage on @lodestone/* publishable packages, friend bootstrap installer, README install rewrite. No external dep changes.
 2026-05-03T22:27:18Z  Theferalmoon            no dep changes — bundle-models source URL update + HF auth wire
+2026-05-03T23:21:35Z  Theferalmoon            no dep changes — embedder autocorrect + pack-profile + bundled snowflake weights
+2026-05-03T23:29:16Z  Theferalmoon            v0.1.4 version bump only
+2026-06-08T23:36:35Z  Theferalmoon            v0.1.5 friend-install release prep — package-local docs, installer checksum refresh, lean full-profile tarball, pnpm lockfile refresh, dev-only Vitest refresh + fast-uri/hono/ip-address/protobufjs/qs overrides; pnpm audit --prod clean; no runtime model fetch
+2026-06-08T23:43:20Z  Theferalmoon            v0.1.5 friend-install release: audited dev-only Vitest refresh and patched transitive overrides fast-uri/hono/ip-address/protobufjs/qs; npm registry metadata checked, pnpm audit --prod clean, AGY non-Codex review GREEN

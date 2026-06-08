@@ -26,7 +26,7 @@ npx lodestone@latest
 lodestone doctor
 ```
 
-Reports the installed CLI version, the schema version recorded in `.lodestone/store/lodestone.db`, and whether they agree. If they do not, the doctor prints the recommended action (usually `lodestone reindex --from-scratch`).
+Reports the installed CLI version, the schema version recorded in `.lodestone/lodestone.sqlite`, and whether they agree. If they do not, the doctor prints the recommended action (usually `lodestone reindex --from-scratch`).
 
 `lodestone --version` prints the version + commit-hash one-liner without doing the rest of the doctor probes.
 
@@ -38,7 +38,7 @@ The current schema version is recorded in the SQLite `schema_version` table and 
 lodestone reindex --from-scratch
 ```
 
-This deletes `.lodestone/store/` and rebuilds from a fresh ingest pass. For a 10k-symbol repo this takes under a minute on a modern laptop. The watcher state, the SKILL.md cards under `.lodestone/skills/`, and the `lodestone.toml` config are all preserved across a from-scratch reindex.
+This deletes and rebuilds `.lodestone/lodestone.sqlite` from a fresh ingest pass. For a 10k-symbol repo this takes under a minute on a modern laptop. The watcher state, the SKILL.md cards under `.lodestone/skills/`, and the `lodestone.toml` config are all preserved across a from-scratch reindex.
 
 ## Why no migration runner in v0
 
@@ -61,7 +61,7 @@ The numbered-migrations runner is the first thing on the v0.5 roadmap. It will l
 
 ## Bigger embedder upgrade (opt-in fetch path)
 
-The default ship bundles both `nomic-embed-text-v1.5` int8 (~150 MB) and `snowflake-arctic-embed-s` int8 (~33 MB) inside the npm package — no runtime download needed for the privacy-first happy path.
+The friend release ships profiled ingest tarballs: `lite` bundles `snowflake-arctic-embed-s` int8 (~33 MB model payload) and `full` bundles `nomic-embed-text-v1.5` int8 (~150 MB model payload). Normal friend runtime does not need a model download.
 
 Friends who want to upgrade to a larger embedder (e.g. the future `nomic-fp16` weights, or who want to re-fetch a missing or corrupted file) can opt in to a one-shot, consent-gated fetch:
 

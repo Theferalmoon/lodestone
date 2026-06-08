@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Upgrade | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a class="active" href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="upgrading-lodestone">Upgrading Lodestone</h1>
+<p>v0 follows the standard semver shape
+(<code>MAJOR.MINOR.PATCH</code>). Within v0.x, schema-breaking changes
+are allowed but documented. From v1.0 onward, schema-breaking changes
+will require a numbered migration. Until then, treat
+<code>.lodestone/</code> as a regenerable cache.</p>
+<h2 id="how-to-upgrade-the-cli">How to upgrade the CLI</h2>
+<p>If you installed globally:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install <span class="at">-g</span> @lodestone/cli@latest</span></code></pre></div>
+<p>If you run via <code>npx</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> lodestone@latest</span></code></pre></div>
+<p><code>npx</code> resolves the latest published version on each
+invocation, so you are always on the newest release. The trade-off is a
+small startup cost on the first run after a release.</p>
+<h2
+id="how-to-verify-the-install-version-vs-the-on-disk-schema-version">How
+to verify the install version vs the on-disk schema version</h2>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> doctor</span></code></pre></div>
+<p>Reports the installed CLI version, the schema version recorded in
+<code>.lodestone/lodestone.sqlite</code>, and whether they agree. If
+they do not, the doctor prints the recommended action (usually
+<code>lodestone reindex --from-scratch</code>).</p>
+<p><code>lodestone --version</code> prints the version + commit-hash
+one-liner without doing the rest of the doctor probes.</p>
+<h2 id="schema-versions-in-v0">Schema versions in v0</h2>
+<p>The current schema version is recorded in the SQLite
+<code>schema_version</code> table and surfaced as
+<code>CURRENT_SCHEMA_VERSION</code> in <code>@lodestone/shared</code>.
+Any upgrade between v0.x versions that bumps that constant requires a
+from-scratch reindex:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> reindex <span class="at">--from-scratch</span></span></code></pre></div>
+<p>This deletes and rebuilds <code>.lodestone/lodestone.sqlite</code>
+from a fresh ingest pass. For a 10k-symbol repo this takes under a
+minute on a modern laptop. The watcher state, the SKILL.md cards under
+<code>.lodestone/skills/</code>, and the <code>lodestone.toml</code>
+config are all preserved across a from-scratch reindex.</p>
+<h2 id="why-no-migration-runner-in-v0">Why no migration runner in
+v0</h2>
+<p>A numbered-migrations runner was scoped out of v0 in favor of getting
+the index design right first. The current pattern (treat
+<code>.lodestone/</code> as ephemeral, reindex on schema bumps) is
+acceptable for friend mode because:</p>
+<ul>
+<li>Reindex is fast.</li>
+<li>The index is per-project and not shared, so no coordination is
+needed.</li>
+<li>We want the freedom to evolve the SQLite schema during the v0.x
+window without locking in migration paths we will regret at v1.0.</li>
+</ul>
+<p>The numbered-migrations runner is the first thing on the v0.5
+roadmap. It will land alongside the embedder-dim swap (the bigger
+<code>nomic-embed-code</code> weights, gated by
+<code>LODESTONE_ALLOW_MODEL_DOWNLOAD=1</code>) — that swap is the first
+migration that genuinely cannot be a from-scratch reindex because it
+changes the embedding dimension and would require re-embedding every
+symbol regardless.</p>
+<h2 id="v0--v01--v05-path-forward-looking">v0 → v0.1 → v0.5 path
+(forward-looking)</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>What changes</th>
+<th>Upgrade action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v0.1.x</td>
+<td>Bug fixes only; no schema bumps.</td>
+<td><code>npm install -g @lodestone/cli@latest</code>.</td>
+</tr>
+<tr>
+<td>v0.2 / v0.3 / v0.4</td>
+<td>Possible schema bumps; minor feature additions (more languages,
+better seed skills, ranking improvements).</td>
+<td>Each release notes whether a from-scratch reindex is required. The
+doctor will tell you.</td>
+</tr>
+<tr>
+<td>v0.5</td>
+<td>Pro mode, numbered migration runner, embedder-dim swap option.</td>
+<td>First version with proper migrations; from-scratch reindex no longer
+required for schema bumps that have a migration.</td>
+</tr>
+<tr>
+<td>v1.0</td>
+<td>Locked schema; semver-strict migration policy; backwards-compat
+guarantees.</td>
+<td>Standard <code>npm install -g @lodestone/cli@latest</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="bigger-embedder-upgrade-opt-in-fetch-path">Bigger embedder
+upgrade (opt-in fetch path)</h2>
+<p>The friend release ships profiled ingest tarballs: <code>lite</code>
+bundles <code>snowflake-arctic-embed-s</code> int8 (~33 MB model
+payload) and <code>full</code> bundles
+<code>nomic-embed-text-v1.5</code> int8 (~150 MB model payload). Normal
+friend runtime does not need a model download.</p>
+<p>Friends who want to upgrade to a larger embedder (e.g. the future
+<code>nomic-fp16</code> weights, or who want to re-fetch a missing or
+corrupted file) can opt in to a one-shot, consent-gated fetch:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Either set the env var once for the shell:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LODESTONE_ALLOW_MODEL_DOWNLOAD</span><span class="op">=</span>1</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> setup-models <span class="at">--embedder</span> nomic-fp16</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># …or pass the flag per-invocation:</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> setup-models <span class="at">--embedder</span> nomic-fp16 <span class="at">--allow-download</span></span></code></pre></div>
+<p>The command will refuse to run unless one of these consent paths is
+taken. It also routes through <code>assertNetworkAllowed()</code> (the
+§18 chokepoint), so <code>LODESTONE_OFFLINE=1</code> blocks the fetch
+even with explicit consent — both gates must permit.</p>
+<p>Weights land at
+<code>&lt;repoRoot&gt;/.lodestone/models/&lt;id&gt;/</code>. Each
+project keeps its own copy; nothing leaks across friends or
+projects.</p>
+<p>Useful flags:</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--embedder &lt;id&gt;</code></td>
+<td>Fetch only the named embedder (repeatable). Default: every embedder
+in the manifest.</td>
+</tr>
+<tr>
+<td><code>--target &lt;path&gt;</code></td>
+<td>Override the per-project model directory
+(<code>&lt;repoRoot&gt;/.lodestone/models/</code>).</td>
+</tr>
+<tr>
+<td><code>--allow-download</code></td>
+<td>Per-invocation consent. Equivalent to setting
+<code>LODESTONE_ALLOW_MODEL_DOWNLOAD=1</code> for one run.</td>
+</tr>
+<tr>
+<td><code>--force</code></td>
+<td>Re-download even when the file is present and the sha256
+matches.</td>
+</tr>
+</tbody>
+</table>
+<p>Each downloaded file is sha256-verified against a pinned manifest
+baked into the CLI binary. A mismatch causes the file to be quarantined
+(deleted) and <code>setup-models</code> exits non-zero.</p>
+<p>When the bundled weights are missing entirely,
+<code>lodestone init</code> and <code>lodestone reindex</code> print a
+hint pointing at this command rather than failing silently.</p>
+<h2 id="reserved-env-vars-for-upgrades">Reserved env vars for
+upgrades</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LODESTONE_ALLOW_MODEL_DOWNLOAD=1</code></td>
+<td>Operator consent gate for <code>lodestone setup-models</code>.
+Without this (or the <code>--allow-download</code> flag), the command
+refuses to touch the network.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-breaking-changes">Known breaking changes</h2>
+<p>None for v0.1.0 — this is the first ship. Future releases will list
+breaking changes here, with the date and the recommended migration
+path.</p>
+
+      </article>
+      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

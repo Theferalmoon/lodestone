@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Troubleshooting | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a class="active" href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="troubleshooting">Troubleshooting</h1>
+<p>Common install and runtime issues, with the symptom first and the fix
+second. If you hit something not on this list, run
+<code>lodestone doctor</code> — it probes the environment (Node version,
+git presence, RAM, proxy state, CoreML availability, WSL2 detection) and
+prints a structured report you can paste into an issue.</p>
+<h2 id="wsl2-path-issues">WSL2 path issues</h2>
+<p><strong>Symptom:</strong> <code>lodestone init</code> runs from a
+WSL2 shell but the file watcher misses changes, or ingest is
+mysteriously slow on a project at <code>/mnt/c/code/...</code>.</p>
+<p><strong>Fix:</strong> clone the project to the WSL2 native filesystem
+(<code>~/code/...</code>), not under <code>/mnt/c/</code>. The
+<code>/mnt/c/...</code> path is a 9P FUSE mount; file events on
+Windows-side changes are not reliably propagated to the Linux-side
+inotify watcher chokidar uses. Symptoms range from missed events to
+permission errors. Native WSL2 paths work correctly. This is a
+Windows-side issue, not Lodestone-side; it affects every Linux file
+watcher running under WSL2.</p>
+<h2 id="corporate-proxy--zscaler--tls-interception">Corporate proxy /
+Zscaler / TLS interception</h2>
+<p><strong>Symptom:</strong> install hangs on the snowflake fallback
+fetch (with <code>[embedder].profile = "tiny"</code>), or
+<code>lodestone doctor</code> reports network probes failing.</p>
+<p><strong>Fix:</strong></p>
+<ul>
+<li>Set <code>HTTPS_PROXY</code> and <code>NO_PROXY</code> in your
+shell. Lodestone respects standard Node proxy environment
+variables.</li>
+<li>If your corporate proxy intercepts TLS, install the corporate root
+CA on the machine
+(<code>NODE_EXTRA_CA_CERTS=/path/to/corp-ca.pem</code>).</li>
+<li>Alternatively: stay on the bundled-model default profile
+(<code>[embedder].profile = "default"</code>). It does not fetch.</li>
+<li>For full air-gap: set <code>LODESTONE_OFFLINE=1</code> and use the
+default profile. The runtime guard will throw a clear
+<code>NetworkBlockedError</code> if anything tries to fetch — useful for
+catching surprises.</li>
+</ul>
+<h2 id="apple-silicon-slow-inference-on-m-series">Apple Silicon: slow
+inference on M-series</h2>
+<p><strong>Symptom:</strong> the embedding pass during
+<code>lodestone reindex</code> is 3 to 5 times slower than expected on
+an M1 / M2 / M3 / M4 Mac. Other Lodestone operations (parse, graph
+build, cluster) run at expected speed.</p>
+<p><strong>Fix:</strong> <code>lodestone doctor</code> reports the
+CoreML execution provider status. If it says "CoreML EP not available,"
+install the latest <code>onnxruntime-node</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> add onnxruntime-node@latest</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or globally if running via `npx lodestone`:</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install <span class="at">-g</span> onnxruntime-node@latest</span></code></pre></div>
+<p>Restart your editor / re-run init. CoreML EP routes the ONNX
+inference through Apple's Neural Engine and brings throughput in line
+with x86_64.</p>
+<h2 id="missing-prebuild-for-better-sqlite3-or-sqlite-vec">Missing
+prebuild for <code>better-sqlite3</code> or <code>sqlite-vec</code></h2>
+<p><strong>Symptom:</strong> <code>pnpm install</code> (or
+<code>npx lodestone init</code> first run) fails with
+<code>no prebuild found for your platform</code>.</p>
+<p><strong>Fix:</strong> Lodestone v0 ships prebuilds for:</p>
+<ul>
+<li><code>darwin-arm64</code> (Apple Silicon)</li>
+<li><code>darwin-x64</code> (Intel Mac)</li>
+<li><code>linux-x64</code> (Ubuntu / Debian / Fedora / Pop!_OS,
+glibc-based)</li>
+<li><code>linux-arm64</code> (Raspberry Pi 5 class, glibc-based)</li>
+</ul>
+<p>If you are on a different platform (musl-libc Alpine, FreeBSD,
+riscv64, etc.) the prebuild will not be present. File an issue with your
+platform triple (<code>uname -ms</code> plus
+<code>node -p process.platform+'-'+process.arch</code>) and we will add
+it to the build matrix. As a workaround,
+<code>npm install --build-from-source @lodestone/cli</code> builds the
+native modules locally if you have a C++ toolchain installed.</p>
+<h2 id="tree-sitter-parse-failures-on-individual-files">Tree-sitter
+parse failures on individual files</h2>
+<p><strong>Symptom:</strong> <code>lodestone status</code> reports a
+small number of skipped files. Specific files in your project never
+appear in <code>query</code> results.</p>
+<p><strong>Fix:</strong> usually safe to ignore. Tree-sitter grammars
+occasionally fail on files using unusual syntax (TypeScript with
+experimental decorators, Python with deeply-nested f-strings, Rust with
+macros expanding to non-grammar tokens). The ingest pipeline catches the
+parse error, marks the file as skipped, and moves on rather than
+crashing. <code>lodestone doctor</code> prints which files were skipped
+and why. If a file you care about is consistently skipped, file an issue
+with the file content (or a redacted minimal repro) and we will look at
+the grammar version.</p>
+<h2 id="friends-repo-is-enormous-50k-symbols">Friend's repo is enormous
+(&gt;50k symbols)</h2>
+<p><strong>Symptom:</strong> initial ingest takes more than 10 minutes.
+Watcher CPU usage is sustained high.</p>
+<p><strong>Fix:</strong></p>
+<ul>
+<li>Use <code>--max-symbols &lt;N&gt;</code> on
+<code>lodestone init</code> or <code>lodestone reindex</code> to cap how
+many symbols are persisted. Useful for monorepos where you want to focus
+on a subset.</li>
+<li>Add aggressive entries to <code>[ingest].ignore_extra</code> to
+exclude generated code, vendored libraries, and large test
+fixtures.</li>
+<li>Increase <code>[ingest].debounce_ms</code> from the default 600 to
+something like 2000 to reduce watcher churn during active edits.</li>
+<li>Pro mode (multi-repo, sharded ingest) is on the v0.5+ roadmap for
+repos that genuinely need it.</li>
+</ul>
+<h2
+id="cloners-without-init-see-mcp-server-failed-to-start">Cloners-without-init
+see "MCP server failed to start"</h2>
+<p><strong>Symptom:</strong> a teammate clones a repo that has a
+committed <code>.mcp.json</code> file. Their editor reports "MCP server
+failed to start: ENOENT" pointing at a path under
+<code>.lodestone/runtime/</code>.</p>
+<p><strong>Fix:</strong> this is by design. The <code>.mcp.json</code>
+snippet <code>lodestone init</code> writes uses an absolute path under
+<code>.lodestone/runtime/</code> (because MCP clients require absolute
+paths). That path does not exist on a fresh clone until init has been
+run. The fix is one command:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npx</span> lodestone init</span></code></pre></div>
+<p>This is intentional — it forces every developer on a project to opt
+in to the local index. If you want to remove the friction entirely, do
+not commit <code>.mcp.json</code>; have each developer run
+<code>lodestone init</code> themselves.</p>
+<h2 id="lodestone-is-corrupt"><code>.lodestone/</code> is corrupt</h2>
+<p><strong>Symptom:</strong> MCP tools return errors mentioning schema
+versions, or <code>lodestone status</code> reports the index in an
+inconsistent state.</p>
+<p><strong>Fix:</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> reindex <span class="at">--from-scratch</span></span></code></pre></div>
+<p>That rebuilds <code>.lodestone/lodestone.sqlite</code> from scratch.
+v0 has no migration runner; that is v0.5+ work. Until then, treat
+<code>.lodestone/</code> as a regenerable cache: a from-scratch reindex
+on a 10k-symbol repo takes under a minute. For the schema-bump path
+(e.g. embedder dim changes between versions), see <a
+href="./UPGRADE.md"><code>UPGRADE.md</code></a>.</p>
+<h2
+id="lodestone-init-says-pro-mode-is-v05-work"><code>lodestone init</code>
+says "Pro mode is v0.5+ work"</h2>
+<p><strong>Symptom:</strong> <code>lodestone init --pro</code> exits
+cleanly with the message "Pro mode is v0.5+ work; see docs/PRO.md".</p>
+<p><strong>Fix:</strong> this is the intended exit message. Pro mode
+(multi-repo, shared index, Docker-Compose orchestrated) is deferred to
+v0.5+. Use <code>lodestone init</code> without <code>--pro</code> for
+friend mode (the v0 ship target).</p>
+
+      </article>
+      <footer>Generated 2026-06-08 23:40 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>
