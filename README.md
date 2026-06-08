@@ -16,7 +16,7 @@ git checkout -b add-lodestone
 curl -sSfL https://lodestone.cmndi.ai/install | bash
 ```
 
-This downloads the approved Lodestone release tarballs, verifies their SHA-256 checksums, installs them into `./node_modules`, and runs `lodestone init` for that project. The embedder weights are bundled inside the install; there are no runtime network calls.
+This downloads the approved Lodestone release tarballs, verifies their SHA-256 checksums, installs them into `./node_modules`, and runs `lodestone init` for that project. The embedder weights are bundled inside the install, so there is no runtime model fetch and Lodestone does not upload your source code. During install, npm can still download the normal dependency tree required by the Lodestone packages.
 
 Friends do not need collaborator access to this repository. They can download and install Lodestone into their own repo, but they cannot push changes to the canonical Lodestone repo unless the operator explicitly adds them as GitHub collaborators.
 

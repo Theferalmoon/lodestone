@@ -13,7 +13,7 @@
 #   # Full (Nomic 768d embedder; ~178 MB to download — advanced setups)
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 #
-#   # Pin a specific version, if the installer carries checksums for it
+#   # Pin a specific version, if this installer carries checksums for it
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.4 LODESTONE_PROFILE=lite bash
 #
 # (lodestone.cmndi.ai/install redirects to a fixed installer ref. If this
@@ -28,7 +28,7 @@
 #   5. Installs them into ./node_modules using `npm install ./*.tgz`.
 #   6. Runs the lodestone bin's `init` against the current dir.
 #
-# Disk footprint (lite profile verified e2e 2026-05-15 against v0.1.4 on Node 22;
+# Disk footprint (lite profile verified e2e 2026-06-08 against v0.1.4 on Node 22;
 # full profile sizes from the published GitHub release assets):
 #   • Tarball download (what your bandwidth pays for):
 #         ~16 MB (lite)   /   ~178 MB (full)
@@ -40,9 +40,10 @@
 # Requires: curl, node ≥20, npm. Cleans up its temp dir on success or failure.
 #
 # Privacy: lodestone bundles its embedder weights inside the
-# `@lodestone/ingest` tarball. After this install, no network call is
-# needed at runtime. The single network use is THIS install pulling
-# from github.com/Theferalmoon/lodestone (a public repo).
+# `@lodestone/ingest` tarball. After this install, no model fetch is needed
+# at runtime and Lodestone does not upload your source code. Install-time
+# network use includes the verified Lodestone tarballs from GitHub and npm's
+# normal dependency resolution for the packages named by those tarballs.
 #
 # Access: github.com/Theferalmoon/lodestone is currently a public repository,
 # so no auth is required to fetch this script or the release tarballs. This
@@ -139,13 +140,7 @@ GH_AUTH_HEADER=()
 
 # ── Resolve "latest" to an actual tag via the GitHub release API ──
 if [[ "$LODESTONE_VERSION" == "latest" ]]; then
-  log "resolving latest release tag from github.com/$REPO ..."
-  TAG=$(curl -sSfL "${GH_AUTH_HEADER[@]}" \
-        -H "Accept: application/vnd.github+json" \
-        "https://api.github.com/repos/$REPO/releases/latest" | \
-        grep -oE '"tag_name":\s*"[^"]+"' | head -1 | cut -d'"' -f4)
-  [[ -n "$TAG" ]] || fail "could not resolve latest release tag (auth issue or no releases yet — pass LODESTONE_VERSION=v0.x.y explicitly)"
-  log "latest = $TAG"
+  fail "this pinned friend installer does not support LODESTONE_VERSION=latest; use LODESTONE_VERSION=v0.1.4 or fetch a newer installer"
 else
   TAG="$LODESTONE_VERSION"
 fi
