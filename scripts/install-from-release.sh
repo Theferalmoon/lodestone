@@ -13,19 +13,20 @@
 #   # Full (Nomic 768d embedder; ~178 MB to download — advanced setups)
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 #
-#   # Pin a specific version
+#   # Pin a specific version, if the installer carries checksums for it
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.4 LODESTONE_PROFILE=lite bash
 #
-# (lodestone.cmndi.ai/install is a 302 redirect to the canonical script at
-# raw.githubusercontent.com/Theferalmoon/lodestone/main/scripts/install-from-release.sh
-# — if Cloudflare is down for any reason, use that raw-GitHub URL directly.)
+# (lodestone.cmndi.ai/install redirects to a fixed installer ref. If this
+# script is moved forward for a new Lodestone release, update the checksum
+# table below before publishing the installer ref.)
 #
 # What it does:
-#   1. Resolves the version (env LODESTONE_VERSION, or "latest").
+#   1. Resolves the version (env LODESTONE_VERSION, default v0.1.4).
 #   2. Resolves the profile (env LODESTONE_PROFILE, default "lite").
 #   3. Downloads the tarballs from the GH release into a temp dir.
-#   4. Installs them into ./node_modules using `npm install ./*.tgz`.
-#   5. Runs the lodestone bin's `init` against the current dir.
+#   4. Verifies each tarball's SHA-256 before installation.
+#   5. Installs them into ./node_modules using `npm install ./*.tgz`.
+#   6. Runs the lodestone bin's `init` against the current dir.
 #
 # Disk footprint (lite profile verified e2e 2026-05-15 against v0.1.4 on Node 22;
 # full profile sizes from the published GitHub release assets):
@@ -43,12 +44,10 @@
 # needed at runtime. The single network use is THIS install pulling
 # from github.com/Theferalmoon/lodestone (a public repo).
 #
-# Access: github.com/Theferalmoon/lodestone is currently a public
-# repository, so no auth is required to fetch this script or the release
-# tarballs. If the operator later flips the repo private for a specific
-# release, this installer will fall back to `gh release download` when
-# `gh auth login` has been run, or to an explicit `GH_TOKEN=<pat>` env
-# var; see the asset-download block below.
+# Access: github.com/Theferalmoon/lodestone is currently a public repository,
+# so no auth is required to fetch this script or the release tarballs. This
+# installer uses anonymous downloads by default. Maintainers can opt into
+# private-release auth with GH_TOKEN=<pat> or LODESTONE_USE_GH_AUTH=1.
 #
 # Compliance summary (friend-facing): Apache-2.0 license; bundled
 # embedders are US-origin (NVIDIA / IBM / Snowflake / Nomic English
@@ -58,13 +57,54 @@
 set -euo pipefail
 
 REPO="Theferalmoon/lodestone"
-LODESTONE_VERSION="${LODESTONE_VERSION:-latest}"
+LODESTONE_VERSION="${LODESTONE_VERSION:-v0.1.4}"
 LODESTONE_PROFILE="${LODESTONE_PROFILE:-lite}"
 WORK_DIR="$(mktemp -d -t lodestone-install-XXXXXX)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
 log() { printf '[lodestone-install] %s\n' "$*" >&2; }
 fail() { printf '[lodestone-install] ERROR: %s\n' "$*" >&2; exit 1; }
+
+sha256_file() {
+  local path="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$path" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$path" | awk '{print $1}'
+  else
+    fail "sha256sum or shasum is required for release verification"
+  fi
+}
+
+expected_sha256() {
+  local tag="$1"
+  local file="$2"
+  case "$tag:$file" in
+    v0.1.4:lodestone-cli-0.1.4.tgz) printf '%s\n' "0eecdf520dc4d4c6e64f76cd3ad346e2508809939bec20893a5fcf3bd4603a0d" ;;
+    v0.1.4:lodestone-shared-0.1.4.tgz) printf '%s\n' "d61985775cdb3ec85b575c6660ea05dff72d3d0786ad3f050ccfedee71117806" ;;
+    v0.1.4:lodestone-mcp-server-0.1.4.tgz) printf '%s\n' "979d15791e86fcd5b21364d473688245ec3acacc03e7bdc09cf11e14efb2dd14" ;;
+    v0.1.4:lodestone-ingest-0.1.4-lite.tgz) printf '%s\n' "26558d26eebcedb68ea08e6a1eef249a3bcacd85ff3f48c06470efbffc41563c" ;;
+    v0.1.4:lodestone-ingest-0.1.4-full.tgz) printf '%s\n' "afe9c763a36e6d8246ff03d3efd09c7e582ff800b6089df88b740408cb0fc8bb" ;;
+    *) return 1 ;;
+  esac
+}
+
+verify_download() {
+  local path="$1"
+  local file="$2"
+  local tag="$3"
+  local expected actual
+
+  if ! expected="$(expected_sha256 "$tag" "$file")"; then
+    fail "no embedded checksum for $tag/$file; use a supported LODESTONE_VERSION or update the installer checksum table"
+  fi
+
+  actual="$(sha256_file "$path")"
+  if [[ "$actual" != "$expected" ]]; then
+    fail "checksum mismatch for $file: expected $expected, got $actual"
+  fi
+  log "  verified $file sha256=$actual"
+}
 
 # ── Profile validation ──
 case "$LODESTONE_PROFILE" in
@@ -82,13 +122,16 @@ NODE_MAJOR=$(node -e 'console.log(process.versions.node.split(".")[0])')
 [[ "$NODE_MAJOR" -ge 20 ]] || fail "node $NODE_MAJOR detected; lodestone requires v20+"
 
 # ── Auth resolution ──
-# Prefer explicit GH_TOKEN; fall back to gh CLI's stored token if available.
-if [[ -z "${GH_TOKEN:-}" ]] && command -v gh >/dev/null 2>&1; then
+# Normal friend installs are anonymous public downloads. Maintainers can opt
+# into private-release auth explicitly when testing non-public releases.
+if [[ -n "${GH_TOKEN:-}" ]]; then
+  log "using explicit GH_TOKEN"
+elif [[ "${LODESTONE_USE_GH_AUTH:-}" == "1" ]] && command -v gh >/dev/null 2>&1; then
   GH_TOKEN="$(gh auth token 2>/dev/null || true)"
   [[ -n "$GH_TOKEN" ]] && log "using gh CLI token (gh auth login was run on this machine)"
 fi
 if [[ -z "${GH_TOKEN:-}" ]]; then
-  log "WARN: no GH_TOKEN and no gh CLI auth — will try anonymous (only works if the repo is public)"
+  log "using anonymous public GitHub downloads"
 fi
 
 GH_AUTH_HEADER=()
@@ -138,6 +181,7 @@ for tgz in "${TARBALLS[@]}"; do
     curl -sSfL -o "$WORK_DIR/$tgz" "$URL" \
       || fail "anonymous download failed (private repo? set GH_TOKEN or run 'gh auth login'): $URL"
   fi
+  verify_download "$WORK_DIR/$tgz" "$tgz" "$TAG"
 done
 
 # ── Rename the profiled ingest to the canonical name npm expects ──

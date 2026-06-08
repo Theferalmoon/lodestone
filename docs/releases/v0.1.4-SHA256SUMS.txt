@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Lodestone v0.1.4 release asset checksums.
+# These hashes are embedded in scripts/install-from-release.sh so the
+# friend installer can fail closed if a downloaded tarball changes.
+
+0eecdf520dc4d4c6e64f76cd3ad346e2508809939bec20893a5fcf3bd4603a0d  lodestone-cli-0.1.4.tgz
+afe9c763a36e6d8246ff03d3efd09c7e582ff800b6089df88b740408cb0fc8bb  lodestone-ingest-0.1.4-full.tgz
+26558d26eebcedb68ea08e6a1eef249a3bcacd85ff3f48c06470efbffc41563c  lodestone-ingest-0.1.4-lite.tgz
+979d15791e86fcd5b21364d473688245ec3acacc03e7bdc09cf11e14efb2dd14  lodestone-mcp-server-0.1.4.tgz
+d61985775cdb3ec85b575c6660ea05dff72d3d0786ad3f050ccfedee71117806  lodestone-shared-0.1.4.tgz

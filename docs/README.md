@@ -15,9 +15,10 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 > curl -sSfL https://lodestone.cmndi.ai/install | bash
 > ```
 >
-> Everything else in this guide (MCP tool surface, the "first 60 seconds"
-> question, where-to-go-next links) still applies after the curl install
-> finishes — only the literal first command differs.
+> That command downloads the approved release tarballs, verifies their SHA-256
+> checksums, installs Lodestone into the current project, and runs
+> `lodestone init`. See [`FRIEND-INSTALL.md`](./FRIEND-INSTALL.md) for the
+> plain-English download-only handoff.
 
 ## Install
 
@@ -25,7 +26,7 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 # v0.5+ (not yet wired):
 npx lodestone init
 
-# Today (v0.1.4, what actually works):
+# Today (download-only friend install):
 curl -sSfL https://lodestone.cmndi.ai/install | bash
 ```
 

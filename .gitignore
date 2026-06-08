@@ -4,6 +4,7 @@ dist/
 .lodestone/
 coverage/
 .DS_Store
+.mcp.json
 *.log
 !.provenance-cleared.log
 
