@@ -19,6 +19,8 @@ The installer:
 5. Creates local project files so your coding agent can use Lodestone.
 
 Your code stays on your machine. Lodestone does not upload your source code.
+The installer may still download normal npm package dependencies during
+installation.
 
 ## Install
 
