@@ -26,8 +26,10 @@
 #   3. Downloads the tarballs from the GH release into a temp dir.
 #   4. Verifies each tarball's SHA-256 before installation.
 #   5. Installs them into ./node_modules using `npm install ./*.tgz`.
-#   6. Runs the lodestone bin's `init` against the current dir.
-#   7. Points the friend at the installed docs path when the package carries it.
+#   6. Adds npm root overrides for patched transitive packages that npm
+#      consumers do not inherit from the monorepo's pnpm overrides.
+#   7. Runs the lodestone bin's `init` against the current dir.
+#   8. Points the friend at the installed docs path when the package carries it.
 #
 # Disk footprint (lite profile verified e2e 2026-06-08 against v0.1.5 on Node 22;
 # full profile sizes from the published GitHub release assets):
@@ -181,8 +183,57 @@ mv "$WORK_DIR/lodestone-ingest-$VERSION_NUM-$LODESTONE_PROFILE.tgz" \
    "$WORK_DIR/lodestone-ingest-$VERSION_NUM.tgz"
 
 log "installing into $(pwd)/node_modules ..."
+log "ensuring npm override protobufjs=7.5.8 for advisory-clean consumer installs ..."
+node <<'NODE'
+const fs = require("node:fs");
+
+const packageJsonPath = "package.json";
+let existed = fs.existsSync(packageJsonPath);
+let data = {};
+
+if (existed) {
+  try {
+    data = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  } catch (error) {
+    console.error(`[lodestone-install] cannot parse ${packageJsonPath}: ${error.message}`);
+    process.exit(1);
+  }
+} else {
+  data = { private: true };
+}
+
+if (!data.overrides || typeof data.overrides !== "object" || Array.isArray(data.overrides)) {
+  data.overrides = {};
+}
+
+const pins = {
+  protobufjs: "7.5.8"
+};
+
+let changed = !existed;
+for (const [name, version] of Object.entries(pins)) {
+  if (data.overrides[name] !== version) {
+    data.overrides[name] = version;
+    changed = true;
+  }
+}
+
+if (changed) {
+  fs.writeFileSync(packageJsonPath, `${JSON.stringify(data, null, 2)}\n`);
+  console.error(
+    existed
+      ? "[lodestone-install] updated package.json overrides for Lodestone npm audit posture"
+      : "[lodestone-install] created package.json with Lodestone npm audit overrides"
+  );
+} else {
+  console.error("[lodestone-install] package.json already has required Lodestone npm overrides");
+}
+NODE
+
 # Order matters: shared first (depended on by others), then ingest +
 # mcp-server (cli depends on both), then cli last.
+# npm root overrides are required because friend installs use npm in the
+# target project; npm does not inherit the monorepo's pnpm overrides.
 npm install --no-save \
   "$WORK_DIR/lodestone-shared-$VERSION_NUM.tgz" \
   "$WORK_DIR/lodestone-ingest-$VERSION_NUM.tgz" \
