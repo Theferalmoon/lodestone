@@ -144,6 +144,20 @@ To verify Codex setup:
 ./node_modules/.bin/lodestone doctor --client codex
 ```
 
+For Claude Code, Cursor, Cline, cmndclaw, and other clients that use the
+project `.mcp.json`, no extra installer option is required. Verify that shared
+MCP config with:
+
+```bash
+./node_modules/.bin/lodestone doctor --client mcp
+```
+
+You can also use the matching client name, such as:
+
+```bash
+./node_modules/.bin/lodestone doctor --client cursor
+```
+
 ### Claude Desktop MCPB Option
 
 Claude Desktop users who prefer a one-click extension can use a private

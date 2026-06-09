@@ -52,7 +52,16 @@ export interface InitOptions {
   noReindex: boolean;
 }
 
-export type ClientTarget = "codex";
+export type ClientTarget = "mcp" | "codex";
+
+const MCP_CLIENT_ALIASES = new Set([
+  "mcp",
+  "claude-code",
+  "cursor",
+  "cline",
+  "cmndclaw",
+]);
+const CLIENT_USAGE = "mcp, codex, all, claude-code, cursor, cline, cmndclaw";
 
 /**
  * `install_state` semantics (schema v2):
@@ -93,23 +102,29 @@ export function parseInitArgv(argv: readonly string[]): InitOptions {
     if (token === "--client") {
       value = argv[i + 1];
       if (value === undefined || value.startsWith("--")) {
-        clientError = "--client requires a value: codex or all";
+        clientError = `--client requires a value: ${CLIENT_USAGE}`;
         break;
       }
       i += 1;
     } else if (token.startsWith("--client=")) {
       value = token.slice("--client=".length);
       if (value === "") {
-        clientError = "--client requires a value: codex or all";
+        clientError = `--client requires a value: ${CLIENT_USAGE}`;
         break;
       }
     } else {
       continue;
     }
-    if (value === "codex" || value === "all") {
+    const normalizedValue = value.toLowerCase();
+    if (normalizedValue === "all") {
+      clients.add("mcp");
+      clients.add("codex");
+    } else if (MCP_CLIENT_ALIASES.has(normalizedValue)) {
+      clients.add("mcp");
+    } else if (normalizedValue === "codex") {
       clients.add("codex");
     } else {
-      clientError = `Unknown client '${value}'. Known clients: codex, all`;
+      clientError = `Unknown client '${value}'. Known clients: ${CLIENT_USAGE}`;
       break;
     }
   }

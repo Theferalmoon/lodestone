@@ -266,6 +266,14 @@ in the same directory and ask:</p>
 <p>The agent will call <code>cluster()</code> and read back the Louvain
 communities Lodestone discovered. That's the moment that justifies the
 install.</p>
+<p>For Claude Code, Cursor, Cline, cmndclaw, and other clients that read
+the project <code>.mcp.json</code>, verify the shared MCP config
+with:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> mcp</span></code></pre></div>
+<p>The friendly aliases <code>--client claude-code</code>,
+<code>--client cursor</code>, <code>--client cline</code>, and
+<code>--client cmndclaw</code> run that same check.</p>
 <h2 id="what-you-get">What you get</h2>
 <p>Eight MCP tools, all returning a uniform
 <code>LodestoneToolResponse&lt;T&gt;</code> envelope with
@@ -303,22 +311,22 @@ traversals beyond the canned tools.</li>
 <p>Full reference (request shapes, response shapes, examples): <a
 href="./MCP-TOOLS.md"><code>MCP-TOOLS.md</code></a>.</p>
 <h2 id="the-first-60-seconds">The first 60 seconds</h2>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ~/code/your-project</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> curl <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> profile = lite</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> latest = v0.1.6</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> downloading tarballs ... <span class="er">(</span><span class="ex">4</span> files, ~16 MB<span class="kw">)</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> installing into ./node_modules ...</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> running <span class="st">&#39;lodestone init&#39;</span> ...</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">[ok]</span> Lodestone install complete.</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">.mcp.json:</span>        created</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install</span> manifest: .lodestone/install-manifest.json</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">[ok]</span> Reindex complete.</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="ex">files</span> parsed:        1247</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="ex">symbols</span> indexed:     8932</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="ex">edges</span> <span class="er">(</span><span class="ex">resolved</span><span class="kw">)</span><span class="bu">:</span>    14217</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="ex">embeddings:</span>          8932</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ~/code/your-project</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> curl <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> profile = lite</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> latest = v0.1.6</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> downloading tarballs ... <span class="er">(</span><span class="ex">4</span> files, ~16 MB<span class="kw">)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> installing into ./node_modules ...</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> running <span class="st">&#39;lodestone init&#39;</span> ...</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">[ok]</span> Lodestone install complete.</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">.mcp.json:</span>        created</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install</span> manifest: .lodestone/install-manifest.json</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="ex">[ok]</span> Reindex complete.</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="ex">files</span> parsed:        1247</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="ex">symbols</span> indexed:     8932</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="ex">edges</span> <span class="er">(</span><span class="ex">resolved</span><span class="kw">)</span><span class="bu">:</span>    14217</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="ex">embeddings:</span>          8932</span></code></pre></div>
 <p>Open Claude Code (or any MCP client) in the same directory. Ask:
 <em>what are the main subsystems of this codebase?</em> The agent should
 call <code>cluster()</code> and read back the Louvain communities.</p>
@@ -415,8 +423,8 @@ package so the installer can point users at local documentation.</p>
 before packing. For manual rebuilds that need byte-for-byte stable
 output, set either <code>SOURCE_DATE_EPOCH</code> or
 <code>LODESTONE_DOCS_BUILD_TIMESTAMP</code> before running:</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">SOURCE_DATE_EPOCH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> log <span class="at">-1</span> <span class="at">--format</span><span class="op">=</span>%ct HEAD<span class="va">)</span><span class="st">&quot;</span> <span class="ex">pnpm</span> docs:friend</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">SOURCE_DATE_EPOCH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> log <span class="at">-1</span> <span class="at">--format</span><span class="op">=</span>%ct HEAD<span class="va">)</span><span class="st">&quot;</span> <span class="ex">pnpm</span> docs:friend</span></code></pre></div>
 <p>Do not add these generated docs directories to
 <code>.gitignore</code> unless the distribution model changes.</p>
 <h2 id="status">Status</h2>
@@ -431,7 +439,7 @@ href="../NOTICE"><code>../NOTICE</code></a>, and <a
 href="../LICENSE-AUTHORIZATION.md"><code>../LICENSE-AUTHORIZATION.md</code></a>.</p>
 
       </article>
-      <footer>Generated 2026-06-09 04:23 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 04:42 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

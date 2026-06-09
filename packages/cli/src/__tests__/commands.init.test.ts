@@ -79,17 +79,56 @@ describe("parseInitArgv", () => {
       noReindex: false,
     });
   });
-  it("--client all currently selects codex", () => {
+  it("--client mcp selects the generic MCP surface", () => {
+    expect(parseInitArgv(["--client", "mcp"])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      clients: ["mcp"],
+      noReindex: false,
+    });
+  });
+  it("--client aliases select the generic MCP surface case-insensitively", () => {
+    expect(parseInitArgv(["--client", "Cursor"])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      clients: ["mcp"],
+      noReindex: false,
+    });
+    expect(parseInitArgv(["--client", "claude-code"])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      clients: ["mcp"],
+      noReindex: false,
+    });
+    expect(parseInitArgv(["--client", "cline"])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      clients: ["mcp"],
+      noReindex: false,
+    });
+    expect(parseInitArgv(["--client", "cmndclaw"])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      clients: ["mcp"],
+      noReindex: false,
+    });
+  });
+  it("--client all selects generic MCP and Codex", () => {
     expect(parseInitArgv(["--client", "all"])).toEqual({
       writeClaudeMd: false,
       pro: false,
       dryRun: false,
-      clients: ["codex"],
+      clients: ["mcp", "codex"],
       noReindex: false,
     });
   });
   it("--client requires a known value", () => {
-    const parsed = parseInitArgv(["--client", "cursor"]);
+    const parsed = parseInitArgv(["--client", "notepad"]);
     expect(parsed.clientError).toMatch(/Unknown client/);
   });
   it("--client= requires a value", () => {
@@ -242,7 +281,7 @@ describe("init() handler", () => {
   });
 
   it("unknown --client exits as usage error without install side effects", async () => {
-    expect(await init(["--client", "cursor", "--no-reindex"])).toBe(2);
+    expect(await init(["--client", "notepad", "--no-reindex"])).toBe(2);
     expect(existsSync(path.join(tmp, ".codex"))).toBe(false);
     expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
   });

@@ -77,8 +77,10 @@ the internal `[embedder].profile` config values used by `lodestone.toml`.
 
 ## Client Adapter Option
 
-The public installer accepts optional `LODESTONE_CLIENT=codex` or
-`LODESTONE_CLIENT=all`. In v0.1.x, `all` maps to the Codex adapter.
+The public installer writes `.mcp.json` by default for generic MCP-aware
+clients. It also accepts optional `LODESTONE_CLIENT=codex` or
+`LODESTONE_CLIENT=all`; in v0.1.x, `all` keeps the default MCP surface and adds
+the Codex adapter.
 
 When enabled, `lodestone init --client codex` writes
 `.codex/config.toml` with:
@@ -101,6 +103,19 @@ Validation command:
 
 The doctor check exits non-zero when the Codex config file is missing, stale,
 malformed, or points at the wrong runtime command.
+
+Generic MCP-aware clients such as Claude Code, Cursor, Cline, and cmndclaw use
+the project `.mcp.json` that Lodestone writes on every install. `lodestone init
+--client mcp`, `--client cursor`, `--client cline`, `--client cmndclaw`, and
+`--client claude-code` are accepted as explicit names for that default surface.
+Verify the shared client surface with:
+
+```bash
+./node_modules/.bin/lodestone doctor --client mcp
+```
+
+`--client claude-code`, `--client cursor`, `--client cline`, and
+`--client cmndclaw` are friendly aliases for the same `.mcp.json` check.
 
 ## Optional Claude Desktop MCPB Bundle
 

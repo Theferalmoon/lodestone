@@ -40,6 +40,16 @@ Then open Claude Code, Codex, Cursor, or any other MCP-aware client in the same 
 
 The agent will call `cluster()` and read back the Louvain communities Lodestone discovered. That's the moment that justifies the install.
 
+For Claude Code, Cursor, Cline, cmndclaw, and other clients that read the
+project `.mcp.json`, verify the shared MCP config with:
+
+```bash
+./node_modules/.bin/lodestone doctor --client mcp
+```
+
+The friendly aliases `--client claude-code`, `--client cursor`,
+`--client cline`, and `--client cmndclaw` run that same check.
+
 ## What you get
 
 Eight MCP tools, all returning a uniform `LodestoneToolResponse<T>` envelope with `request_id`, `provenance`, and `diagnostics` so the agent always knows how stale the data is:

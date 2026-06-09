@@ -26,13 +26,31 @@ describe("stub commands (return 0, warn, accept future flags)", () => {
     expect(parseDoctorArgv(["--client=codex"])).toEqual({
       clients: ["codex"],
     });
+    expect(parseDoctorArgv(["--client", "mcp"])).toEqual({
+      clients: ["mcp"],
+    });
+    expect(parseDoctorArgv(["--client", "cursor"])).toEqual({
+      clients: ["mcp"],
+    });
+    expect(parseDoctorArgv(["--client", "claude-code"])).toEqual({
+      clients: ["mcp"],
+    });
+    expect(parseDoctorArgv(["--client", "cline"])).toEqual({
+      clients: ["mcp"],
+    });
+    expect(parseDoctorArgv(["--client", "cmndclaw"])).toEqual({
+      clients: ["mcp"],
+    });
+    expect(parseDoctorArgv(["--client", "Cursor"])).toEqual({
+      clients: ["mcp"],
+    });
     expect(parseDoctorArgv(["--client", "all"])).toEqual({
-      clients: ["codex"],
+      clients: ["mcp", "codex"],
     });
     expect(parseDoctorArgv(["--client="]).clientError).toMatch(
       /requires a value/
     );
-    expect(parseDoctorArgv(["--client", "cursor"]).clientError).toMatch(
+    expect(parseDoctorArgv(["--client", "notepad"]).clientError).toMatch(
       /Unknown client/
     );
   });
@@ -130,6 +148,41 @@ describe("stub commands (return 0, warn, accept future flags)", () => {
     }
   });
 
+  it("doctor() --client mcp returns 1 when .mcp.json is missing", async () => {
+    const tmp = mkdtempSync(path.join(tmpdir(), "lodestone-doctor-"));
+    const prevCwd = process.cwd();
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      process.chdir(tmp);
+      expect(await doctor(["--client", "mcp"])).toBe(1);
+      expect(log.mock.calls.flat().join("\n")).toContain("mcp json");
+      expect(err.mock.calls.flat().join("\n")).toContain("Generic MCP config is not healthy");
+    } finally {
+      process.chdir(prevCwd);
+      log.mockRestore();
+      err.mockRestore();
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("doctor() --client cursor validates the shared .mcp.json surface", async () => {
+    const tmp = mkdtempSync(path.join(tmpdir(), "lodestone-doctor-"));
+    const prevCwd = process.cwd();
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    try {
+      process.chdir(tmp);
+      runInstallSteps(tmp, { writeClaudeMd: false });
+      expect(await doctor(["--client", "cursor"])).toBe(0);
+      expect(log.mock.calls.flat().join("\n")).toContain("mcp json");
+      expect(log.mock.calls.flat().join("\n")).toContain("ok");
+    } finally {
+      process.chdir(prevCwd);
+      log.mockRestore();
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   it("doctor() --client codex returns 0 when init wrote the Codex adapter", async () => {
     const tmp = mkdtempSync(path.join(tmpdir(), "lodestone-doctor-"));
     const prevCwd = process.cwd();
@@ -143,6 +196,38 @@ describe("stub commands (return 0, warn, accept future flags)", () => {
     } finally {
       process.chdir(prevCwd);
       log.mockRestore();
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("doctor() returns 1 when install manifest exists but .mcp.json is stale", async () => {
+    const tmp = mkdtempSync(path.join(tmpdir(), "lodestone-doctor-"));
+    const prevCwd = process.cwd();
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      process.chdir(tmp);
+      runInstallSteps(tmp, { writeClaudeMd: false });
+      writeFileSync(
+        path.join(tmp, ".mcp.json"),
+        JSON.stringify({
+          mcpServers: {
+            "lodestone-mcp": {
+              command: "/old/path",
+              args: [],
+              env: {},
+            },
+          },
+        })
+      );
+      expect(await doctor([])).toBe(1);
+      expect(log.mock.calls.flat().join("\n")).toContain("mcp json");
+      expect(log.mock.calls.flat().join("\n")).toContain("stale");
+      expect(err.mock.calls.flat().join("\n")).toContain("Generic MCP config is not healthy");
+    } finally {
+      process.chdir(prevCwd);
+      log.mockRestore();
+      err.mockRestore();
       rmSync(tmp, { recursive: true, force: true });
     }
   });
@@ -193,7 +278,7 @@ describe("stub commands (return 0, warn, accept future flags)", () => {
   it("doctor() unknown --client exits as a usage error", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
     try {
-      expect(await doctor(["--client", "cursor"])).toBe(2);
+      expect(await doctor(["--client", "notepad"])).toBe(2);
       expect(err.mock.calls.flat().join("\n")).toContain("Unknown client");
     } finally {
       err.mockRestore();
