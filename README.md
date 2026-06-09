@@ -101,7 +101,7 @@ That command generates Word documents, HTML docs, and package-local docs from th
 To bump a pinned model revision:
 
 ```bash
-# Edit MODELS[].hfRevision in scripts/bundle-models.mjs, then:
+# Edit MODELS[].hfRevision in packages/ingest/scripts/bundle-models.mjs, then:
 pnpm --filter @lodestone/ingest bundle-models -- --update-manifest
 # Review the updated models-manifest.json diff before committing.
 ```

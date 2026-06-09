@@ -12,7 +12,7 @@ Start here:
 
 Word versions are generated into [word/](./word/).
 
-HTML copies are generated into [../site/](../site/) and published at:
+HTML copies are included in [html/](./html/) and published at:
 
 ```text
 https://lodestone.cmndi.ai/docs/

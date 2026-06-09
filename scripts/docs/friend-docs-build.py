@@ -525,7 +525,12 @@ def build_package_docs() -> None:
     if PACKAGE_DOCS_DIR.exists():
         shutil.rmtree(PACKAGE_DOCS_DIR)
     PACKAGE_DOCS_DIR.mkdir(parents=True)
-    shutil.copy2(FRIEND_DIR / "README.md", PACKAGE_DOCS_DIR / "README.md")
+    package_readme = (FRIEND_DIR / "README.md").read_text(encoding="utf-8")
+    package_readme = package_readme.replace(
+        "HTML copies are generated into [../site/](../site/) and published at:",
+        "HTML copies are included in [html/](./html/) and published at:",
+    )
+    (PACKAGE_DOCS_DIR / "README.md").write_text(package_readme, encoding="utf-8")
     for doc in DOCS:
         if doc.source.is_relative_to(FRIEND_DIR):
             shutil.copy2(doc.source, PACKAGE_DOCS_DIR / doc.source.name)

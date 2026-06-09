@@ -32,9 +32,149 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 // e2e/__tests__/ -> repo root is two levels up.
 const REPO_ROOT = path.resolve(HERE, "..", "..");
 const DOCS_DIR = path.join(REPO_ROOT, "docs");
+const MARKDOWN_SKIP_DIRS = new Set([
+  ".bob",
+  ".git",
+  ".lodestone",
+  ".remember",
+  "dist",
+  "docs/internal",
+  "docs/releases",
+  "docs/site",
+  "node_modules",
+]);
+const MARKDOWN_SKIP_FILES = new Set(["docs/CMNDI-DOCS-MANDATE.md"]);
 
 function readFile(relative: string): string {
   return readFileSync(path.join(REPO_ROOT, relative), "utf8");
+}
+
+function markdownSourceFiles(): string[] {
+  const files: string[] = [];
+
+  const walk = (relDir: string): void => {
+    const absDir = path.join(REPO_ROOT, relDir);
+    for (const dirent of readdirSync(absDir, { withFileTypes: true })) {
+      const rel = path.normalize(path.join(relDir, dirent.name)).replace(/^\.\//, "");
+      if (dirent.isDirectory()) {
+        if (!MARKDOWN_SKIP_DIRS.has(rel) && !MARKDOWN_SKIP_DIRS.has(dirent.name)) {
+          walk(rel);
+        }
+        continue;
+      }
+      if (dirent.isFile() && rel.endsWith(".md") && !MARKDOWN_SKIP_FILES.has(rel)) {
+        files.push(rel);
+      }
+    }
+  };
+
+  walk(".");
+  return files.sort();
+}
+
+function workspacePackageNames(): Set<string> {
+  const names = new Set<string>();
+  const packageJsonFiles = [
+    ...readdirSync(path.join(REPO_ROOT, "packages"), { withFileTypes: true })
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => path.join("packages", dirent.name, "package.json")),
+    path.join("e2e", "package.json"),
+  ];
+  for (const rel of packageJsonFiles) {
+    const pkg = JSON.parse(readFile(rel)) as { name?: unknown };
+    if (typeof pkg.name === "string") names.add(pkg.name);
+  }
+  return names;
+}
+
+function cliSubcommandNames(): Set<string> {
+  const helpSource = readFile("packages/cli/src/routing/help.ts");
+  const names = new Set<string>();
+  for (const match of helpSource.matchAll(/name\s*:\s*["']([^"']+)["']/g)) {
+    if (typeof match[1] === "string") names.add(match[1]);
+  }
+  expect(names.has("init"), "failed to parse CLI subcommands from help.ts").toBe(true);
+  return names;
+}
+
+function markdownCodeSegments(text: string): string[] {
+  const segments: string[] = [];
+  for (const match of text.matchAll(/```[^\n]*\n([\s\S]*?)```/g)) {
+    if (typeof match[1] === "string") segments.push(match[1]);
+  }
+  for (const match of text.matchAll(/`([^`\n]+)`/g)) {
+    if (typeof match[1] === "string") segments.push(match[1]);
+  }
+  return segments;
+}
+
+function shouldSkipRepoPathCandidate(candidate: string): boolean {
+  return (
+    candidate.includes("/dist/") ||
+    candidate.includes("/node_modules/") ||
+    candidate.startsWith("e2e/synthetic-demo-repo/.lodestone/") ||
+    candidate.startsWith("packages/api/") ||
+    candidate === "scripts/seed.py" ||
+    candidate === "scripts/migrate.py"
+  );
+}
+
+interface PathCandidate {
+  display: string;
+  resolved: string;
+}
+
+function repoPathCandidates(relativeFile: string, text: string): PathCandidate[] {
+  const candidates: PathCandidate[] = [];
+  const seen = new Set<string>();
+  const add = (display: string, resolved: string): void => {
+    const cleanedResolved = path.normalize(resolved);
+    const key = `${display}\0${cleanedResolved}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push({ display, resolved: cleanedResolved });
+  };
+  const patterns = [
+    /(?:^|[\s`(])((?:\.github|docs|e2e|packages|scripts)\/[A-Za-z0-9_./@-]+)/g,
+    /(?:^|[\s`(])((?:README|LICENSE|package|pnpm-lock)\.[A-Za-z0-9_-]+)/g,
+  ];
+  const markdownLinkRe = /\]\((?!https?:|mailto:|#)([^)#\s]+)(?:#[^)]*)?\)/g;
+  for (const match of text.matchAll(markdownLinkRe)) {
+    const raw = match[1];
+    if (typeof raw !== "string") continue;
+    const target = raw.replace(/[),.;:]+$/, "");
+    add(target, path.join(path.dirname(relativeFile), target));
+  }
+
+  for (const segment of markdownCodeSegments(text)) {
+    for (const pattern of patterns) {
+      for (const match of segment.matchAll(pattern)) {
+        const raw = match[1];
+        if (typeof raw !== "string") continue;
+        const cleaned = raw.replace(/[),.;:]+$/, "");
+        if (shouldSkipRepoPathCandidate(cleaned)) continue;
+        add(cleaned, cleaned);
+      }
+    }
+  }
+
+  return candidates;
+}
+
+function documentedLodestoneCommands(text: string): string[] {
+  const commands: string[] = [];
+  const commandRe = /(?:^|[;&|]\s*)(?:npx\s+|\.\/node_modules\/\.bin\/|(?:node\s+)?[\w./-]*\/)?lodestone(?:\.js)?\s+([a-z][a-z-]*)/g;
+  for (const segment of markdownCodeSegments(text)) {
+    for (const line of segment.split(/\r?\n/)) {
+      const trimmed = line.trim().replace(/^[$>]\s+/, "");
+      if (trimmed === "" || trimmed.startsWith("#")) continue;
+      for (const match of trimmed.matchAll(commandRe)) {
+        const raw = match[1];
+        if (typeof raw === "string") commands.push(raw);
+      }
+    }
+  }
+  return commands;
 }
 
 describe("section 21 documentation pass", () => {
@@ -217,6 +357,58 @@ describe("section 21 documentation pass", () => {
         expect(existsSync(path.join(REPO_ROOT, rel)), `missing ${rel}`).toBe(true);
       });
     }
+  });
+
+  describe("stale-doc guardrails", () => {
+    const sourceFiles = markdownSourceFiles();
+
+    it("documented lodestone subcommands exist in the CLI", () => {
+      const known = cliSubcommandNames();
+      const invalid: string[] = [];
+
+      for (const rel of sourceFiles) {
+        const text = readFile(rel);
+        for (const command of documentedLodestoneCommands(text)) {
+          if (!known.has(command)) {
+            invalid.push(`${rel}: lodestone ${command}`);
+          }
+        }
+      }
+
+      expect(invalid, `stale command references: ${invalid.join(", ")}`).toEqual([]);
+    });
+
+    it("repo-relative doc/source paths mentioned in markdown exist", () => {
+      const missing: string[] = [];
+
+      for (const rel of sourceFiles) {
+        const text = readFile(rel);
+        for (const candidate of repoPathCandidates(rel, text)) {
+          const resolved = path.join(REPO_ROOT, candidate.resolved);
+          if (!existsSync(resolved)) {
+            missing.push(`${rel}: ${candidate.display}`);
+          }
+        }
+      }
+
+      expect(missing, `stale path references: ${missing.join(", ")}`).toEqual([]);
+    });
+
+    it("documented @lodestone workspace package names exist", () => {
+      const known = workspacePackageNames();
+      const stale: string[] = [];
+      const packageRe = /@lodestone\/[a-z0-9-]+/g;
+
+      for (const rel of sourceFiles) {
+        const text = readFile(rel);
+        for (const match of text.matchAll(packageRe)) {
+          const name = match[0];
+          if (!known.has(name)) stale.push(`${rel}: ${name}`);
+        }
+      }
+
+      expect(stale, `stale package references: ${stale.join(", ")}`).toEqual([]);
+    });
   });
 
   describe("release hygiene helpers", () => {
