@@ -144,6 +144,13 @@ To verify Codex setup:
 ./node_modules/.bin/lodestone doctor --client codex
 ```
 
+### Claude Desktop MCPB Option
+
+Claude Desktop users who prefer a one-click extension can use a private
+current-platform MCPB bundle after Lodestone has already been installed and
+indexed in the target project. See `docs/MCPB.md` or the online docs page for
+the bundle build and install steps.
+
 ## What the Installer Does
 
 The installer:

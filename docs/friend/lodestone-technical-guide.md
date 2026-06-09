@@ -102,6 +102,22 @@ Validation command:
 The doctor check exits non-zero when the Codex config file is missing, stale,
 malformed, or points at the wrong runtime command.
 
+## Optional Claude Desktop MCPB Bundle
+
+The repository includes a private MCPB packer for Claude Desktop:
+
+```bash
+scripts/mcpb/build-claude-desktop-bundle.mjs --profile lite
+```
+
+The bundle is for users who already installed and indexed Lodestone in the
+target project. Claude Desktop asks for a `Project folder`, and the bundle
+launches the bundled Lodestone MCP server with that folder as its working
+directory.
+
+MCPB artifacts are current-platform because Lodestone includes native Node
+dependencies. Build separate artifacts on each target operating system family.
+
 ## Installer Flow
 
 The friend installer at `https://lodestone.cmndi.ai/install` redirects to a

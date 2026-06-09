@@ -123,6 +123,7 @@ DOCS = [
     Doc(REPO_ROOT / "docs/ARCHITECTURE.md", "architecture", "Architecture", "Technical Reference"),
     Doc(REPO_ROOT / "docs/CONFIG.md", "config", "Configuration", "Technical Reference"),
     Doc(REPO_ROOT / "docs/MCP-TOOLS.md", "mcp-tools", "MCP Tools", "Technical Reference"),
+    Doc(REPO_ROOT / "docs/MCPB.md", "mcpb", "Claude Desktop MCPB", "Technical Reference"),
     Doc(REPO_ROOT / "docs/PRIVACY.md", "privacy", "Privacy", "Technical Reference"),
     Doc(REPO_ROOT / "docs/SUPPLY-CHAIN.md", "supply-chain", "Supply Chain", "Technical Reference"),
     Doc(REPO_ROOT / "docs/TROUBLESHOOTING.md", "troubleshooting", "Troubleshooting", "Technical Reference"),

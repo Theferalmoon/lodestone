@@ -15,7 +15,9 @@
 // We walk the zod schema by introspection rather than maintaining a
 // hand-list of keys.
 
-import { existsSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -202,6 +204,7 @@ describe("section 21 documentation pass", () => {
       "docs/ARCHITECTURE.md",
       "docs/CONFIG.md",
       "docs/MCP-TOOLS.md",
+      "docs/MCPB.md",
       "docs/PRIVACY.md",
       "docs/SUPPLY-CHAIN.md",
       "docs/TROUBLESHOOTING.md",
@@ -274,6 +277,95 @@ describe("section 21 documentation pass", () => {
       expect(technical).toContain("Strict npm override mode");
       expect(installation).toContain("Advanced operators can set");
       expect(installation).toContain("LODESTONE_STRICT_NPM_OVERRIDES=1");
+    });
+
+    it("Claude Desktop MCPB packer documents and enforces the private bundle contract", () => {
+      const script = readFile("scripts/mcpb/build-claude-desktop-bundle.mjs");
+      const mcpbDoc = readFile("docs/MCPB.md");
+      const technical = readFile("docs/friend/lodestone-technical-guide.md");
+      const installation = readFile("docs/friend/lodestone-installation-guide.md");
+
+      expect(script).toContain("manifest_version: \"0.4\"");
+      expect(script).toContain("mcpb-manifest-v0.4.schema.json");
+      expect(script).toContain("LODESTONE_REPO_ROOT");
+      expect(script).toContain("repository_root");
+      expect(script).toContain("process.chdir(repoRoot)");
+      expect(script).toContain("@lodestone/mcp-server");
+      expect(script).toContain("current-platform");
+      expect(script).toContain("pruneCurrentPlatformNativePayloads");
+      expect(script).toContain("napiName.startsWith(\"napi-v\")");
+      expect(script).toContain("manifest-only artifacts are not distribution-ready");
+
+      expect(mcpbDoc).toContain("Claude Desktop MCPB Packaging");
+      expect(mcpbDoc).toContain("current-platform");
+      expect(mcpbDoc).toContain("Project folder");
+      expect(mcpbDoc).toContain("Do not commit generated `.mcpb` files");
+      expect(technical).toContain("Optional Claude Desktop MCPB Bundle");
+      expect(installation).toContain("Claude Desktop MCPB Option");
+    });
+
+    it("MCPB manifest-only smoke writes a valid bundle manifest", () => {
+      const tmp = mkdtempSync(path.join(tmpdir(), "lodestone-mcpb-test-"));
+      try {
+        execFileSync(
+          "node",
+          [
+            "scripts/mcpb/build-claude-desktop-bundle.mjs",
+            "--manifest-only",
+            "--out-dir",
+            tmp,
+          ],
+          {
+            cwd: REPO_ROOT,
+            env: { ...process.env, SOURCE_DATE_EPOCH: "1770000000" },
+            stdio: "pipe",
+          }
+        );
+        const bundle = readdirSync(tmp).find((name) => name.endsWith(".mcpb"));
+        expect(bundle).toBeDefined();
+        const bundlePath = path.join(tmp, bundle ?? "");
+        const manifestRaw = execFileSync(
+          "python3",
+          [
+            "-c",
+            "import zipfile,sys; print(zipfile.ZipFile(sys.argv[1]).read('manifest.json').decode())",
+            bundlePath,
+          ],
+          { encoding: "utf8" }
+        );
+        const namesRaw = execFileSync(
+          "python3",
+          [
+            "-c",
+            "import json,zipfile,sys; print(json.dumps(sorted(zipfile.ZipFile(sys.argv[1]).namelist())))",
+            bundlePath,
+          ],
+          { encoding: "utf8" }
+        );
+        const manifest = JSON.parse(manifestRaw) as {
+          manifest_version?: string;
+          server?: { entry_point?: string; mcp_config?: { env?: Record<string, string> } };
+          user_config?: Record<string, unknown>;
+          compatibility?: { platforms?: string[] };
+        };
+        const names = JSON.parse(namesRaw) as string[];
+
+        expect(manifest.manifest_version).toBe("0.4");
+        expect(manifest.server?.entry_point).toBe("server/lodestone-mcpb-launcher.js");
+        expect(manifest.server?.mcp_config?.env?.LODESTONE_REPO_ROOT).toBe(
+          "${user_config.repository_root}"
+        );
+        expect(manifest.user_config?.repository_root).toBeDefined();
+        expect(manifest.compatibility?.platforms).toEqual([process.platform]);
+        expect(names).toEqual([
+          "README.md",
+          "manifest.json",
+          "package.json",
+          "server/lodestone-mcpb-launcher.js",
+        ]);
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
     });
   });
 });

@@ -88,6 +88,7 @@ Open Claude Code (or any MCP client) in the same directory. Ask: *what are the m
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Stack choices (Node-only, Louvain not Leiden, SQLite + sqlite-vec, KuzuDB deferred), the `packages/*` monorepo layout, friend-mode vs Pro-mode. |
 | [`CONFIG.md`](./CONFIG.md) | Every key in `lodestone.toml` with its type, default, allowed values, and one-line explanation. Plus environment variable overrides. |
 | [`MCP-TOOLS.md`](./MCP-TOOLS.md) | The 8 MCP tools — request shapes, response shapes, JSON examples, when to use each. |
+| [`MCPB.md`](./MCPB.md) | Private Claude Desktop MCPB bundle build and install path. |
 | [`PRIVACY.md`](./PRIVACY.md) | The "never leaves your machine" claim, what it actually means, and the build-time enforcement. |
 | [`SUPPLY-CHAIN.md`](./SUPPLY-CHAIN.md) | Why these specific models and libraries — license, origin, audit posture. |
 | [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) | WSL2 paths, corp proxies, Apple Silicon, missing prebuilds, parse failures, big repos. |
