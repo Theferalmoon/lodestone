@@ -4,7 +4,7 @@
 # pack-profile.sh — produce lodestone tarballs for a specific install profile.
 #
 # Lodestone ships two friend-facing profiles (tarball download sizes from
-# the published v0.1.6 GitHub release assets):
+# the published v0.1.7 GitHub release assets):
 #   * lite — Snowflake 384d embedder, ~16 MB tarball. For friends with
 #            low-RAM laptops or limited bandwidth. Default for friend
 #            distribution.

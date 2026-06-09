@@ -6,7 +6,7 @@
 
 **Prepared by:** Cybersecurity Management & Network Defense, Inc.
 **Document type:** Installation guide
-**Version:** v0.1.6 friend-install documentation
+**Version:** v0.1.7 friend-install documentation
 **Date:** June 8, 2026
 
 ## What You Are Installing
@@ -74,7 +74,7 @@ curl -sSfL https://lodestone.cmndi.ai/install | bash
 
 What this downloads:
 
-- The approved Lodestone v0.1.6 package set.
+- The approved Lodestone v0.1.7 package set.
 - The `lite` ingest package with the Snowflake 384-dimensional embedder.
 - About 16 MB of Lodestone release tarballs.
 
@@ -101,7 +101,7 @@ curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 
 What this downloads:
 
-- The approved Lodestone v0.1.6 package set.
+- The approved Lodestone v0.1.7 package set.
 - The `full` ingest package with the Nomic 768-dimensional embedder.
 - About 89 MB of Lodestone release tarballs.
 
