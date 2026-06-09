@@ -6,7 +6,7 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 
 **Your code never leaves your machine.** Embeddings, the call graph, cluster names, skill cards, feedback events — everything is written to `.lodestone/` inside your project, locally. There is no telemetry, no upload step, and no remote service to call. See [`PRIVACY.md`](./PRIVACY.md) for the implementation details and the build-time grep audit that enforces it.
 
-> **Note (v0.1.6).** The `npx lodestone init` flow described below is the
+> **Note (v0.1.7).** The `npx lodestone init` flow described below is the
 > v0.5+ npm-publish path and is **not yet wired** — `@lodestone/cli` is not
 > on the npm registry. Today's working install is the curl-bash one-liner
 > from the [top-level README](../README.md#install-one-liner):
@@ -40,6 +40,16 @@ Then open Claude Code, Codex, Cursor, or any other MCP-aware client in the same 
 
 The agent will call `cluster()` and read back the Louvain communities Lodestone discovered. That's the moment that justifies the install.
 
+For Claude Code, Cursor, Cline, cmndclaw, and other clients that read the
+project `.mcp.json`, verify the shared MCP config with:
+
+```bash
+./node_modules/.bin/lodestone doctor --client mcp
+```
+
+The friendly aliases `--client claude-code`, `--client cursor`,
+`--client cline`, and `--client cmndclaw` run that same check.
+
 ## What you get
 
 Eight MCP tools, all returning a uniform `LodestoneToolResponse<T>` envelope with `request_id`, `provenance`, and `diagnostics` so the agent always knows how stale the data is:
@@ -61,7 +71,7 @@ Full reference (request shapes, response shapes, examples): [`MCP-TOOLS.md`](./M
 $ cd ~/code/your-project
 $ curl -sSfL https://lodestone.cmndi.ai/install | bash
 [lodestone-install] profile = lite
-[lodestone-install] latest = v0.1.6
+[lodestone-install] latest = v0.1.7
 [lodestone-install] downloading tarballs ... (4 files, ~16 MB)
 [lodestone-install] installing into ./node_modules ...
 [lodestone-install] running 'lodestone init' ...
@@ -88,11 +98,31 @@ Open Claude Code (or any MCP client) in the same directory. Ask: *what are the m
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Stack choices (Node-only, Louvain not Leiden, SQLite + sqlite-vec, KuzuDB deferred), the `packages/*` monorepo layout, friend-mode vs Pro-mode. |
 | [`CONFIG.md`](./CONFIG.md) | Every key in `lodestone.toml` with its type, default, allowed values, and one-line explanation. Plus environment variable overrides. |
 | [`MCP-TOOLS.md`](./MCP-TOOLS.md) | The 8 MCP tools — request shapes, response shapes, JSON examples, when to use each. |
+| [`MCPB.md`](./MCPB.md) | Private Claude Desktop MCPB bundle build and install path. |
 | [`PRIVACY.md`](./PRIVACY.md) | The "never leaves your machine" claim, what it actually means, and the build-time enforcement. |
 | [`SUPPLY-CHAIN.md`](./SUPPLY-CHAIN.md) | Why these specific models and libraries — license, origin, audit posture. |
 | [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) | WSL2 paths, corp proxies, Apple Silicon, missing prebuilds, parse failures, big repos. |
 | [`UPGRADE.md`](./UPGRADE.md) | How to upgrade the CLI, schema-version expectations, and the v0 → v0.5 migration path. |
 | [`DEMO-REPO.md`](./DEMO-REPO.md) | The synthetic demo repo at `e2e/synthetic-demo-repo/`, why it exists, and how to use it as a teaching example. |
+
+## Generated Docs Policy
+
+The generated docs under `docs/site/`, `docs/friend/word/`, and
+`packages/cli/docs/` are intentionally tracked. They are distribution
+artifacts: `docs/site/` is what gets published at
+`https://lodestone.cmndi.ai/docs/`, and `packages/cli/docs/` is copied into the
+friend install package so the installer can point users at local documentation.
+
+Release packaging sets stable docs metadata from the release commit before
+packing. For manual rebuilds that need byte-for-byte stable output, set either
+`SOURCE_DATE_EPOCH` or `LODESTONE_DOCS_BUILD_TIMESTAMP` before running:
+
+```bash
+SOURCE_DATE_EPOCH="$(git log -1 --format=%ct HEAD)" pnpm docs:friend
+```
+
+Do not add these generated docs directories to `.gitignore` unless the
+distribution model changes.
 
 ## Status
 

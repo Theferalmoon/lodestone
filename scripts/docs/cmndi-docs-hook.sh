@@ -19,7 +19,13 @@ NON_HTML_CHANGED=$(echo "$CHANGED" | grep -v '^docs/cmndi/index\.html$' || true)
 MD_CHANGED=$(echo "$CHANGED" | grep -E '^docs/cmndi/0[1-6]-.*\.md$' || true)
 if [ -n "$MD_CHANGED" ]; then
   if [ -x scripts/docs/cmndi-docs-build.py ]; then
-    python3 scripts/docs/cmndi-docs-build.py >&2 || true
+    DOCS_SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log -1 --format=%ct HEAD 2>/dev/null || date +%s)}"
+    DOCS_BUILD_COMMIT="${LODESTONE_DOCS_BUILD_COMMIT:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}"
+    DOCS_BUILD_BRANCH="${LODESTONE_DOCS_BUILD_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)}"
+    SOURCE_DATE_EPOCH="$DOCS_SOURCE_DATE_EPOCH" \
+      LODESTONE_DOCS_BUILD_COMMIT="$DOCS_BUILD_COMMIT" \
+      LODESTONE_DOCS_BUILD_BRANCH="$DOCS_BUILD_BRANCH" \
+      python3 scripts/docs/cmndi-docs-build.py >&2 || true
     echo "[cmndi-docs] regenerated docs/cmndi/index.html — stage and commit the refresh" >&2
   fi
 fi

@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { writeMcpJson } from "./mcp-config.js";
+import { checkMcpJson, writeMcpJson } from "./mcp-config.js";
 
 interface McpJsonShape {
   mcpServers: Record<string, { command: string; args: string[]; env: Record<string, string> }>;
@@ -29,6 +29,48 @@ describe("writeMcpJson", () => {
     expect(typeof cfg.mcpServers["lodestone-mcp"].command).toBe("string");
     expect(Array.isArray(cfg.mcpServers["lodestone-mcp"].args)).toBe(true);
     expect(typeof cfg.mcpServers["lodestone-mcp"].env).toBe("object");
+  });
+
+  it("doctor health reports missing .mcp.json", () => {
+    expect(checkMcpJson(tmp)).toEqual({
+      state: "missing-file",
+      path: path.join(tmp, ".mcp.json"),
+    });
+  });
+
+  it("doctor health reports ok for the canonical .mcp.json entry", () => {
+    writeMcpJson(tmp);
+    expect(checkMcpJson(tmp).state).toBe("ok");
+  });
+
+  it("doctor health accepts optional args/env being omitted", () => {
+    writeFileSync(
+      path.join(tmp, ".mcp.json"),
+      JSON.stringify({
+        mcpServers: {
+          "lodestone-mcp": {
+            command: path.join(tmp, ".lodestone", "runtime", "lodestone-mcp"),
+          },
+        },
+      })
+    );
+    expect(checkMcpJson(tmp).state).toBe("ok");
+  });
+
+  it("doctor health accepts custom well-typed args/env", () => {
+    writeFileSync(
+      path.join(tmp, ".mcp.json"),
+      JSON.stringify({
+        mcpServers: {
+          "lodestone-mcp": {
+            command: path.join(tmp, ".lodestone", "runtime", "lodestone-mcp"),
+            args: ["--verbose"],
+            env: { LODESTONE_LOG_LEVEL: "debug" },
+          },
+        },
+      })
+    );
+    expect(checkMcpJson(tmp).state).toBe("ok");
   });
 
   it("merges into an existing .mcp.json without removing other servers", () => {
@@ -87,6 +129,51 @@ describe("writeMcpJson", () => {
     expect(cfg.mcpServers["lodestone-mcp"].env).toEqual({});
     // Other servers preserved
     expect(cfg.mcpServers["other-mcp"]).toEqual(stale.mcpServers["other-mcp"]);
+  });
+
+  it("doctor health reports stale when lodestone-mcp points at another install", () => {
+    writeFileSync(
+      path.join(tmp, ".mcp.json"),
+      JSON.stringify({
+        mcpServers: {
+          "lodestone-mcp": {
+            command: "/home/someone-else/.lodestone/runtime/lodestone-mcp",
+            args: [],
+            env: {},
+          },
+        },
+      })
+    );
+    const health = checkMcpJson(tmp);
+    expect(health.state).toBe("stale");
+    expect(health.state === "stale" ? health.detail : "").toContain("command");
+  });
+
+  it("doctor health reports invalid when lodestone-mcp is not an object", () => {
+    writeFileSync(
+      path.join(tmp, ".mcp.json"),
+      JSON.stringify({ mcpServers: { "lodestone-mcp": "node server.js" } })
+    );
+    expect(checkMcpJson(tmp).state).toBe("invalid");
+  });
+
+  it("doctor health reports invalid when optional args/env have the wrong shape", () => {
+    writeFileSync(
+      path.join(tmp, ".mcp.json"),
+      JSON.stringify({
+        mcpServers: {
+          "lodestone-mcp": {
+            command: path.join(tmp, ".lodestone", "runtime", "lodestone-mcp"),
+            args: "--verbose",
+            env: [],
+          },
+        },
+      })
+    );
+    const health = checkMcpJson(tmp);
+    expect(health.state).toBe("invalid");
+    expect(health.state === "invalid" ? health.detail : "").toContain("args");
+    expect(health.state === "invalid" ? health.detail : "").toContain("env");
   });
 
   it("preserves user formatting choices when merging (parses JSON, so formatting is normalized to 2-space)", () => {

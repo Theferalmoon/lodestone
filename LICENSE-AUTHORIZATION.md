@@ -30,7 +30,7 @@ This authorization does **not**:
 
 ## Why this document exists
 
-A second-pair-of-eyes architecture review (Codex round 001, recorded at `docs/codex-review/lodestone/001-result.md`) identified that "replace AGPL headers with Apache headers" was named in the original plan as an implementation step without an explicit authorization record. Codex correctly noted that header replacement alone is not legally valid relicensing — only the rights holder may authorize the change.
+A second-pair-of-eyes architecture review identified that "replace AGPL headers with Apache headers" was named in the original plan as an implementation step without an explicit authorization record. Codex correctly noted that header replacement alone is not legally valid relicensing — only the rights holder may authorize the change.
 
 This document **is** that authorization. It is committed to the Lodestone repository at the root so that any future contributor, downstream user, or auditor can verify provenance.
 

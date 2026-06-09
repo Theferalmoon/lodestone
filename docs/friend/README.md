@@ -30,3 +30,9 @@ Build the full pack from the repository root:
 ```bash
 pnpm docs:friend
 ```
+
+The generated Word, HTML, and package-local copies are intentionally committed
+because they are part of the friend distribution surface. For release rebuilds,
+the packaging script sets stable metadata from the release commit. For a manual
+reproducible rebuild, set `SOURCE_DATE_EPOCH` or
+`LODESTONE_DOCS_BUILD_TIMESTAMP` before running `pnpm docs:friend`.

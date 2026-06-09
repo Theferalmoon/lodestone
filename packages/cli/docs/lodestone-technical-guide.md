@@ -6,7 +6,7 @@
 
 **Prepared by:** Cybersecurity Management & Network Defense, Inc.
 **Document type:** Technical guide
-**Version:** v0.1.6 friend-install documentation
+**Version:** v0.1.7 friend-install documentation
 **Date:** June 8, 2026
 
 ## System Summary
@@ -77,8 +77,10 @@ the internal `[embedder].profile` config values used by `lodestone.toml`.
 
 ## Client Adapter Option
 
-The public installer accepts optional `LODESTONE_CLIENT=codex` or
-`LODESTONE_CLIENT=all`. In v0.1.x, `all` maps to the Codex adapter.
+The public installer writes `.mcp.json` by default for generic MCP-aware
+clients. It also accepts optional `LODESTONE_CLIENT=codex` or
+`LODESTONE_CLIENT=all`; in v0.1.x, `all` keeps the default MCP surface and adds
+the Codex adapter.
 
 When enabled, `lodestone init --client codex` writes
 `.codex/config.toml` with:
@@ -102,6 +104,35 @@ Validation command:
 The doctor check exits non-zero when the Codex config file is missing, stale,
 malformed, or points at the wrong runtime command.
 
+Generic MCP-aware clients such as Claude Code, Cursor, Cline, and cmndclaw use
+the project `.mcp.json` that Lodestone writes on every install. `lodestone init
+--client mcp`, `--client cursor`, `--client cline`, `--client cmndclaw`, and
+`--client claude-code` are accepted as explicit names for that default surface.
+Verify the shared client surface with:
+
+```bash
+./node_modules/.bin/lodestone doctor --client mcp
+```
+
+`--client claude-code`, `--client cursor`, `--client cline`, and
+`--client cmndclaw` are friendly aliases for the same `.mcp.json` check.
+
+## Optional Claude Desktop MCPB Bundle
+
+The repository includes a private MCPB packer for Claude Desktop:
+
+```bash
+scripts/mcpb/build-claude-desktop-bundle.mjs --profile lite
+```
+
+The bundle is for users who already installed and indexed Lodestone in the
+target project. Claude Desktop asks for a `Project folder`, and the bundle
+launches the bundled Lodestone MCP server with that folder as its working
+directory.
+
+MCPB artifacts are current-platform because Lodestone includes native Node
+dependencies. Build separate artifacts on each target operating system family.
+
 ## Installer Flow
 
 The friend installer at `https://lodestone.cmndi.ai/install` redirects to a
@@ -119,13 +150,30 @@ High-level flow:
    - `lodestone-cli`
    - profile-specific `lodestone-ingest`
 6. Verify each tarball against an embedded SHA-256 checksum.
-7. Install the tarballs into the target project's `node_modules`.
-8. Run `./node_modules/.bin/lodestone init`.
-9. Pass `--client codex` when `LODESTONE_CLIENT=codex` or `all` is set.
-10. Leave no temporary download directory behind.
+7. Add a narrow npm root override for `protobufjs@7.5.8`, because npm
+   consumer projects do not inherit the release workspace's pnpm overrides.
+8. Install the tarballs into the target project's `node_modules`.
+9. Run `./node_modules/.bin/lodestone init`.
+10. Pass `--client codex` when `LODESTONE_CLIENT=codex` or `all` is set.
+11. Leave no temporary download directory behind.
 
 The installer does not grant repository write access. It only downloads release
 artifacts.
+
+### Strict npm override mode
+
+Fresh installs resolve the broader advisory-sensitive transitive packages to
+safe versions through normal npm resolution. Existing projects with old
+lockfiles may want a stricter posture. For that case, the installer supports:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_STRICT_NPM_OVERRIDES=1 bash
+```
+
+Strict mode adds root overrides for `fast-uri`, `hono`, `ip-address`, and `qs`
+in addition to the default `protobufjs` override. It is opt-in because these
+are common packages and root overrides can affect the host project's own
+dependency tree.
 
 ## Runtime Architecture
 
@@ -226,6 +274,12 @@ Install full with Codex project config:
 curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full LODESTONE_CLIENT=codex bash
 ```
 
+Install with strict npm advisory overrides:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_STRICT_NPM_OVERRIDES=1 bash
+```
+
 Status:
 
 ```bash
@@ -282,6 +336,7 @@ When troubleshooting a friend install, collect:
 - Installer command used.
 - `LODESTONE_PROFILE` value, if any.
 - `LODESTONE_CLIENT` value, if any.
+- `LODESTONE_STRICT_NPM_OVERRIDES` value, if any.
 - Last 50 lines of installer output.
 - `git status --short`.
 - Whether `.mcp.json` exists.

@@ -6,7 +6,7 @@
 
 **Prepared by:** Cybersecurity Management & Network Defense, Inc.
 **Document type:** Installation guide
-**Version:** v0.1.6 friend-install documentation
+**Version:** v0.1.7 friend-install documentation
 **Date:** June 8, 2026
 
 ## What You Are Installing
@@ -74,7 +74,7 @@ curl -sSfL https://lodestone.cmndi.ai/install | bash
 
 What this downloads:
 
-- The approved Lodestone v0.1.6 package set.
+- The approved Lodestone v0.1.7 package set.
 - The `lite` ingest package with the Snowflake 384-dimensional embedder.
 - About 16 MB of Lodestone release tarballs.
 
@@ -101,7 +101,7 @@ curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 
 What this downloads:
 
-- The approved Lodestone v0.1.6 package set.
+- The approved Lodestone v0.1.7 package set.
 - The `full` ingest package with the Nomic 768-dimensional embedder.
 - About 89 MB of Lodestone release tarballs.
 
@@ -144,6 +144,27 @@ To verify Codex setup:
 ./node_modules/.bin/lodestone doctor --client codex
 ```
 
+For Claude Code, Cursor, Cline, cmndclaw, and other clients that use the
+project `.mcp.json`, no extra installer option is required. Verify that shared
+MCP config with:
+
+```bash
+./node_modules/.bin/lodestone doctor --client mcp
+```
+
+You can also use the matching client name, such as:
+
+```bash
+./node_modules/.bin/lodestone doctor --client cursor
+```
+
+### Claude Desktop MCPB Option
+
+Claude Desktop users who prefer a one-click extension can use a private
+current-platform MCPB bundle after Lodestone has already been installed and
+indexed in the target project. See `docs/MCPB.md` or the online docs page for
+the bundle build and install steps.
+
 ## What the Installer Does
 
 The installer:
@@ -156,6 +177,11 @@ The installer:
 6. Optionally writes `.codex/config.toml` when `LODESTONE_CLIENT=codex` is set.
 7. Creates `.lodestone/` for the local index, cache, and manifest.
 8. Runs the first indexing pass.
+
+Advanced operators can set `LODESTONE_STRICT_NPM_OVERRIDES=1` when installing
+into an existing project with an old lockfile. Do not use that option unless
+you specifically want Lodestone to add stricter root dependency overrides to
+the project.
 
 ## What Files Are Created
 

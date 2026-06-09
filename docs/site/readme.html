@@ -198,6 +198,7 @@
 <a href="./architecture.html">Architecture</a>
 <a href="./config.html">Configuration</a>
 <a href="./mcp-tools.html">MCP Tools</a>
+<a href="./mcpb.html">Claude Desktop MCPB</a>
 <a href="./privacy.html">Privacy</a>
 <a href="./supply-chain.html">Supply Chain</a>
 <a href="./troubleshooting.html">Troubleshooting</a>
@@ -255,9 +256,9 @@ Lodestone plus its transitive npm dependencies (tree-sitter parsers,
 — is **~1 GB** in either profile. The bulk on disk is the npm dep tree,
 not Lodestone itself. Plan accordingly on metered/slow connections.</p>
 <p><strong>Pinning.</strong> The friend installer defaults to the
-approved <code>v0.1.6</code> package set. To make that explicit:</p>
+approved <code>v0.1.7</code> package set. To make that explicit:</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_VERSION</span><span class="op">=</span>v0.1.6 <span class="fu">bash</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_VERSION</span><span class="op">=</span>v0.1.7 <span class="fu">bash</span></span></code></pre></div>
 <p><strong>Access.</strong> The <code>Theferalmoon/lodestone</code> repo
 is currently public, so no GitHub auth is required to fetch this
 installer or the release tarballs. The
@@ -336,7 +337,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="
 docs from the same source Markdown.</p>
 <p>To bump a pinned model revision:</p>
 <div class="sourceCode" id="cb9"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit MODELS[].hfRevision in scripts/bundle-models.mjs, then:</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit MODELS[].hfRevision in packages/ingest/scripts/bundle-models.mjs, then:</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">--filter</span> @lodestone/ingest bundle-models <span class="at">--</span> <span class="at">--update-manifest</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Review the updated models-manifest.json diff before committing.</span></span></code></pre></div>
 <h2 id="license">License</h2>
@@ -345,7 +346,7 @@ href="./NOTICE"><code>NOTICE</code></a>, and <a
 href="./LICENSE-AUTHORIZATION.md"><code>LICENSE-AUTHORIZATION.md</code></a>.</p>
 
       </article>
-      <footer>Generated 2026-06-09 02:58 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 14:20 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>
