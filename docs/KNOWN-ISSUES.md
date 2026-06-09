@@ -17,3 +17,7 @@ The end-to-end test pass surfaced a small handful of cross-section cleanups (par
 ## v0 has no migration runner
 
 By design, not a bug — see [`UPGRADE.md`](./UPGRADE.md). Schema bumps within v0.x require `lodestone reindex --from-scratch`. The numbered-migrations runner ships in v0.5 alongside the embedder-dim swap option.
+
+## `setup-models` is fail-closed in the public v0.1.x build
+
+The public `lite` and `full` friend profiles bundle their model weights, so normal friend runtime does not need a model download. The `lodestone setup-models` command remains the reserved future path for pinned, consent-gated model downloads, but the public v0.1.x build exits before any network call until real release hashes are published.

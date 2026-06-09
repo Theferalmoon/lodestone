@@ -350,14 +350,28 @@ href="./UPGRADE.md"><code>UPGRADE.md</code></a>.</p>
 id="lodestone-init-says-pro-mode-is-v05-work"><code>lodestone init</code>
 says "Pro mode is v0.5+ work"</h2>
 <p><strong>Symptom:</strong> <code>lodestone init --pro</code> exits
-cleanly with the message "Pro mode is v0.5+ work; see docs/PRO.md".</p>
+cleanly with the message "Pro mode is v0.5+ work; no files were
+changed."</p>
 <p><strong>Fix:</strong> this is the intended exit message. Pro mode
 (multi-repo, shared index, Docker-Compose orchestrated) is deferred to
 v0.5+. Use <code>lodestone init</code> without <code>--pro</code> for
 friend mode (the v0 ship target).</p>
+<h2
+id="lodestone-setup-models-says-it-is-not-enabled"><code>lodestone setup-models</code>
+says it is not enabled</h2>
+<p><strong>Symptom:</strong>
+<code>lodestone setup-models --allow-download</code> exits before any
+network call and says setup-models is not enabled in the public v0.1.x
+build.</p>
+<p><strong>Fix:</strong> this is intentional. The public friend profiles
+already bundle their model weights. Use the default <code>lite</code>
+installer, or reinstall with <code>LODESTONE_PROFILE=full</code> if you
+want the larger bundled Nomic model. The live setup-models fetch path
+stays fail-closed until a future release publishes real pinned
+hashes.</p>
 
       </article>
-      <footer>Generated 2026-06-08 23:53 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

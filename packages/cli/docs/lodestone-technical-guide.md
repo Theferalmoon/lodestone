@@ -149,8 +149,9 @@ Lodestone's normal runtime state stays inside the target repository:
 
 Install-time network use includes GitHub release downloads and npm dependency
 resolution. Runtime model fetch is not required for the packaged `lite` and
-`full` friend profiles. Optional model setup commands are consent-gated and
-routed through the Lodestone network guard.
+`full` friend profiles. Future optional model setup commands are consent-gated
+and routed through the Lodestone network guard; the public v0.1.x build exits
+before network until real pinned hashes are published.
 
 ## Security Controls
 

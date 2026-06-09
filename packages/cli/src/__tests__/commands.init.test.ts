@@ -182,10 +182,14 @@ describe("init() handler", () => {
     expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
   });
 
-  it("--pro warns (not yet implemented) but still completes successfully", async () => {
+  it("--pro exits cleanly without install side effects", async () => {
     expect(await init(["--pro", "--no-reindex"])).toBe(0);
     const stderr = err.mock.calls.flat().join("\n");
-    expect(stderr).toMatch(/--pro/);
+    expect(stderr).toMatch(/Pro mode is v0\.5\+ work/);
+    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".gitignore"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
+    expect(existsSync(path.join(tmp, "CLAUDE.md"))).toBe(false);
   });
 
   it("--write-claude-md augments CLAUDE.md", async () => {

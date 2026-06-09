@@ -41,7 +41,7 @@ The MCP-native surface is the second wedge. Every other code-grounding product i
 
 - **Bundled embedder weights** — the privacy claim only holds if the install does not phone home at runtime. Lodestone ships profiled ingest tarballs so day-1 use needs zero outbound model calls.
 - **Build-time URL audit** — every release runs a grep over the shipped `dist/` against an explicit allowlist (`network-manifest.json`). Anything new fails the build. The privacy claim is enforced at release time, not just at runtime.
-- **Two-gate consent for any model fetch** — the only opt-in fetch path (`lodestone setup-models --allow-download`) requires both an explicit operator flag and a pass through the `LODESTONE_OFFLINE` chokepoint. Either gate can veto.
+- **Two-gate consent for any future model fetch** — the reserved opt-in fetch path (`lodestone setup-models --allow-download`) requires both an explicit operator flag and a pass through the `LODESTONE_OFFLINE` chokepoint. The public v0.1.x build also exits before network until real pinned hashes are published.
 - **MCP-portable** — runs over local stdio. Works with every MCP-aware client, today and tomorrow, with no per-editor adapter.
 
 ## What is on the v0.5 roadmap

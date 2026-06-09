@@ -13,7 +13,7 @@ Lodestone is a project-local tool. Embeddings, the call graph, cluster names, SK
 The promise is enforced three ways:
 
 1. **Bundled embedder weights.** The friend installer ships profiled ingest tarballs: `lite` bundles Snowflake 384d, `full` bundles Nomic 768d. Day-1 runtime makes zero outbound model calls.
-2. **A single chokepoint for any opt-in fetch.** The only fetch path is `lodestone setup-models --allow-download`, gated by both an explicit operator flag *and* the `LODESTONE_OFFLINE` env-var check. Either gate vetoes.
+2. **A single chokepoint for any future opt-in fetch.** The reserved fetch path is `lodestone setup-models --allow-download`, gated by both an explicit operator flag *and* the `LODESTONE_OFFLINE` env-var check. The public v0.1.x build also exits before network until real pinned hashes are published.
 3. **Build-time URL audit.** Every CI build greps the shipped `dist/` for outbound URLs and fails on anything not on a hand-curated allowlist (`network-manifest.json`). The privacy claim is enforced at release time, not just at runtime.
 
 For regulated industries, defense workloads, or any team that cannot upload proprietary source to a vendor: this is the wedge.
@@ -54,7 +54,7 @@ A friend customer wires Lodestone into Claude Code on their company laptop. Day 
 
 ### Regulated team — code grounding without code egress
 
-A defense or finance team runs an MCP-aware editor inside an air-gapped network. Lodestone runs alongside, pulled once from the npm registry on a build host, then carried in. `LODESTONE_OFFLINE=1` is set in the shell profile. The agent gets the same eight tools as the public OSS user; the network never sees source. Compliance is the build-time URL audit and the consent-gated fetch path.
+A defense or finance team runs an MCP-aware editor inside an air-gapped network. Lodestone runs alongside, pulled once from an approved release host, then carried in. `LODESTONE_OFFLINE=1` is set in the shell profile. The agent gets the same eight tools as the public OSS user; the network never sees source. Compliance is the build-time URL audit and the reserved future fetch path staying fail-closed unless both consent and release pins exist.
 
 ### Solo engineer — getting an agent to actually understand the project
 

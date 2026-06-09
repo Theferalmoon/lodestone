@@ -303,6 +303,24 @@ describe("runSetupModels — consent gate (Gate 1)", () => {
     // Fetch was never reached.
     expect(fake.calls).toEqual([]);
   });
+
+  it("built-in public manifest with placeholder pins fails closed before network", async () => {
+    const fake = makeFakeFetch({});
+    const code = await runSetupModels(
+      {
+        embedders: ["nomic-text-v1.5"],
+        targetDir: tmp,
+        force: false,
+        allowDownload: true,
+      },
+      { fetchImpl: fake.fetch, cwd: tmp }
+    );
+    expect(code).toBe(2);
+    expect(fake.calls).toEqual([]);
+    const stderr = err.mock.calls.flat().join("\n");
+    expect(stderr).toMatch(/not enabled/i);
+    expect(stderr).toMatch(/lite and full/i);
+  });
 });
 
 describe("runSetupModels — happy path", () => {

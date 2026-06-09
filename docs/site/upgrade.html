@@ -263,12 +263,12 @@ needed.</li>
 window without locking in migration paths we will regret at v1.0.</li>
 </ul>
 <p>The numbered-migrations runner is the first thing on the v0.5
-roadmap. It will land alongside the embedder-dim swap (the bigger
-<code>nomic-embed-code</code> weights, gated by
-<code>LODESTONE_ALLOW_MODEL_DOWNLOAD=1</code>) — that swap is the first
-migration that genuinely cannot be a from-scratch reindex because it
-changes the embedding dimension and would require re-embedding every
-symbol regardless.</p>
+roadmap. It will land alongside the embedder-dim swap for a vetted
+larger or code-aware model, gated by
+<code>LODESTONE_ALLOW_MODEL_DOWNLOAD=1</code> once real pins ship. That
+swap is the first migration that genuinely cannot be a from-scratch
+reindex because it changes the embedding dimension and would require
+re-embedding every symbol regardless.</p>
 <h2 id="v0--v01--v05-path-forward-looking">v0 → v0.1 → v0.5 path
 (forward-looking)</h2>
 <table>
@@ -306,16 +306,21 @@ guarantees.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="bigger-embedder-upgrade-opt-in-fetch-path">Bigger embedder
-upgrade (opt-in fetch path)</h2>
+<h2 id="bigger-embedder-upgrade-future-opt-in-fetch-path">Bigger
+embedder upgrade (future opt-in fetch path)</h2>
 <p>The friend release ships profiled ingest tarballs: <code>lite</code>
 bundles <code>snowflake-arctic-embed-s</code> int8 (~33 MB model
 payload) and <code>full</code> bundles
 <code>nomic-embed-text-v1.5</code> int8 (~150 MB model payload). Normal
 friend runtime does not need a model download.</p>
-<p>Friends who want to upgrade to a larger embedder (e.g. the future
-<code>nomic-fp16</code> weights, or who want to re-fetch a missing or
-corrupted file) can opt in to a one-shot, consent-gated fetch:</p>
+<p>The <code>lodestone setup-models</code> command is reserved for a
+future pinned model-download path. In the public v0.1.x friend build, it
+exits before any network call because live fetch hashes are not
+published yet. Friends who want the larger currently shipped model
+should use the <code>full</code> installer profile instead.</p>
+<p>Future releases may let friends upgrade to a larger embedder (e.g.
+future fp16 weights, or a repair path for a missing or corrupted file)
+with a one-shot, consent-gated fetch:</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Either set the env var once for the shell:</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">LODESTONE_ALLOW_MODEL_DOWNLOAD</span><span class="op">=</span>1</span>
@@ -365,9 +370,10 @@ matches.</td>
 <p>Each downloaded file is sha256-verified against a pinned manifest
 baked into the CLI binary. A mismatch causes the file to be quarantined
 (deleted) and <code>setup-models</code> exits non-zero.</p>
-<p>When the bundled weights are missing entirely,
-<code>lodestone init</code> and <code>lodestone reindex</code> print a
-hint pointing at this command rather than failing silently.</p>
+<p>When the bundled weights are missing entirely in v0.1.x, reinstall
+the matching <code>lite</code> or <code>full</code> release. Do not rely
+on <code>setup-models</code> until release notes explicitly say that
+live model pins are published.</p>
 <h2 id="reserved-env-vars-for-upgrades">Reserved env vars for
 upgrades</h2>
 <table>
@@ -392,7 +398,7 @@ breaking changes here, with the date and the recommended migration
 path.</p>
 
       </article>
-      <footer>Generated 2026-06-08 23:53 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

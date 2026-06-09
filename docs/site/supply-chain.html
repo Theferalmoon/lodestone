@@ -383,18 +383,19 @@ graph; <code>pnpm audit</code> lists open advisories; the Hugging Face
 model card pages link directly to the maintainer organization.</p>
 <h2 id="the-network-manifest">The network manifest</h2>
 <p>Every URL Lodestone is allowed to contact — at install, build, or
-runtime — is enumerated in <a
+future pinned model-setup time — is enumerated in <a
 href="../network-manifest.json"><code>../network-manifest.json</code></a>
 at the repo root, paired with the gate that has to fire before the URL
 is reached. The CI privacy audit (<code>.github/workflows/ci.yml</code>
 → <code>Privacy audit — no outbound URLs in dist/</code>) treats
 anything not on that list landing in shipped <code>dist/</code> as a
-build failure. See <a href="./PRIVACY.md"><code>PRIVACY.md</code></a>
-for how the two-gate <code>setup-models</code> consent path interacts
-with the manifest.</p>
+build failure. The public v0.1.x setup-models command exits before
+network until real hashes ship; see <a
+href="./PRIVACY.md"><code>PRIVACY.md</code></a> for how the two-gate
+consent path interacts with the manifest.</p>
 
       </article>
-      <footer>Generated 2026-06-08 23:53 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

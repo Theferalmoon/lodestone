@@ -36,7 +36,7 @@ Lodestone runs entirely on the operator's machine — there is nothing to "host.
 
 ### What about model updates?
 
-Friend ship: `lite` bundles Snowflake 384d and `full` bundles Nomic 768d. The opt-in `lodestone setup-models --allow-download` path can fetch larger or alternate model weights but requires both an explicit operator flag and absence of `LODESTONE_OFFLINE=1`. Per-project model cache, never a shared global cache.
+Friend ship: `lite` bundles Snowflake 384d and `full` bundles Nomic 768d. The reserved `lodestone setup-models --allow-download` path is for future larger or alternate model weights, but the public v0.1.x build exits before network until real pinned hashes are published. Per-project model cache, never a shared global cache.
 
 ### How do you keep secrets?
 
