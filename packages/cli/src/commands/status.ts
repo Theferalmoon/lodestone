@@ -18,6 +18,7 @@ import {
 } from "@lodestone/shared";
 import { VERSION } from "../version.js";
 import { output } from "../ui/output.js";
+import { readInstallManifest } from "../uninstall/manifest-reader.js";
 
 interface StatusOptions {
   json: boolean;
@@ -36,12 +37,21 @@ interface StatusReport {
   dirty_at_index: boolean;
   index_epoch: number;
   coverage: number | null;
+  install_manifest: InstallManifestStatus;
   /**
    * Codex impl-003 B1: surface clock-skew when indexed_at is in the future
    * (negative staleness clamped to 0). Set when (Date.now() - indexed_at) is
    * more than 5 seconds negative.
    */
   clock_skew_detected: boolean;
+}
+
+interface InstallManifestStatus {
+  present: boolean;
+  path: string;
+  install_state: "pending" | "complete" | null;
+  reindex_state: "complete" | "failed" | "skipped" | null;
+  read_error: string | null;
 }
 
 function parseStatusArgv(argv: readonly string[]): StatusOptions {
@@ -59,6 +69,29 @@ function humanizeAge(iso: string): string | null {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
+}
+
+function readInstallManifestStatus(cwd: string): InstallManifestStatus {
+  const result = readInstallManifest(cwd);
+  if (result.ok) {
+    return {
+      present: true,
+      path: result.path,
+      install_state: result.manifest.install_state,
+      reindex_state: result.manifest.reindex_state ?? null,
+      read_error: null,
+    };
+  }
+  return {
+    present: false,
+    path: result.path,
+    install_state: null,
+    reindex_state: null,
+    read_error:
+      result.reason === "missing"
+        ? null
+        : `${result.reason}${result.detail ? `: ${result.detail}` : ""}`,
+  };
 }
 
 function buildReport(cwd: string, marker: ReadyJson): StatusReport {
@@ -96,6 +129,7 @@ function buildReport(cwd: string, marker: ReadyJson): StatusReport {
     dirty_at_index: marker.dirty_at_index,
     index_epoch: marker.index_epoch,
     coverage,
+    install_manifest: readInstallManifestStatus(cwd),
     clock_skew_detected,
   };
 }
@@ -130,6 +164,12 @@ function printReport(report: StatusReport): void {
   output.info(fmt("commit at index", report.commit_at_index ?? "(non-git)"));
   output.info(fmt("dirty at index", String(report.dirty_at_index)));
   output.info(fmt("index epoch", String(report.index_epoch)));
+  if (report.install_manifest.present) {
+    output.info(fmt("install state", report.install_manifest.install_state ?? "unknown"));
+    output.info(fmt("reindex state", report.install_manifest.reindex_state ?? "not recorded"));
+  } else if (report.install_manifest.read_error !== null) {
+    output.info(fmt("install manifest", report.install_manifest.read_error));
+  }
   output.info(
     fmt("coverage", report.coverage === null ? "unknown" : `${(report.coverage * 100).toFixed(0)}%`)
   );
@@ -153,6 +193,18 @@ export async function status(argv: readonly string[]): Promise<number> {
   const readyPath = lodestoneSubpath(cwd, "ready");
   if (!existsSync(readyPath)) {
     output.error("No `ready.json` marker found. Run `lodestone reindex` to rebuild the index.");
+    const manifest = readInstallManifestStatus(cwd);
+    if (manifest.present) {
+      output.error(
+        `Install manifest reports install_state=${manifest.install_state ?? "unknown"}, ` +
+          `reindex_state=${manifest.reindex_state ?? "not recorded"}.`
+      );
+      if (manifest.reindex_state === "failed") {
+        output.error("The last install-side reindex failed; rerun `lodestone reindex` after fixing the reported cause.");
+      }
+    } else if (manifest.read_error !== null) {
+      output.error(`Install manifest unreadable: ${manifest.read_error}`);
+    }
     return 1;
   }
 

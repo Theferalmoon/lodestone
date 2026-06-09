@@ -6,18 +6,18 @@ Lodestone keeps its dependency graph small, predictable, and auditable. This doc
 
 ## Why these specific models
 
-### Default embedder: `nomic-embed-text-v1.5`
+### Full-profile embedder: `nomic-embed-text-v1.5`
 
-Bundled inside `@lodestone/ingest` as ONNX int8. ~150 MB on disk. No network fetch on the default profile.
+Bundled inside the `full` `@lodestone/ingest` release tarball as ONNX int8. ~150 MB on disk. No runtime network fetch is required when the model is bundled.
 
 - **Maintainer:** Nomic AI (United States).
 - **License:** Apache 2.0.
 - **Source:** the official `nomic-ai` Hugging Face organization.
-- **Why bundled:** the privacy claim ("your code never leaves your machine") only holds if the default install does not phone home. Bundling the weights costs install size; we accept the trade.
+- **Why bundled:** the privacy claim ("your code never leaves your machine") only holds if the install does not phone home at runtime. Bundling the weights costs install size; we accept the trade for the `full` profile.
 
-### Fallback embedder: `snowflake-arctic-embed-s`
+### Lite-profile embedder: `snowflake-arctic-embed-s`
 
-Used when `[embedder].profile = "tiny"`. Smaller than the default. Fetched on first use, cached locally; blocked when `LODESTONE_OFFLINE=1` is set.
+Bundled inside the `lite` `@lodestone/ingest` release tarball as ONNX int8. Smaller than the full-profile model and used for the default friend install. No runtime network fetch is required when the model is bundled. The internal `tiny` config path can still use Snowflake as a fallback in development or non-profiled builds.
 
 - **Maintainer:** Snowflake (United States).
 - **License:** Apache 2.0.
@@ -27,7 +27,7 @@ Used when `[embedder].profile = "tiny"`. Smaller than the default. Fetched on fi
 
 We chose to keep the dependency graph predictable and auditable. PRC-origin model providers (and their derivatives) were excluded after weighing supply-chain risk: opaque training-data provenance, opaque tokenizer construction, and the practical difficulty of vetting dependencies whose maintainer org we cannot reach. This is a hygiene call, not a political one. The same standard rules out any model whose base we cannot trace to a permissively-licensed United States or allied-jurisdiction maintainer.
 
-The English-only `nomic-embed-text` family meets that bar. The code-aware `nomic-embed-code` model is built on a PRC-origin base and is explicitly excluded; if a future profile needs code-aware embeddings, the candidate is a Mistral- or Granite-based model from a vetted maintainer.
+The English-only `nomic-embed-text` family and Snowflake Arctic family meet that bar. The code-aware `nomic-embed-code` model is built on a PRC-origin base and is explicitly excluded; if a future profile needs code-aware embeddings, the candidate is a Mistral- or Granite-based model from a vetted maintainer.
 
 ## Why these specific libraries
 
@@ -56,10 +56,10 @@ Every direct dependency is Apache 2.0 or MIT. Lodestone itself is Apache 2.0 (se
 
 ## A note on the rebuilt dependency tree
 
-The v0 dependency graph was rebuilt from scratch — every transitive dependency walked, every license read, every maintainer org checked. The audit lives in the workspace lockfile (`pnpm-lock.yaml`) and in the per-package `package.json` files; `pnpm audit` is a CI gate. One known transitive issue (a CVE in a deeply-nested embedder dep) is documented in [`KNOWN-ISSUES.md`](./KNOWN-ISSUES.md) — it does not affect Lodestone's use of the package, and an upstream fix is tracked.
+The v0 dependency graph was rebuilt from scratch — every transitive dependency walked, every license read, every maintainer org checked. The audit lives in the workspace lockfile (`pnpm-lock.yaml`) and in the per-package `package.json` files; `pnpm audit` is a CI gate. The v0.1.6 friend-install release prep also pins patched transitive releases for packages that were advisory-sensitive at release time, so `pnpm audit --prod` is clean as of 2026-06-08. The public friend installer carries the same intent into npm consumer projects by adding a root npm override for `protobufjs@7.5.8` before install.
 
 If you want to verify any of the above on your machine: `pnpm why <package>` shows where a dep entered the graph; `pnpm audit` lists open advisories; the Hugging Face model card pages link directly to the maintainer organization.
 
 ## The network manifest
 
-Every URL Lodestone is allowed to contact — at install, build, or runtime — is enumerated in [`../network-manifest.json`](../network-manifest.json) at the repo root, paired with the gate that has to fire before the URL is reached. The CI privacy audit (`.github/workflows/ci.yml` → `Privacy audit — no outbound URLs in dist/`) treats anything not on that list landing in shipped `dist/` as a build failure. See [`PRIVACY.md`](./PRIVACY.md) for how the two-gate `setup-models` consent path interacts with the manifest.
+Every URL Lodestone is allowed to contact — at install, build, or future pinned model-setup time — is enumerated in [`../network-manifest.json`](../network-manifest.json) at the repo root, paired with the gate that has to fire before the URL is reached. The CI privacy audit (`.github/workflows/ci.yml` → `Privacy audit — no outbound URLs in dist/`) treats anything not on that list landing in shipped `dist/` as a build failure. The public v0.1.x setup-models command exits before network until real hashes ship; see [`PRIVACY.md`](./PRIVACY.md) for how the two-gate consent path interacts with the manifest.

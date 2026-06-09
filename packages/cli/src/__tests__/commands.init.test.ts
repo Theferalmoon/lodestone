@@ -21,6 +21,7 @@ describe("parseInitArgv", () => {
       writeClaudeMd: false,
       pro: false,
       dryRun: false,
+      clients: [],
       noReindex: false,
     });
   });
@@ -29,6 +30,7 @@ describe("parseInitArgv", () => {
       writeClaudeMd: true,
       pro: false,
       dryRun: false,
+      clients: [],
       noReindex: false,
     });
   });
@@ -37,6 +39,7 @@ describe("parseInitArgv", () => {
       writeClaudeMd: false,
       pro: true,
       dryRun: false,
+      clients: [],
       noReindex: false,
     });
   });
@@ -45,6 +48,7 @@ describe("parseInitArgv", () => {
       writeClaudeMd: false,
       pro: false,
       dryRun: true,
+      clients: [],
       noReindex: false,
     });
   });
@@ -53,14 +57,51 @@ describe("parseInitArgv", () => {
       writeClaudeMd: false,
       pro: false,
       dryRun: false,
+      clients: [],
       noReindex: true,
     });
   });
+  it("--client codex", () => {
+    expect(parseInitArgv(["--client", "codex"])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      clients: ["codex"],
+      noReindex: false,
+    });
+  });
+  it("--client=codex", () => {
+    expect(parseInitArgv(["--client=codex"])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      clients: ["codex"],
+      noReindex: false,
+    });
+  });
+  it("--client all currently selects codex", () => {
+    expect(parseInitArgv(["--client", "all"])).toEqual({
+      writeClaudeMd: false,
+      pro: false,
+      dryRun: false,
+      clients: ["codex"],
+      noReindex: false,
+    });
+  });
+  it("--client requires a known value", () => {
+    const parsed = parseInitArgv(["--client", "cursor"]);
+    expect(parsed.clientError).toMatch(/Unknown client/);
+  });
+  it("--client= requires a value", () => {
+    const parsed = parseInitArgv(["--client="]);
+    expect(parsed.clientError).toMatch(/requires a value/);
+  });
   it("all flags together", () => {
-    expect(parseInitArgv(["--write-claude-md", "--pro", "--dry-run", "--no-reindex"])).toEqual({
+    expect(parseInitArgv(["--write-claude-md", "--pro", "--dry-run", "--client", "codex", "--no-reindex"])).toEqual({
       writeClaudeMd: true,
       pro: true,
       dryRun: true,
+      clients: ["codex"],
       noReindex: true,
     });
   });
@@ -103,6 +144,17 @@ describe("runInstallSteps", () => {
     const manifest = runInstallSteps(tmp, { writeClaudeMd: true });
     expect(manifest.claude_md.action).toBe("created");
     expect(existsSync(path.join(tmp, "CLAUDE.md"))).toBe(true);
+  });
+
+  it("--client codex writes project Codex config and records it in the manifest", () => {
+    const manifest = runInstallSteps(tmp, { writeClaudeMd: false, clients: ["codex"] });
+    const cfgPath = path.join(tmp, ".codex", "config.toml");
+    expect(manifest.codex_config?.action).toBe("created");
+    expect(existsSync(cfgPath)).toBe(true);
+    const body = readFileSync(cfgPath, "utf8");
+    expect(body).toContain("[mcp_servers.lodestone-mcp]");
+    expect(body).toContain(path.join(tmp, ".lodestone", "runtime", "lodestone-mcp"));
+    expect(body).toContain(`cwd = "${tmp}"`);
   });
 
   it("idempotent — re-running on the same repo only updates installed_at", () => {
@@ -182,10 +234,27 @@ describe("init() handler", () => {
     expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
   });
 
-  it("--pro warns (not yet implemented) but still completes successfully", async () => {
+  it("--dry-run --client codex reports Codex config without touching filesystem", async () => {
+    expect(await init(["--dry-run", "--client", "codex"])).toBe(0);
+    const stdout = log.mock.calls.flat().join("\n");
+    expect(stdout).toContain(".codex");
+    expect(existsSync(path.join(tmp, ".codex"))).toBe(false);
+  });
+
+  it("unknown --client exits as usage error without install side effects", async () => {
+    expect(await init(["--client", "cursor", "--no-reindex"])).toBe(2);
+    expect(existsSync(path.join(tmp, ".codex"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
+  });
+
+  it("--pro exits cleanly without install side effects", async () => {
     expect(await init(["--pro", "--no-reindex"])).toBe(0);
     const stderr = err.mock.calls.flat().join("\n");
-    expect(stderr).toMatch(/--pro/);
+    expect(stderr).toMatch(/Pro mode is v0\.5\+ work/);
+    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".gitignore"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
+    expect(existsSync(path.join(tmp, "CLAUDE.md"))).toBe(false);
   });
 
   it("--write-claude-md augments CLAUDE.md", async () => {

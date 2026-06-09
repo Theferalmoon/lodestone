@@ -11,21 +11,21 @@ Lodestone is a project-local tool. Everything it produces — embeddings, the ca
 | Thing | Where it lives | Who can read it |
 |---|---|---|
 | Source code | Your repo, like always | You |
-| Symbol embeddings (vectors) | `.lodestone/store/lodestone.db` (sqlite-vec virtual table) | The Lodestone process, opened read-only by MCP |
-| The call graph (symbols, edges, PageRank) | `.lodestone/store/lodestone.db` | Same |
-| Cluster names + naming evidence | `.lodestone/store/lodestone.db` (`clusters` table) | Same |
+| Symbol embeddings (vectors) | `.lodestone/lodestone.sqlite` (sqlite-vec virtual table) | The Lodestone process, opened read-only by MCP |
+| The call graph (symbols, edges, PageRank) | `.lodestone/lodestone.sqlite` | Same |
+| Cluster names + naming evidence | `.lodestone/lodestone.sqlite` (`clusters` table) | Same |
 | SKILL.md cards | `.lodestone/skills/*.md` | You; agents read via `skills_for()` |
-| Feedback events (the agent's thumbs-up / thumbs-down) | `.lodestone/store/lodestone.db` (`feedback` table) | Same |
+| Feedback events (the agent's thumbs-up / thumbs-down) | `.lodestone/lodestone.sqlite` (`feedback` table) | Same |
 | Watcher state, ready marker | `.lodestone/runtime/`, `.lodestone/ready.json` | Same |
 
 ## What leaves the machine
 
-In friend mode (the default), **nothing**. Once installed, Lodestone runs entirely offline.
+In friend mode, **nothing** leaves the machine at runtime for the packaged `lite` and `full` profiles. Once installed, Lodestone runs entirely offline. A consent-gated model setup path is reserved for future releases, but the public v0.1.x build keeps it fail-closed until real release pins are published.
 
 The two scenarios where bytes might leave your machine are:
 
-1. **Installing or upgrading Lodestone itself.** `npm install -g @lodestone/cli@latest` (or `npx lodestone@latest`) hits the public npm registry to fetch the package. This is a normal package install, no different from any other npm tool you use. The npm registry URL is the only outbound URL allowed in the shipped `dist/` (the build-time grep audit, below, enforces this).
-2. **The `tiny` embedder profile on first use.** If you set `[embedder].profile = "tiny"` in your `lodestone.toml`, the snowflake-arctic-embed-s weights are fetched on first use from Hugging Face and cached locally. Subsequent runs use the cached copy. Setting `LODESTONE_OFFLINE=1` in your environment blocks this fetch with a clear error, in which case the cache must be pre-populated. The default profile bundles its weights — no fetch occurs.
+1. **Installing or upgrading Lodestone itself.** The friend installer downloads pinned Lodestone release tarballs from GitHub and lets npm resolve normal package dependencies. Future npm-published paths will hit the public npm registry. This is normal package installation traffic, not runtime code upload.
+2. **Future consent-gated model setup.** The `lodestone setup-models --allow-download` command is the reserved path for pinned, operator-approved model downloads. In the public v0.1.x friend build it exits before any network call because the built-in live-fetch manifest intentionally has placeholder hashes. The packaged `lite` and `full` friend profiles already bundle their model weights, so normal friend runtime does not need this fetch.
 
 That is the complete list. There is no third path.
 
@@ -37,17 +37,19 @@ If you want a hard guarantee, set `LODESTONE_OFFLINE=1` in your shell or in your
 
 ## The opt-in `setup-models` path
 
-There is exactly one runtime-fetch path Lodestone exposes to the friend, and it is gated by **two** consents that both have to say yes:
+There is exactly one runtime-fetch path Lodestone reserves for friends, and it is gated by **two** consents that both have to say yes. In the public v0.1.x friend build, the command also has a release-pin gate and exits before network because live fetch pins are not published yet:
 
 ```bash
-# Default behavior: refuses to do anything network-side.
-lodestone setup-models nomic-embed-text-v1.5
-# → exits non-zero with "model download is opt-in; pass --allow-download
-#   or set LODESTONE_ALLOW_MODEL_DOWNLOAD=1"
+# Public v0.1.x behavior: refuses before any network call because live
+# setup-models pins are not published yet.
+lodestone setup-models --embedder nomic-text-v1.5
+# → exits non-zero with "setup-models is not enabled in this public v0.1.x build"
 
-# Opt in explicitly:
-lodestone setup-models nomic-embed-text-v1.5 --allow-download
-# → still hits assertNetworkAllowed("setup-models: nomic-embed-text-v1.5")
+# Future pinned build, opt in explicitly:
+lodestone setup-models --embedder nomic-text-v1.5 --allow-download
+# → public v0.1.x: exits before network because live setup-models pins
+#   are not published yet.
+# → future pinned build: still hits assertNetworkAllowed("setup-models: ...")
 #   and so still fails when LODESTONE_OFFLINE=1.
 ```
 
@@ -56,7 +58,7 @@ The two gates:
 1. **Operator opt-in.** The `--allow-download` flag (or the equivalent `LODESTONE_ALLOW_MODEL_DOWNLOAD=1` env var) — the friend has to say "yes, fetch this." Without it, the command refuses.
 2. **Repo-wide chokepoint.** `assertNetworkAllowed("setup-models: <id>")` from `@lodestone/shared/net/fetch`. When `LODESTONE_OFFLINE=1` is set anywhere in the environment, this throws — the operator opt-in is overridden by the offline guard.
 
-This is the only deliberate path that touches the network at runtime. Weights land per-project at `<repoRoot>/.lodestone/models/<id>/`, never in a shared global cache, so one friend's `setup-models` cannot leak weights into another friend's project.
+This is the only deliberate path that may touch the network at runtime once real pins ship. Weights land per-project at `<repoRoot>/.lodestone/models/<id>/`, never in a shared global cache, so one friend's `setup-models` cannot leak weights into another friend's project.
 
 The implementation lives in `packages/cli/src/commands/setup-models.ts`. The full list of URLs `setup-models` is permitted to contact is in [`network-manifest.json`](../network-manifest.json) at the repo root.
 
@@ -72,8 +74,8 @@ The allowlist lives in two places that have to agree:
 Today the allowlist is:
 
 - `https://registry.npmjs.org/` — the npm registry, used only by `npm install` / `pnpm install` itself, not by the running tool.
-- `https://huggingface.co/Xenova/nomic-embed-text-v1.5/` — the default embedder, fetched only via the opt-in `setup-models` path above.
-- `https://huggingface.co/Snowflake/snowflake-arctic-embed-s/` — the tiny-profile fallback embedder, fetched only via the opt-in `setup-models` path above.
+- `https://huggingface.co/Xenova/nomic-embed-text-v1.5/` — reserved for the future opt-in `setup-models` path above; the public v0.1.x build fails closed before reaching it.
+- `https://huggingface.co/Snowflake/snowflake-arctic-embed-s/` — reserved for the future opt-in `setup-models` path above; the public v0.1.x build fails closed before reaching it.
 - `https://huggingface.co/nomic-ai/`, `https://huggingface.co/ibm-granite/` — pre-approved maintainer orgs reserved for future bundled embedder variants. Currently unused in code; pre-listing them means the §05 / §10 follow-on work does not have to amend the manifest at the same time as it ships code.
 - `https://spdx.org/licenses/` — license-identifier comment root. Inert, never contacted at runtime.
 
@@ -84,7 +86,7 @@ The audit runs in two places, both as gates:
 
 ## No telemetry
 
-There is no telemetry. No usage events, no error reports, no anonymous metrics. The closest thing is the `feedback` MCP tool, which the agent calls voluntarily after a useful or unhelpful tool call — but those events are written to your local `.lodestone/store/lodestone.db` and stay there. Nothing is sent anywhere.
+There is no telemetry. No usage events, no error reports, no anonymous metrics. The closest thing is the `feedback` MCP tool, which the agent calls voluntarily after a useful or unhelpful tool call — but those events are written to your local `.lodestone/lodestone.sqlite` and stay there. Nothing is sent anywhere.
 
 ## Verifying offline behavior locally
 

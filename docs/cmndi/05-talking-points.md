@@ -23,10 +23,10 @@ Bullet-list reference for demos, interviews, and Q&A. Use these as starting poin
 - **5** languages parsed (TypeScript, JavaScript, Python, Go, Rust)
 - **4** workspace packages (`shared`, `cli`, `ingest`, `mcp-server`)
 - **106** test files in the workspace + e2e harness
-- **~150 MB** bundled embedder weights (default profile)
-- **0** runtime network calls on default install
+- **~16 MB / ~89 MB** release tarball download for `lite` / `full`
+- **0** runtime model network calls on packaged friend installs
 - **Apache 2.0**, every direct dep
-- **v0.1.2** at HEAD `f82f02e`
+- **v0.1.6** friend-install package set
 
 ## FAQ
 
@@ -36,7 +36,7 @@ Lodestone runs entirely on the operator's machine — there is nothing to "host.
 
 ### What about model updates?
 
-Default ship: bundled `nomic-embed-text-v1.5` ONNX int8. Upgrades come with the npm package — `npm install -g @lodestone/cli@latest`. The opt-in `lodestone setup-models --allow-download` path can fetch larger or alternate model weights but requires both an explicit operator flag and absence of `LODESTONE_OFFLINE=1`. Per-project model cache, never a shared global cache.
+Friend ship: `lite` bundles Snowflake 384d and `full` bundles Nomic 768d. The reserved `lodestone setup-models --allow-download` path is for future larger or alternate model weights, but the public v0.1.x build exits before network until real pinned hashes are published. Per-project model cache, never a shared global cache.
 
 ### How do you keep secrets?
 
@@ -80,7 +80,7 @@ The tool rejects the call. The `request_id` is how Lodestone correlates the sign
 
 ### What about transitive CVEs in the dep tree?
 
-One known transitive CVE in `protobufjs` via `@xenova/transformers > onnxruntime-web > onnx-proto > protobufjs`. **Does not affect runtime** — the protobuf code path is only exercised when loading model files, and Lodestone's bundled weights are pinned + integrity-checked + loaded from inside the package itself. Tracking the upstream pin bump; will publish a Lodestone patch release once the chain is patched. The full writeup is at `docs/KNOWN-ISSUES.md`.
+As of the v0.1.6 friend-install release prep on 2026-06-08, `pnpm audit --prod` is clean after patched transitive overrides. Treat audit status as live: rerun `pnpm audit --prod` during strict intake because registry advisories can change after release.
 
 ### How do I undo the install?
 
@@ -94,7 +94,7 @@ One known transitive CVE in `protobufjs` via `@xenova/transformers > onnxruntime
 - Apache 2.0, every direct dep Apache 2.0 or MIT, every maintainer org vetted.
 - Five languages parsed in v0; cluster names emerge from Louvain communities; skill cards mature with index age.
 - Friend mode is the v0 ship; Pro mode is wired but deferred.
-- One transitive CVE in the dep tree, documented, tracked, no runtime impact.
+- Production dependency audit clean at v0.1.6 release prep; rerun `pnpm audit --prod` for live intake.
 - The synthetic demo repo at `e2e/synthetic-demo-repo/` is the contract — its `FIXTURE_MANIFEST.json` is what e2e asserts against, and a Lodestone change that breaks one of its predictions fails CI.
 
 ## What we DON'T claim
@@ -110,7 +110,7 @@ One known transitive CVE in `protobufjs` via `@xenova/transformers > onnxruntime
 
 ## Demo flow (5 minutes)
 
-1. `npx lodestone init` in a real-ish project. Show the output (file count, symbol count, edge count, ingest time).
+1. `curl -sSfL https://lodestone.cmndi.ai/install | bash` in a real-ish project. Show the output (file count, symbol count, edge count, ingest time).
 2. Show the `.mcp.json` snippet that init wrote.
 3. Open Claude Code. Ask: *what are the main subsystems of this codebase?* — agent calls `cluster()`, reads back communities.
 4. Ask: *find the rate-limit middleware* — agent calls `query()`, lands on the right symbol.

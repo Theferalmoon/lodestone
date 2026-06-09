@@ -77,10 +77,10 @@ Which embedding model and how it batches.
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `profile` | enum | `"default"` | `"default"` uses the bundled `nomic-embed-text-v1.5` ONNX int8 (~150 MB, no fetch). `"tiny"` uses `snowflake-arctic-embed-s` (smaller, fetched on first use unless `LODESTONE_OFFLINE=1`). `"pro"` is reserved for v0.5+ and currently behaves like `"default"`. |
+| `profile` | enum | `"default"` | `"default"` prefers bundled `nomic-embed-text-v1.5` when present. In the friend `lite` release tarball, the runtime auto-selects the bundled `snowflake-arctic-embed-s` model instead. `"tiny"` pins Snowflake. `"pro"` is reserved for v0.5+ and currently behaves like `"default"`. |
 | `batch_size` | int (≥1) | `16` | Symbols per inference batch. Higher uses more RAM during ingest; lower is friendlier on small machines. The pipeline auto-clamps when free RAM is low. |
 
-`lodestone reindex` reads this profile before loading the embedder. Set `profile = "tiny"` to pin index-time embeddings to `snowflake-arctic-embed-s`; an explicit `LODESTONE_EMBEDDER` environment override still wins for operator debugging.
+`lodestone reindex` reads this profile before loading the embedder. Set `profile = "tiny"` to pin index-time embeddings to `snowflake-arctic-embed-s`; an explicit `LODESTONE_EMBEDDER` environment override still wins for operator debugging. Friend install profiles (`LODESTONE_PROFILE=lite|full`) control which model is packaged into the release tarball; this TOML key controls runtime selection inside an installed project.
 
 ## `[cluster]`
 
@@ -147,6 +147,6 @@ Some runtime flags are env-var-only because they apply across the toolchain (CLI
 | `LODESTONE_OFFLINE` | `"1"` to enable | Block every outbound network call. The chokepoint in `@lodestone/shared/net/fetch` throws `NetworkBlockedError` with a clear reason. Recommended for air-gapped or paranoid setups. See [`PRIVACY.md`](./PRIVACY.md). |
 | `LODESTONE_LOG_LEVEL` | `error` \| `warn` \| `info` \| `debug` | CLI and worker log verbosity. Default is `info`. |
 | `LODESTONE_COMMIT_HASH` | string | Build-time injection of the commit hash into the CLI's `--version` output. If unset, `lodestone --version` falls back to a runtime `git rev-parse`, then to `dev`. |
-| `LODESTONE_ALLOW_MODEL_DOWNLOAD` | `"1"` to enable | Reserved for v0.5+. Will gate the larger `nomic-embed-code` weights opt-in. Currently a no-op. |
+| `LODESTONE_ALLOW_MODEL_DOWNLOAD` | `"1"` to enable | Reserved for future pinned model downloads. Public v0.1.x setup-models exits before network until real hashes ship. |
 
 `LODESTONE_OFFLINE=1` is the load-bearing one for the privacy claim. Set it in your shell profile or your editor's MCP config block.

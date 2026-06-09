@@ -95,19 +95,19 @@ main hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
 <body>
 <div class="layout">
   <nav class="toc">
-    <div class="brand">CMNDI<small>main · e5bfed1<br/>2026-05-02 16:02:43 UTC</small></div>
+    <div class="brand">CMNDI<small>fix/symbol-embeddings-dedup · 1e4b92d<br/>2026-06-09 03:14:50 UTC</small></div>
     <input class="search" placeholder="filter sections…" autocomplete="off"/>
     <div class="toc-section">Executive 1-Pager</div><ul><li class="h1"><a href="#exec-lodestone-executive-1-pager">Lodestone — Executive 1-Pager</a></li><li class="h2"><a href="#exec-what-it-is">What it is</a></li><li class="h2"><a href="#exec-who-it-is-for">Who it is for</a></li><li class="h2"><a href="#exec-why-it-matters">Why it matters</a></li><li class="h2"><a href="#exec-key-numbers">Key numbers</a></li><li class="h2"><a href="#exec-how-it-stays-defensible">How it stays defensible</a></li><li class="h2"><a href="#exec-what-is-on-the-v05-roadmap">What is on the v0.5 roadmap</a></li><li class="h2"><a href="#exec-where-it-sits-in-cmndi">Where it sits in CMNDI</a></li></ul><div class="toc-section">Technical Specification</div><ul><li class="h1"><a href="#tech-lodestone-technical-specification">Lodestone — Technical Specification</a></li><li class="h2"><a href="#tech-1-system-overview">1. System overview</a></li><li class="h2"><a href="#tech-2-monorepo-layout">2. Monorepo layout</a></li><li class="h3"><a href="#tech-per-package-responsibilities">Per-package responsibilities</a></li><li class="h2"><a href="#tech-3-data-flow">3. Data flow</a></li><li class="h2"><a href="#tech-4-storage-schema">4. Storage schema</a></li><li class="h2"><a href="#tech-5-embedder-runtime">5. Embedder runtime</a></li><li class="h3"><a href="#tech-consent-gated-download-path">Consent-gated download path</a></li><li class="h2"><a href="#tech-6-mcp-tool-surface">6. MCP tool surface</a></li><li class="h3"><a href="#tech-61-the-universal-envelope">6.1 The universal envelope</a></li><li class="h3"><a href="#tech-62-the-eight-tools">6.2 The eight tools</a></li><li class="h3"><a href="#tech-63-the-cross-store-ready-gate">6.3 The cross-store ready-gate</a></li><li class="h3"><a href="#tech-64-the-sql-gate">6.4 The `sql` gate</a></li><li class="h2"><a href="#tech-7-configuration">7. Configuration</a></li><li class="h2"><a href="#tech-8-watcher">8. Watcher</a></li><li class="h2"><a href="#tech-9-install-uninstall-lifecycle">9. Install / uninstall lifecycle</a></li><li class="h2"><a href="#tech-10-supply-chain-posture">10. Supply chain posture</a></li><li class="h2"><a href="#tech-11-build-time-url-audit">11. Build-time URL audit</a></li><li class="h2"><a href="#tech-12-what-is-deferred-to-v05">12. What is deferred to v0.5+</a></li><li class="h2"><a href="#tech-13-cross-references">13. Cross-references</a></li></ul><div class="toc-section">Operator Guide</div><ul><li class="h1"><a href="#user-lodestone-operator-guide">Lodestone — Operator Guide</a></li><li class="h2"><a href="#user-1-install-in-60-seconds">1. Install in 60 seconds</a></li><li class="h2"><a href="#user-2-wire-it-to-your-editor">2. Wire it to your editor</a></li><li class="h3"><a href="#user-claude-code">Claude Code</a></li><li class="h3"><a href="#user-cursor">Cursor</a></li><li class="h3"><a href="#user-cmndclaw">cmndclaw</a></li><li class="h3"><a href="#user-cline-other-mcp-clients">Cline / other MCP clients</a></li><li class="h2"><a href="#user-3-daily-commands">3. Daily commands</a></li><li class="h2"><a href="#user-4-where-things-live-lodestone-directory-layout">4. Where things live (`.lodestone/` directory layout)</a></li><li class="h2"><a href="#user-5-try-the-synthetic-demo-first">5. Try the synthetic demo first</a></li><li class="h2"><a href="#user-6-common-errors-and-fixes">6. Common errors and fixes</a></li><li class="h3"><a href="#user-mcp-server-failed-to-start-enoent-after-cloning-a-repo">&quot;MCP server failed to start: ENOENT&quot; after cloning a repo</a></li><li class="h3"><a href="#user-file-watcher-misses-changes-on-wsl2">File watcher misses changes on WSL2</a></li><li class="h3"><a href="#user-slow-embedding-pass-on-apple-silicon">Slow embedding pass on Apple Silicon</a></li><li class="h3"><a href="#user-corporate-proxy-tls-interception-breaks-fetch">Corporate proxy / TLS interception breaks fetch</a></li><li class="h3"><a href="#user-no-prebuild-found-for-your-platform">&quot;no prebuild found for your platform&quot;</a></li><li class="h3"><a href="#user-schema-version-mismatch-lodestone-is-corrupt">&quot;schema_version mismatch&quot; / `.lodestone/` is corrupt</a></li><li class="h3"><a href="#user-pro-mode-is-v05-work">&quot;Pro mode is v0.5+ work&quot;</a></li><li class="h3"><a href="#user-tree-sitter-parse-failures-on-individual-files">Tree-sitter parse failures on individual files</a></li><li class="h3"><a href="#user-friends-repo-is-huge-50k-symbols">Friend&#x27;s repo is huge (&gt;50k symbols)</a></li><li class="h2"><a href="#user-7-privacy-posture-in-one-paragraph">7. Privacy posture in one paragraph</a></li><li class="h2"><a href="#user-8-upgrading">8. Upgrading</a></li><li class="h2"><a href="#user-9-known-issues-at-v01x">9. Known issues at v0.1.x</a></li><li class="h2"><a href="#user-10-where-to-ask-for-help">10. Where to ask for help</a></li></ul><div class="toc-section">Brochure</div><ul><li class="h1"><a href="#brochure-lodestone-brochure">Lodestone — Brochure</a></li><li class="h2"><a href="#brochure-the-pitch-in-three-sentences">The pitch in three sentences</a></li><li class="h2"><a href="#brochure-the-privacy-promise">The privacy promise</a></li><li class="h2"><a href="#brochure-eight-tools-one-envelope">Eight tools, one envelope</a></li><li class="h2"><a href="#brochure-what-makes-it-different">What makes it different</a></li><li class="h2"><a href="#brochure-use-cases">Use cases</a></li><li class="h3"><a href="#brochure-friend-customer-onboarding-a-new-agent-to-an-existing-codebase">Friend customer — onboarding a new agent to an existing codebase</a></li><li class="h3"><a href="#brochure-regulated-team-code-grounding-without-code-egress">Regulated team — code grounding without code egress</a></li><li class="h3"><a href="#brochure-solo-engineer-getting-an-agent-to-actually-understand-the-project">Solo engineer — getting an agent to actually understand the project</a></li><li class="h3"><a href="#brochure-cmndi-alpha-bundle-inside-a-friend-distribution-stack">CMNDI alpha — bundle inside a friend-distribution stack</a></li><li class="h2"><a href="#brochure-honest-limits">Honest limits</a></li><li class="h2"><a href="#brochure-how-to-try-it">How to try it</a></li><li class="h2"><a href="#brochure-where-lodestone-sits-in-the-bigger-product-roadmap">Where Lodestone sits in the bigger product roadmap</a></li><li class="h2"><a href="#brochure-license-provenance">License + provenance</a></li><li class="h2"><a href="#brochure-in-one-sentence">In one sentence</a></li></ul><div class="toc-section">Talking Points</div><ul><li class="h1"><a href="#talking-lodestone-talking-points">Lodestone — Talking Points</a></li><li class="h2"><a href="#talking-the-30-second-pitch">The 30-second pitch</a></li><li class="h2"><a href="#talking-the-6-differentiators">The 6 differentiators</a></li><li class="h2"><a href="#talking-quick-numbers-for-slides">Quick numbers (for slides)</a></li><li class="h2"><a href="#talking-faq">FAQ</a></li><li class="h3"><a href="#talking-can-i-self-host">Can I self-host?</a></li><li class="h3"><a href="#talking-what-about-model-updates">What about model updates?</a></li><li class="h3"><a href="#talking-how-do-you-keep-secrets">How do you keep secrets?</a></li><li class="h3"><a href="#talking-whats-the-gpu-footprint">What&#x27;s the GPU footprint?</a></li><li class="h3"><a href="#talking-how-big-a-repo-can-it-handle">How big a repo can it handle?</a></li><li class="h3"><a href="#talking-why-louvain-instead-of-leiden">Why Louvain instead of Leiden?</a></li><li class="h3"><a href="#talking-why-sqlite-instead-of-lancedb-kuzudb">Why SQLite instead of LanceDB + KuzuDB?</a></li><li class="h3"><a href="#talking-why-apache-20-and-not-agpl">Why Apache 2.0 and not AGPL?</a></li><li class="h3"><a href="#talking-does-it-learn-from-my-code">Does it learn from my code?</a></li><li class="h3"><a href="#talking-does-it-work-with-claude-code-cursor-cline-cmndclaw">Does it work with Claude Code? Cursor? Cline? cmndclaw?</a></li><li class="h3"><a href="#talking-whats-the-relationship-to-lodestone-forge">What&#x27;s the relationship to &quot;Lodestone Forge&quot;?</a></li><li class="h3"><a href="#talking-what-if-my-agent-calls-feedback-without-a-request-id">What if my agent calls `feedback` without a `request_id`?</a></li><li class="h3"><a href="#talking-what-about-transitive-cves-in-the-dep-tree">What about transitive CVEs in the dep tree?</a></li><li class="h3"><a href="#talking-how-do-i-undo-the-install">How do I undo the install?</a></li><li class="h2"><a href="#talking-what-we-do-claim">What we DO claim</a></li><li class="h2"><a href="#talking-what-we-dont-claim">What we DON&#x27;T claim</a></li><li class="h2"><a href="#talking-demo-flow-5-minutes">Demo flow (5 minutes)</a></li></ul>
   </nav>
   <main>
     <section class="doc-section" id="section-exec"><p>&lt;!-- SPDX-License-Identifier: Apache-2.0 --&gt;</p>
 <h1 id="exec-lodestone-executive-1-pager">Lodestone — Executive 1-Pager</h1>
-<p><strong>Version:</strong> v0.1.2 (HEAD: <code>f82f02e</code>, main, tag <code>v0.1.2</code>)</p>
-<p><strong>License:</strong> Apache 2.0 (public, OSS distribution via npm)</p>
-<p><strong>Status:</strong> First public ship complete; dogfood phase open</p>
+<p><strong>Version:</strong> v0.1.6 friend-install package set</p>
+<p><strong>License:</strong> Apache 2.0 (public, download-only friend distribution)</p>
+<p><strong>Status:</strong> Friend install and dogfood phase open</p>
 <h2 id="exec-what-it-is">What it is</h2>
 <p>Lodestone is a project-local, code-aware <strong>Knowledge Graph for coding agents</strong>. It watches one repository, parses every source file with tree-sitter, builds a symbol-and-call graph, embeds each symbol locally with a bundled ONNX model, clusters the graph into emergent architectural modules with Louvain community detection, emits machine-readable SKILL cards for the patterns it sees, and exposes the whole thing to the operator's coding agent over the Model Context Protocol (MCP).</p>
-<p>It is a single <code>npm install</code> away. It runs entirely on the operator's machine. There is no service to deploy, no account to create, no upload step.</p>
+<p>It is a single curl-based friend install away. It runs entirely on the operator's machine. There is no service to deploy, no account to create, no upload step.</p>
 <h2 id="exec-who-it-is-for">Who it is for</h2>
 <ul>
 <li><strong>Privacy-first development teams</strong> who cannot or will not send proprietary source code to a hosted LLM-grounding service.</li>
@@ -140,15 +140,15 @@ main hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
 </tr>
 <tr>
 <td>Bundled model size</td>
-<td>~150 MB (<code>nomic-embed-text-v1.5</code> ONNX int8, default profile)</td>
+<td><code>lite</code>: Snowflake 384d (~16 MB release download); <code>full</code>: Nomic 768d (~89 MB release download)</td>
 </tr>
 <tr>
-<td>Runtime network calls (default profile)</td>
+<td>Runtime network calls (packaged friend profiles)</td>
 <td>Zero</td>
 </tr>
 <tr>
 <td>Distribution</td>
-<td>npm — <code>npx lodestone init</code></td>
+<td>Download-only friend installer via the branded curl one-liner</td>
 </tr>
 <tr>
 <td>License</td>
@@ -157,9 +157,9 @@ main hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
 </tbody></table>
 <h2 id="exec-how-it-stays-defensible">How it stays defensible</h2>
 <ul>
-<li><strong>Bundled embedder weights</strong> — the privacy claim only holds if the default install does not phone home. Lodestone ships its embedder inside the npm package (~150 MB on disk) so day-1 use needs zero outbound calls.</li>
+<li><strong>Bundled embedder weights</strong> — the privacy claim only holds if the install does not phone home at runtime. Lodestone ships profiled ingest tarballs so day-1 use needs zero outbound model calls.</li>
 <li><strong>Build-time URL audit</strong> — every release runs a grep over the shipped <code>dist/</code> against an explicit allowlist (<code>network-manifest.json</code>). Anything new fails the build. The privacy claim is enforced at release time, not just at runtime.</li>
-<li><strong>Two-gate consent for any model fetch</strong> — the only opt-in fetch path (<code>lodestone setup-models --allow-download</code>) requires both an explicit operator flag and a pass through the <code>LODESTONE_OFFLINE</code> chokepoint. Either gate can veto.</li>
+<li><strong>Two-gate consent for any future model fetch</strong> — the reserved opt-in fetch path (<code>lodestone setup-models --allow-download</code>) requires both an explicit operator flag and a pass through the <code>LODESTONE_OFFLINE</code> chokepoint. The public v0.1.x build also exits before network until real pinned hashes are published.</li>
 <li><strong>MCP-portable</strong> — runs over local stdio. Works with every MCP-aware client, today and tomorrow, with no per-editor adapter.</li>
 </ul>
 <h2 id="exec-what-is-on-the-v05-roadmap">What is on the v0.5 roadmap</h2>
@@ -181,7 +181,7 @@ main hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
 <ul>
 <li><strong>Runtime:</strong> Node 20+, TypeScript, ESM throughout.</li>
 <li><strong>Parsers:</strong> <code>web-tree-sitter</code> (WASM) + <code>tree-sitter-{typescript,javascript,python,go,rust}</code>.</li>
-<li><strong>Embedder:</strong> <code>nomic-embed-text-v1.5</code> ONNX int8, bundled (~150 MB), inferenced via <code>@xenova/transformers</code>. Optional <code>tiny</code> fallback (<code>snowflake-arctic-embed-s</code>) and reserved <code>pro</code> profile.</li>
+<li><strong>Embedder:</strong> profiled bundled ONNX models, inferenced via <code>@xenova/transformers</code>. Friend <code>lite</code> bundles Snowflake 384d; friend <code>full</code> bundles Nomic 768d. Internal <code>default</code>, <code>tiny</code>, and reserved <code>pro</code> config values remain for runtime selection and forward compatibility.</li>
 <li><strong>Storage:</strong> <code>better-sqlite3</code> (synchronous) + <code>sqlite-vec</code> extension. WAL mode. Foreign keys on. Reader handle opened readonly at the driver layer.</li>
 <li><strong>Graph:</strong> <code>graphology</code> + <code>graphology-communities-louvain</code>.</li>
 <li><strong>MCP server:</strong> <code>@modelcontextprotocol/sdk</code> over local stdio.</li>
@@ -236,7 +236,7 @@ lodestone/
 </code></pre>
 <p><code>init</code> runs the full pipeline once. The watcher (<code>@lodestone/ingest/watcher</code>) keeps the index live by re-running the affected slice on file changes, debounced by <code>[ingest].debounce_ms</code> and paused during git operations when <code>[ingest].pause_during_git = true</code>.</p>
 <h2 id="tech-4-storage-schema">4. Storage schema</h2>
-<p>All persisted state lives in a single SQLite database under <code>.lodestone/store/lodestone.db</code>. The schema version is recorded in the <code>schema_version</code> table and surfaced as <code>CURRENT_SCHEMA_VERSION</code> in <code>@lodestone/shared</code>. The current value is <code>3</code>.</p>
+<p>All persisted database state lives in a single SQLite database at <code>.lodestone/lodestone.sqlite</code>. The schema version is recorded in the <code>schema_version</code> table and surfaced as <code>CURRENT_SCHEMA_VERSION</code> in <code>@lodestone/shared</code>. The current value is <code>3</code>.</p>
 <p>Useful tables:</p>
 <table><thead><tr>
 <th>Table</th>
@@ -285,21 +285,22 @@ lodestone/
 <p>The <code>index_meta</code> epoch is the cross-store ready-gate every reader-tool checks before responding (see §6.3). A reader hitting an in-progress reindex returns <code>provenance.source = "not_ready"</code> rather than serving stale or partial rows.</p>
 <p>Schema bumps within v0.x require <code>lodestone reindex --from-scratch</code>. The numbered-migrations runner is v0.5+ work — see <a href="../UPGRADE.md"><code>../UPGRADE.md</code></a>.</p>
 <h2 id="tech-5-embedder-runtime">5. Embedder runtime</h2>
-<p>The default embedder profile bundles <code>nomic-embed-text-v1.5</code> (ONNX int8, ~150 MB) inside <code>@lodestone/ingest/dist/models/</code>. The <code>tiny</code> profile bundles <code>snowflake-arctic-embed-s</code> (smaller, ~33 MB int8). The <code>pro</code> profile is reserved for v0.5+ and currently behaves like <code>default</code>.</p>
-<p>Inference goes through <code>@xenova/transformers</code> (Apache 2.0; ONNX Runtime under the hood). The runtime path makes zero outbound calls; the operator's machine never speaks to Hugging Face for embedding. The <strong>only</strong> runtime fetch path Lodestone exposes is <code>lodestone setup-models --allow-download</code>, gated by two consents (operator <code>--allow-download</code> flag plus the <code>LODESTONE_OFFLINE</code> chokepoint). Both gates must permit; either can veto. See <a href="../PRIVACY.md"><code>../PRIVACY.md</code></a> for the full opt-in model.</p>
+<p>The friend installer publishes two profiled ingest tarballs. The <code>lite</code> profile bundles <code>snowflake-arctic-embed-s</code> (ONNX int8, 384 dimensions). The <code>full</code> profile bundles <code>nomic-embed-text-v1.5</code> (ONNX int8, 768 dimensions). The internal <code>default</code>, <code>tiny</code>, and <code>pro</code> config values are still used by <code>lodestone.toml</code>; in profiled release tarballs, the runtime auto-selects the bundled model that is actually present.</p>
+<p>Inference goes through <code>@xenova/transformers</code> (Apache 2.0; ONNX Runtime under the hood). The packaged <code>lite</code> and <code>full</code> runtime paths make zero outbound calls; the operator's machine never speaks to Hugging Face for embedding. The <strong>only</strong> reserved runtime fetch path is <code>lodestone setup-models --allow-download</code>, gated by two consents (operator <code>--allow-download</code> flag plus the <code>LODESTONE_OFFLINE</code> chokepoint). The public v0.1.x build also exits before network until real pinned hashes are published. See <a href="../PRIVACY.md"><code>../PRIVACY.md</code></a> for the full opt-in model.</p>
 <h3 id="tech-consent-gated-download-path">Consent-gated download path</h3>
 <pre><code class="lang-bash">
-# Default behavior: refuses to do anything network-side.
-lodestone setup-models nomic-embed-text-v1.5
-# → exits non-zero with "model download is opt-in; pass --allow-download
-#   or set LODESTONE_ALLOW_MODEL_DOWNLOAD=1"
+# Public v0.1.x behavior: refuses before any network call because live
+# setup-models pins are not published yet.
+lodestone setup-models --embedder nomic-text-v1.5
+# → exits non-zero with "setup-models is not enabled in this public v0.1.x build"
 
-# Opt in explicitly:
-lodestone setup-models nomic-embed-text-v1.5 --allow-download
-# → still hits assertNetworkAllowed("setup-models: nomic-embed-text-v1.5")
-#   and so still fails when LODESTONE_OFFLINE=1.
+# Future pinned build, opt in explicitly:
+lodestone setup-models --embedder nomic-text-v1.5 --allow-download
+# → public v0.1.x exits before network until real setup-models pins ship.
+# → future pinned builds still hit assertNetworkAllowed("setup-models: ...")
+#   and so still fail when LODESTONE_OFFLINE=1.
 </code></pre>
-<p>Weights land per-project at <code>&lt;repoRoot&gt;/.lodestone/models/&lt;id&gt;/</code>, never in a shared global cache. Each downloaded file is sha256-verified against a pinned manifest baked into the CLI binary; a mismatch quarantines the file and exits non-zero.</p>
+<p>Once real pins ship, weights land per-project at <code>&lt;repoRoot&gt;/.lodestone/models/&lt;id&gt;/</code>, never in a shared global cache. Each downloaded file is sha256-verified against a pinned manifest baked into the CLI binary; a mismatch quarantines the file and exits non-zero.</p>
 <h2 id="tech-6-mcp-tool-surface">6. MCP tool surface</h2>
 <p>Lodestone exposes eight tools over the Model Context Protocol. The tool set is registered from a single <code>TOOL_REGISTRY</code> map in <code>packages/mcp-server/src/tools/index.ts</code>; the server has no per-tool wiring beyond that map.</p>
 <p>For per-tool input/output schemas, JSON examples, and "when not to use" guidance, see <a href="../MCP-TOOLS.md"><code>../MCP-TOOLS.md</code></a>. This spec section covers the universal envelope, the registration model, and the cross-store ready-gate.</p>
@@ -479,7 +480,7 @@ npx lodestone init
 <ol>
 <li>Detects your project's languages (TypeScript / JavaScript / Python / Go / Rust).</li>
 <li>Writes <code>.lodestone/lodestone.toml</code> with sensible defaults.</li>
-<li>Scaffolds the SQLite + sqlite-vec store under <code>.lodestone/store/</code>.</li>
+<li>Scaffolds the SQLite + sqlite-vec database at <code>.lodestone/lodestone.sqlite</code>.</li>
 <li>Runs the first ingest pass — parses every source file, embeds each symbol locally with the bundled ONNX model (zero outbound calls on the default profile), builds the call graph, computes PageRank, runs Louvain clustering, emits seed SKILL cards.</li>
 <li>Writes a <code>.mcp.json</code> snippet your editor's coding agent can pick up.</li>
 </ol>
@@ -530,7 +531,7 @@ lodestone init
 </tr>
 <tr>
 <td><code>lodestone reindex --from-scratch</code></td>
-<td>Nuke <code>.lodestone/store/</code> and rebuild. ~1 minute on a 10k-symbol repo. Use after a schema bump or if <code>.lodestone/</code> is corrupt.</td>
+<td>Rebuild <code>.lodestone/lodestone.sqlite</code>. ~1 minute on a 10k-symbol repo. Use after a schema bump or if <code>.lodestone/</code> is corrupt.</td>
 </tr>
 <tr>
 <td><code>lodestone doctor</code></td>
@@ -542,7 +543,7 @@ lodestone init
 </tr>
 <tr>
 <td><code>lodestone setup-models --allow-download</code></td>
-<td>Opt-in fetch path. Requires both the flag and absence of <code>LODESTONE_OFFLINE=1</code>.</td>
+<td>Reserved future opt-in fetch path. Public v0.1.x exits before network until real pinned hashes are published.</td>
 </tr>
 <tr>
 <td><code>lodestone upgrade</code></td>
@@ -562,17 +563,16 @@ lodestone init
 &lt;your-repo&gt;/.lodestone/
 ├── lodestone.toml          # Project config. Hand-editable.
 ├── ready.json              # Cross-store ready-gate marker. MCP tools check this before responding.
-├── store/
-│   └── lodestone.db        # SQLite + sqlite-vec. Symbols, edges, clusters, skills, embeddings, feedback.
+├── lodestone.sqlite        # SQLite + sqlite-vec. Symbols, edges, clusters, skills, embeddings, feedback.
 ├── runtime/
 │   └── ...                 # Watcher state, MCP server transport bookkeeping.
 ├── skills/
 │   └── *.md                # Emitted SKILL cards. Hand-readable. Agents read via skills_for().
-├── models/                 # Per-project model cache; populated only by `setup-models --allow-download`.
+├── models/                 # Per-project model cache; future setup-models path only.
 └── install-manifest.json   # Records what `init` created, for `lodestone uninstall` to undo.
 </code></pre>
 <p>Treat <code>.lodestone/</code> as a regenerable cache. v0 has no migration runner; if anything gets corrupt, <code>lodestone reindex --from-scratch</code> rebuilds in under a minute on most projects.</p>
-<p>The <code>lodestone.toml</code> and any hand-edited skill cards are preserved across a from-scratch reindex; <code>.lodestone/store/</code> is rebuilt fresh.</p>
+<p>The <code>lodestone.toml</code> and any hand-edited skill cards are preserved across a from-scratch reindex; <code>.lodestone/lodestone.sqlite</code> is rebuilt fresh.</p>
 <h2 id="user-5-try-the-synthetic-demo-first">5. Try the synthetic demo first</h2>
 <p>If you want to feel the tool before pointing it at a real project, the repo ships with a multi-language fixture at <code>e2e/synthetic-demo-repo/</code>. It is small, deterministic, and built so the cluster names + seed skills + high-PageRank anchors are predictable.</p>
 <pre><code class="lang-bash">
@@ -615,7 +615,7 @@ npm install -g onnxruntime-node@latest
 </code></pre>
 <p>Restart your editor. CoreML routes ONNX inference through Apple's Neural Engine.</p>
 <h3 id="user-corporate-proxy-tls-interception-breaks-fetch">Corporate proxy / TLS interception breaks fetch</h3>
-<p>Stick to the bundled-model default profile (<code>[embedder].profile = "default"</code>) — it does not fetch. If you need the <code>tiny</code> fallback or <code>setup-models --allow-download</code>, set <code>HTTPS_PROXY</code> and <code>NODE_EXTRA_CA_CERTS</code> per your corporate setup. For full air-gap, <code>LODESTONE_OFFLINE=1</code> blocks all fetches loudly.</p>
+<p>Stick to the bundled-model default profile (<code>[embedder].profile = "default"</code>) — it does not fetch. The public v0.1.x setup-models path exits before network until real pinned hashes are published. For full air-gap, <code>LODESTONE_OFFLINE=1</code> blocks all future fetch paths loudly.</p>
 <h3 id="user-no-prebuild-found-for-your-platform">"no prebuild found for your platform"</h3>
 <p>Lodestone v0 ships prebuilds for <code>darwin-arm64</code>, <code>darwin-x64</code>, <code>linux-x64</code>, <code>linux-arm64</code> (all glibc). Other platforms (musl-libc Alpine, FreeBSD, riscv64) need a build-from-source pass:</p>
 <pre><code class="lang-bash">
@@ -640,7 +640,7 @@ lodestone reindex --from-scratch
 </ul>
 <p>The full troubleshooting matrix is at <a href="../TROUBLESHOOTING.md"><code>../TROUBLESHOOTING.md</code></a>.</p>
 <h2 id="user-7-privacy-posture-in-one-paragraph">7. Privacy posture in one paragraph</h2>
-<p>Default install: zero outbound network calls at runtime. The only opt-in fetch path is <code>lodestone setup-models --allow-download</code>, which requires both an explicit operator flag and the absence of <code>LODESTONE_OFFLINE=1</code>. Set <code>LODESTONE_OFFLINE=1</code> in your shell or your editor's MCP config block to make the privacy guarantee unconditional. The full implementation lives at <a href="../PRIVACY.md"><code>../PRIVACY.md</code></a>, including the build-time grep audit that fails CI on any unexpected URL in shipped <code>dist/</code>.</p>
+<p>Default install: zero outbound network calls at runtime. The reserved opt-in fetch path is <code>lodestone setup-models --allow-download</code>, which requires both an explicit operator flag and the absence of <code>LODESTONE_OFFLINE=1</code>; the public v0.1.x build also exits before network until real pinned hashes are published. Set <code>LODESTONE_OFFLINE=1</code> in your shell or your editor's MCP config block to make the privacy guarantee unconditional. The full implementation lives at <a href="../PRIVACY.md"><code>../PRIVACY.md</code></a>, including the build-time grep audit that fails CI on any unexpected URL in shipped <code>dist/</code>.</p>
 <h2 id="user-8-upgrading">8. Upgrading</h2>
 <pre><code class="lang-bash">
 # Globally installed:
@@ -656,7 +656,7 @@ lodestone doctor
 <p>If the CLI version expects a newer schema than the store has, the doctor prints the recommended action — usually <code>lodestone reindex --from-scratch</code>. The full upgrade path (semver expectations, what changes between v0.x releases, when migrations land) is at <a href="../UPGRADE.md"><code>../UPGRADE.md</code></a>.</p>
 <h2 id="user-9-known-issues-at-v01x">9. Known issues at v0.1.x</h2>
 <ul>
-<li><strong>Transitive CVE in <code>protobufjs</code> via <code>@xenova/transformers</code></strong> — does not affect runtime (the protobuf code is only exercised when loading model files, and Lodestone's bundled weights are pinned + integrity-checked + loaded from inside the package). Tracking the upstream pin bump.</li>
+<li><strong>Production audit status</strong> — <code>pnpm audit --prod</code> is clean as of the v0.1.6 friend-install release prep on 2026-06-08. Registry advisories can change, so rerun the audit as a live check before strict security signoff.</li>
 <li><strong>No migration runner</strong> — by design. Schema bumps within v0.x require <code>lodestone reindex --from-scratch</code>. v0.5 ships the runner alongside the embedder-dim swap option.</li>
 <li><strong>A handful of cosmetic items from the §20 e2e pass</strong> — parser edge resolution edge cases, <code>LODESTONE_DB_PATH</code> env-var alignment, init/reindex command split. Tracked in §22 backlog; not happy-path.</li>
 </ul>
@@ -676,8 +676,8 @@ lodestone doctor
 <p>Lodestone is a project-local tool. Embeddings, the call graph, cluster names, SKILL cards, feedback events, the SQLite index — everything is written to <code>.lodestone/</code> inside the project on disk. There is no telemetry endpoint. There is no upload step. There is no remote service to call. The MCP server runs locally over stdio and only the operator's editor talks to it.</p>
 <p>The promise is enforced three ways:</p>
 <ol>
-<li><strong>Bundled embedder weights.</strong> The default <code>nomic-embed-text-v1.5</code> ONNX int8 model (~150 MB) ships inside the npm tarball. Day-1 use makes zero outbound calls.</li>
-<li><strong>A single chokepoint for any opt-in fetch.</strong> The only fetch path is <code>lodestone setup-models --allow-download</code>, gated by both an explicit operator flag <em>and</em> the <code>LODESTONE_OFFLINE</code> env-var check. Either gate vetoes.</li>
+<li><strong>Bundled embedder weights.</strong> The friend installer ships profiled ingest tarballs: <code>lite</code> bundles Snowflake 384d, <code>full</code> bundles Nomic 768d. Day-1 runtime makes zero outbound model calls.</li>
+<li><strong>A single chokepoint for any future opt-in fetch.</strong> The reserved fetch path is <code>lodestone setup-models --allow-download</code>, gated by both an explicit operator flag <em>and</em> the <code>LODESTONE_OFFLINE</code> env-var check. The public v0.1.x build also exits before network until real pinned hashes are published.</li>
 <li><strong>Build-time URL audit.</strong> Every CI build greps the shipped <code>dist/</code> for outbound URLs and fails on anything not on a hand-curated allowlist (<code>network-manifest.json</code>). The privacy claim is enforced at release time, not just at runtime.</li>
 </ol>
 <p>For regulated industries, defense workloads, or any team that cannot upload proprietary source to a vendor: this is the wedge.</p>
@@ -753,9 +753,9 @@ lodestone doctor
 <p>The differentiation is not just "we don't upload" — it's "you get the moat tools (clusters, impact, skill cards) without giving up control of the code." For most teams that is a feature; for regulated teams it is a hard requirement.</p>
 <h2 id="brochure-use-cases">Use cases</h2>
 <h3 id="brochure-friend-customer-onboarding-a-new-agent-to-an-existing-codebase">Friend customer — onboarding a new agent to an existing codebase</h3>
-<p>A friend customer wires Lodestone into Claude Code on their company laptop. Day 1: <code>npx lodestone init</code>, ask the agent "what are the main subsystems of this codebase?", confirm the clusters look right. Day 2-7: skills emerge as the watcher observes the project; <code>skills_for("write a new API handler")</code> starts returning the team's house style. Week 2: agent edits land that match the project's conventions on first shot.</p>
+<p>A friend customer wires Lodestone into Claude Code on their company laptop. Day 1: run the curl installer, ask the agent "what are the main subsystems of this codebase?", confirm the clusters look right. Day 2-7: skills emerge as the watcher observes the project; <code>skills_for("write a new API handler")</code> starts returning the team's house style. Week 2: agent edits land that match the project's conventions on first shot.</p>
 <h3 id="brochure-regulated-team-code-grounding-without-code-egress">Regulated team — code grounding without code egress</h3>
-<p>A defense or finance team runs an MCP-aware editor inside an air-gapped network. Lodestone runs alongside, pulled once from the npm registry on a build host, then carried in. <code>LODESTONE_OFFLINE=1</code> is set in the shell profile. The agent gets the same eight tools as the public OSS user; the network never sees source. Compliance is the build-time URL audit and the consent-gated fetch path.</p>
+<p>A defense or finance team runs an MCP-aware editor inside an air-gapped network. Lodestone runs alongside, pulled once from an approved release host, then carried in. <code>LODESTONE_OFFLINE=1</code> is set in the shell profile. The agent gets the same eight tools as the public OSS user; the network never sees source. Compliance is the build-time URL audit and the reserved future fetch path staying fail-closed unless both consent and release pins exist.</p>
 <h3 id="brochure-solo-engineer-getting-an-agent-to-actually-understand-the-project">Solo engineer — getting an agent to actually understand the project</h3>
 <p>An engineer working on a 30k-symbol monorepo wires Lodestone into Cursor. Now <code>query("rate limiter middleware")</code> lands on the right symbol on the first hop, <code>impact()</code> on a session-token rotator surfaces the four downstream call sites the agent needs to test, and <code>cluster("auth")</code> returns the eleven files that genuinely make up the authentication subsystem — not the eighty files that contain the substring "auth".</p>
 <h3 id="brochure-cmndi-alpha-bundle-inside-a-friend-distribution-stack">CMNDI alpha — bundle inside a friend-distribution stack</h3>
@@ -767,11 +767,11 @@ lodestone doctor
 <li><strong>Five languages in v0.</strong> TypeScript / JavaScript / Python / Go / Rust. Adding a language is one new tree-sitter grammar plus a small extractor; we are doing the next batch on customer demand.</li>
 <li><strong>Friend mode only.</strong> Multi-repo "Pro mode" is wired but exits with a clean "v0.5+ work" message. The companion product (Lodestone Forge — multi-KG, Docker-Compose-orchestrated) is the v1+ work.</li>
 <li><strong>No GPU acceleration.</strong> Apple Silicon CoreML EP is the closest thing today; install <code>onnxruntime-node@latest</code> to pick it up. GPU support is tracked separately, not in v0 scope.</li>
-<li><strong>One transitive CVE in the embedder dep tree.</strong> Documented at <code>docs/KNOWN-ISSUES.md</code>. Does not affect runtime (the protobuf code path is only exercised when loading model files, and the bundled weights are pinned + integrity-checked + loaded from inside the package). Tracking the upstream pin bump.</li>
+<li><strong>Production audit clean at v0.1.6 prep.</strong> <code>pnpm audit --prod</code> is clean as of 2026-06-08 after patched transitive overrides. Registry advisories can change, so strict environments should rerun the audit during intake.</li>
 </ul>
 <h2 id="brochure-how-to-try-it">How to try it</h2>
 <pre><code class="lang-bash">
-npx lodestone init
+curl -sSfL https://lodestone.cmndi.ai/install | bash
 </code></pre>
 <p>That is the install. Restart your MCP-aware editor in the same directory. Ask the agent: <em>what are the main subsystems of this codebase?</em></p>
 <p>For the synthetic-demo-repo walkthrough (so you can feel the tool before pointing it at a real project), the e2e harness ships a multi-language fixture with deterministic clusters and seed skills — see <a href="./03-end-user-guide.md"><code>./03-end-user-guide.md</code></a> §5.</p>
@@ -786,8 +786,8 @@ npx lodestone init
 <tr>
 <td><strong>Lodestone</strong> (this)</td>
 <td>C</td>
-<td>v0.1.2 shipped</td>
-<td>Single-KG per-project npm. Privacy-first. The local sidecar.</td>
+<td>v0.1.6 friend install</td>
+<td>Single-KG per-project package set. Privacy-first. The local sidecar.</td>
 </tr>
 <tr>
 <td><strong>Lodestone Forge</strong></td>
@@ -823,16 +823,16 @@ npx lodestone init
 <li><strong>5</strong> languages parsed (TypeScript, JavaScript, Python, Go, Rust)</li>
 <li><strong>4</strong> workspace packages (<code>shared</code>, <code>cli</code>, <code>ingest</code>, <code>mcp-server</code>)</li>
 <li><strong>106</strong> test files in the workspace + e2e harness</li>
-<li><strong>~150 MB</strong> bundled embedder weights (default profile)</li>
-<li><strong>0</strong> runtime network calls on default install</li>
+<li><strong>~16 MB / ~89 MB</strong> release tarball download for <code>lite</code> / <code>full</code></li>
+<li><strong>0</strong> runtime model network calls on packaged friend installs</li>
 <li><strong>Apache 2.0</strong>, every direct dep</li>
-<li><strong>v0.1.2</strong> at HEAD <code>f82f02e</code></li>
+<li><strong>v0.1.6</strong> friend-install package set</li>
 </ul>
 <h2 id="talking-faq">FAQ</h2>
 <h3 id="talking-can-i-self-host">Can I self-host?</h3>
 <p>Lodestone runs entirely on the operator's machine — there is nothing to "host." If you mean "run inside an air-gapped network": yes. Pull the npm package once on a build host, carry it in, set <code>LODESTONE_OFFLINE=1</code> in the shell profile. The bundled weights make day-1 use work without any outbound calls.</p>
 <h3 id="talking-what-about-model-updates">What about model updates?</h3>
-<p>Default ship: bundled <code>nomic-embed-text-v1.5</code> ONNX int8. Upgrades come with the npm package — <code>npm install -g @lodestone/cli@latest</code>. The opt-in <code>lodestone setup-models --allow-download</code> path can fetch larger or alternate model weights but requires both an explicit operator flag and absence of <code>LODESTONE_OFFLINE=1</code>. Per-project model cache, never a shared global cache.</p>
+<p>Friend ship: <code>lite</code> bundles Snowflake 384d and <code>full</code> bundles Nomic 768d. The reserved <code>lodestone setup-models --allow-download</code> path is for future larger or alternate model weights, but the public v0.1.x build exits before network until real pinned hashes are published. Per-project model cache, never a shared global cache.</p>
 <h3 id="talking-how-do-you-keep-secrets">How do you keep secrets?</h3>
 <p>Lodestone has no secrets to keep. There is no API key. There is no account. There is no service to authenticate to. The whole tool runs as a Node process that reads your repo and writes to <code>.lodestone/</code> next to it. The MCP server runs over local stdio — only your editor talks to it.</p>
 <h3 id="talking-whats-the-gpu-footprint">What's the GPU footprint?</h3>
@@ -854,7 +854,7 @@ npx lodestone init
 <h3 id="talking-what-if-my-agent-calls-feedback-without-a-request-id">What if my agent calls <code>feedback</code> without a <code>request_id</code>?</h3>
 <p>The tool rejects the call. The <code>request_id</code> is how Lodestone correlates the signal to the call it should learn from; without it the event would be uncorrelated noise. The error response is structured so the agent can self-correct on the next attempt.</p>
 <h3 id="talking-what-about-transitive-cves-in-the-dep-tree">What about transitive CVEs in the dep tree?</h3>
-<p>One known transitive CVE in <code>protobufjs</code> via <code>@xenova/transformers &gt; onnxruntime-web &gt; onnx-proto &gt; protobufjs</code>. <strong>Does not affect runtime</strong> — the protobuf code path is only exercised when loading model files, and Lodestone's bundled weights are pinned + integrity-checked + loaded from inside the package itself. Tracking the upstream pin bump; will publish a Lodestone patch release once the chain is patched. The full writeup is at <code>docs/KNOWN-ISSUES.md</code>.</p>
+<p>As of the v0.1.6 friend-install release prep on 2026-06-08, <code>pnpm audit --prod</code> is clean after patched transitive overrides. Treat audit status as live: rerun <code>pnpm audit --prod</code> during strict intake because registry advisories can change after release.</p>
 <h3 id="talking-how-do-i-undo-the-install">How do I undo the install?</h3>
 <p><code>lodestone uninstall</code>. Uses an install manifest (schema v2, recorded at install time) so the uninstaller knows exactly which files and directories <code>init</code> created. Refuses to operate on a manifest from a future schema version (better to fail loudly than to delete the wrong files). Partial-failure paths preserve the manifest so you can finish manually.</p>
 <h2 id="talking-what-we-do-claim">What we DO claim</h2>
@@ -865,7 +865,7 @@ npx lodestone init
 <li>Apache 2.0, every direct dep Apache 2.0 or MIT, every maintainer org vetted.</li>
 <li>Five languages parsed in v0; cluster names emerge from Louvain communities; skill cards mature with index age.</li>
 <li>Friend mode is the v0 ship; Pro mode is wired but deferred.</li>
-<li>One transitive CVE in the dep tree, documented, tracked, no runtime impact.</li>
+<li>Production dependency audit clean at v0.1.6 release prep; rerun <code>pnpm audit --prod</code> for live intake.</li>
 <li>The synthetic demo repo at <code>e2e/synthetic-demo-repo/</code> is the contract — its <code>FIXTURE_MANIFEST.json</code> is what e2e asserts against, and a Lodestone change that breaks one of its predictions fails CI.</li>
 </ul>
 <h2 id="talking-what-we-dont-claim">What we DON'T claim</h2>
@@ -881,7 +881,7 @@ npx lodestone init
 </ul>
 <h2 id="talking-demo-flow-5-minutes">Demo flow (5 minutes)</h2>
 <ol>
-<li><code>npx lodestone init</code> in a real-ish project. Show the output (file count, symbol count, edge count, ingest time).</li>
+<li><code>curl -sSfL https://lodestone.cmndi.ai/install | bash</code> in a real-ish project. Show the output (file count, symbol count, edge count, ingest time).</li>
 <li>Show the <code>.mcp.json</code> snippet that init wrote.</li>
 <li>Open Claude Code. Ask: <em>what are the main subsystems of this codebase?</em> — agent calls <code>cluster()</code>, reads back communities.</li>
 <li>Ask: <em>find the rate-limit middleware</em> — agent calls <code>query()</code>, lands on the right symbol.</li>
@@ -892,7 +892,7 @@ npx lodestone init
 <p>End on the privacy point: nothing in the demo touched the network after <code>npm install</code>.</p></section>
     <div class="footer">
       Generated by <code>scripts/docs/cmndi-docs-build.py</code> per CMNDI-DOCS-MANDATE-001.<br/>
-      Source markdown: <code>docs/cmndi/0[1-6]-*.md</code> &nbsp;·&nbsp; Build: <code>e5bfed1</code> on <code>main</code>.
+      Source markdown: <code>docs/cmndi/0[1-6]-*.md</code> &nbsp;·&nbsp; Build: <code>1e4b92d</code> on <code>fix/symbol-embeddings-dedup</code>.
     </div>
   </main>
 </div>

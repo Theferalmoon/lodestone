@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Repository README | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a class="active" href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="lodestone">Lodestone</h1>
+<p>A project-local code-aware Knowledge Graph for coding agents.</p>
+<p><strong>Your code never leaves your machine.</strong></p>
+<h2 id="download-only-friend-install">Download-only friend install</h2>
+<p>In your friend's project directory, have them run:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /path/to/their/project</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-b</span> add-lodestone</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<p>This downloads the approved Lodestone release tarballs, verifies
+their SHA-256 checksums, installs them into <code>./node_modules</code>,
+and runs <code>lodestone init</code> for that project. The embedder
+weights are bundled inside the install, so there is no runtime model
+fetch and Lodestone does not upload your source code. During install,
+npm can still download the normal dependency tree required by the
+Lodestone packages.</p>
+<p>Friends do not need collaborator access to this repository. They can
+download and install Lodestone into their own repo, but they cannot push
+changes to the canonical Lodestone repo unless the operator explicitly
+adds them as GitHub collaborators.</p>
+<p><strong>Profiles.</strong> The default <code>lite</code> profile uses
+the Snowflake 384d embedder; the tarball download is ~16 MB. For
+advanced setups that want the larger Nomic 768d embedder, pass
+<code>LODESTONE_PROFILE=full</code> (~89 MB tarball download):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
+<p><strong>Optional Codex adapter.</strong> If your friend uses Codex
+CLI or the Codex IDE extension, they can ask the installer to also write
+project-local Codex MCP config:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>That adds a <code>lodestone-mcp</code> entry to
+<code>.codex/config.toml</code> in the target project. Codex only loads
+project <code>.codex/config.toml</code> after the project is trusted.
+Approve the Codex trust prompt for this repo, then start a new Codex
+session if Codex was already open. To verify the adapter later:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
+<p><strong>Disk footprint.</strong> The numbers above are what you
+actually download from the GitHub release. After
+<code>npm install</code>, the full <code>./node_modules</code> tree —
+Lodestone plus its transitive npm dependencies (tree-sitter parsers,
+<code>better-sqlite3</code>, <code>onnxruntime-node</code>, ~240 others)
+— is **~1 GB** in either profile. The bulk on disk is the npm dep tree,
+not Lodestone itself. Plan accordingly on metered/slow connections.</p>
+<p><strong>Pinning.</strong> The friend installer defaults to the
+approved <code>v0.1.6</code> package set. To make that explicit:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_VERSION</span><span class="op">=</span>v0.1.6 <span class="fu">bash</span></span></code></pre></div>
+<p><strong>Access.</strong> The <code>Theferalmoon/lodestone</code> repo
+is currently public, so no GitHub auth is required to fetch this
+installer or the release tarballs. The
+<code>lodestone.cmndi.ai/install</code> URL is a brand URL for the
+installer and should point at an immutable installer ref, not a mutable
+development branch.</p>
+<p>See <a
+href="./docs/FRIEND-INSTALL.md"><code>docs/FRIEND-INSTALL.md</code></a>
+for the plain-English friend onboarding guide and <a
+href="./docs/README.md"><code>docs/README.md</code></a> for the
+technical guide. (Note: the npm <code>npx lodestone init</code> path is
+future work; today's working install path is the curl one-liner
+above.)</p>
+<p>Friend-facing brochure, installation, and technical documents live in
+<a href="./docs/friend/"><code>docs/friend/</code></a>. HTML copies are
+generated into <a href="./docs/site/"><code>docs/site/</code></a> and
+published at <a
+href="https://lodestone.cmndi.ai/docs/">https://lodestone.cmndi.ai/docs/</a>.
+Package builds generated from this docs refresh include installed copies
+under <code>./node_modules/@lodestone/cli/docs/</code> so friends can
+read the docs from their own project after installation.</p>
+<h2 id="developer-bootstrap-clean-machine">Developer bootstrap (clean
+machine)</h2>
+<p>Requires Node 20+ and a network connection for
+<code>pnpm install</code>. From a clean checkout:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable corepack + activate the pinned pnpm version</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">corepack</span> enable</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">corepack</span> prepare pnpm@10.33.0 <span class="at">--activate</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install workspace deps + run tests</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> install</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> test</span></code></pre></div>
+<p><code>pnpm test</code> is currently network-dependent (it runs
+<code>pnpm audit</code> against the npm registry). Once package code
+lands in §02+, <code>pnpm -r test</code> runs the per-package suites
+which are hermetic.</p>
+<h2
+id="maintainer-only-bundling-embedder-weights-before-publish">Maintainer-only:
+bundling embedder weights before publish</h2>
+<p>Lodestone ships its embedders (Nomic 768d for the <code>full</code>
+profile, Snowflake 384d for the <code>lite</code> profile)
+<strong>inside the per-profile <code>@lodestone/ingest</code>
+tarball</strong> so that friends never make a runtime network call to
+Hugging Face. This is what makes the "your code never leaves your
+machine" promise defensible. Each release ships two ingest tarballs
+(<code>-lite</code> and <code>-full</code>);
+<code>scripts/pack-profile.sh</code> strips the OTHER profile's
+<code>dist/models/</code> subdir from the package before
+<code>npm pack</code> so friends only download the weights they actually
+use.</p>
+<p>Both embedder dirs live under <code>packages/ingest/models/</code> in
+the workspace (gitignored, ~185 MB combined). They are copied into
+<code>packages/ingest/dist/models/</code> at build time, then split
+per-profile at pack time. Maintainers populate them once before
+publishing:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Download both bundled embedders from Hugging Face into packages/ingest/models/</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    Idempotent — skips files whose sha256 matches packages/ingest/models-manifest.json.</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">--filter</span> @lodestone/ingest bundle-models</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Build everything. The ingest build step copies models/ -&gt; dist/models/.</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">-r</span> build</span></code></pre></div>
+<p>Friends never run <code>bundle-models</code>. The script
+intentionally bypasses the runtime offline guard
+(<code>assertNetworkAllowed()</code> in
+<code>@lodestone/shared/net/fetch</code>) because it is a
+build-pipeline-only step that runs on the maintainer's workstation, not
+in the friend's installed copy. See the header comment in
+<code>packages/ingest/scripts/bundle-models.mjs</code> for the
+build-time-network-exception rationale.</p>
+<p>To rebuild the friend documentation pack:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> docs:friend</span></code></pre></div>
+<p>That command generates Word documents, HTML docs, and package-local
+docs from the same source Markdown.</p>
+<p>To bump a pinned model revision:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit MODELS[].hfRevision in scripts/bundle-models.mjs, then:</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">--filter</span> @lodestone/ingest bundle-models <span class="at">--</span> <span class="at">--update-manifest</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Review the updated models-manifest.json diff before committing.</span></span></code></pre></div>
+<h2 id="license">License</h2>
+<p>Apache-2.0. See <a href="./LICENSE"><code>LICENSE</code></a>, <a
+href="./NOTICE"><code>NOTICE</code></a>, and <a
+href="./LICENSE-AUTHORIZATION.md"><code>LICENSE-AUTHORIZATION.md</code></a>.</p>
+
+      </article>
+      <footer>Generated 2026-06-09 02:58 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

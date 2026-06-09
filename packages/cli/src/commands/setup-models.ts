@@ -368,6 +368,40 @@ export async function runSetupModels(
   const fetchImpl = deps.fetchImpl ?? (globalThis.fetch as unknown as FetchLike);
   const cwd = deps.cwd ?? process.cwd();
 
+  // Resolve the target list: caller-specified, else every id in MANIFEST.
+  const wantedIds: string[] =
+    opts.embedders.length > 0 ? [...opts.embedders] : manifest.map((m) => m.id);
+
+  // Validate every requested id is in the manifest before we touch the
+  // network; clean error surface > partial work.
+  const known = new Set(manifest.map((m) => m.id));
+  const unknown = wantedIds.filter((id) => !known.has(id));
+  if (unknown.length > 0) {
+    output.error(`Unknown embedder id(s): ${unknown.join(", ")}`);
+    output.error(`Known ids: ${manifest.map((m) => m.id).join(", ")}`);
+    return 2;
+  }
+
+  // The public v0.1.x package keeps the live fetch path fail-closed until the
+  // built-in manifest carries real release pins. Unit tests and future release
+  // builds can inject a non-placeholder manifest through deps.manifest.
+  if (deps.manifest === undefined) {
+    const selectedPins = manifest.filter((pin) => wantedIds.includes(pin.id));
+    const hasPlaceholderPins = selectedPins.some((pin) =>
+      pin.files.some((file) => file.sha256 === PLACEHOLDER_SHA256)
+    );
+    if (hasPlaceholderPins) {
+      output.error("setup-models is not enabled in this public v0.1.x build.");
+      output.error(
+        "The lite and full friend profiles already bundle their model weights."
+      );
+      output.error(
+        "Use the packaged installer profile, or upgrade to a future release with published setup-models pins."
+      );
+      return 2;
+    }
+  }
+
   // Gate 1: operator explicit opt-in. Either env var OR the per-invocation
   // flag. Defense in depth — we want both a "set it once for the shell" path
   // and a "this single invocation only" path.
@@ -384,20 +418,6 @@ export async function runSetupModels(
     output.error(
       "(Lodestone's privacy promise is opt-in network — see docs/PRIVACY.md.)"
     );
-    return 2;
-  }
-
-  // Resolve the target list: caller-specified, else every id in MANIFEST.
-  const wantedIds: string[] =
-    opts.embedders.length > 0 ? [...opts.embedders] : manifest.map((m) => m.id);
-
-  // Validate every requested id is in the manifest before we touch the
-  // network; clean error surface > partial work.
-  const known = new Set(manifest.map((m) => m.id));
-  const unknown = wantedIds.filter((id) => !known.has(id));
-  if (unknown.length > 0) {
-    output.error(`Unknown embedder id(s): ${unknown.join(", ")}`);
-    output.error(`Known ids: ${manifest.map((m) => m.id).join(", ")}`);
     return 2;
   }
 

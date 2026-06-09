@@ -18,6 +18,7 @@ import { readInstallManifest } from "../uninstall/manifest-reader.js";
 import { removeMcpEntry } from "../uninstall/mcp-config-uninstall.js";
 import { removeClaudeMdBlock } from "../uninstall/claude-md-uninstall.js";
 import { removeGitignoreLine } from "../uninstall/gitignore-uninstall.js";
+import { removeCodexConfigEntry } from "../uninstall/codex-config-uninstall.js";
 import { removeLodestoneTree } from "../uninstall/index-removal.js";
 import type { InstallManifest } from "./init.js";
 
@@ -110,6 +111,13 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
   reportGitignore(gitRes, opts.dryRun);
   if (gitRes.action === "unreadable") exitCode = 1;
 
+  const codexRes = removeCodexConfigEntry(cwd, manifest?.codex_config, {
+    dryRun: opts.dryRun,
+    expectedRuntimeCommand: expectedRuntimeCommandFor(cwd),
+  });
+  reportCodex(codexRes, opts.dryRun);
+  if (codexRes.action === "unparseable") exitCode = 1;
+
   // Codex r2 §19 YELLOW: when we have a manifest, scope MCP removal to
   // entries whose `command` matches THIS install's runtime path. Without
   // this, a pending-state manifest (mcp_json still holds the staging
@@ -169,6 +177,8 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
     claudeRes.action !== "removed-file" &&
     gitRes.action !== "removed-line" &&
     gitRes.action !== "removed-file" &&
+    codexRes.action !== "removed" &&
+    codexRes.action !== "removed-file" &&
     mcpRes.action !== "removed" &&
     treeRes.action !== "removed";
 
@@ -242,6 +252,30 @@ function reportGitignore(
       break;
     case "noop":
       output.info(`  .gitignore:       nothing to do`);
+      break;
+  }
+}
+
+function reportCodex(
+  res: ReturnType<typeof removeCodexConfigEntry>,
+  dryRun: boolean
+): void {
+  const verb = dryRun ? "would " : "";
+  switch (res.action) {
+    case "removed":
+      output.info(`  .codex/config:   ${verb}remove lodestone-mcp entry (${res.path})`);
+      break;
+    case "removed-file":
+      output.info(`  .codex/config:   ${verb}delete file (${res.path})`);
+      break;
+    case "respected-provenance":
+      output.info(`  .codex/config:   skipped (entry belongs to another install)`);
+      break;
+    case "unparseable":
+      output.error(`  .codex/config:   unparseable — ${res.detail}`);
+      break;
+    case "noop":
+      output.info(`  .codex/config:   nothing to do`);
       break;
   }
 }

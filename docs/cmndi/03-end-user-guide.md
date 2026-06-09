@@ -16,7 +16,7 @@ That command does the magic-moment work:
 
 1. Detects your project's languages (TypeScript / JavaScript / Python / Go / Rust).
 2. Writes `.lodestone/lodestone.toml` with sensible defaults.
-3. Scaffolds the SQLite + sqlite-vec store under `.lodestone/store/`.
+3. Scaffolds the SQLite + sqlite-vec database at `.lodestone/lodestone.sqlite`.
 4. Runs the first ingest pass — parses every source file, embeds each symbol locally with the bundled ONNX model (zero outbound calls on the default profile), builds the call graph, computes PageRank, runs Louvain clustering, emits seed SKILL cards.
 5. Writes a `.mcp.json` snippet your editor's coding agent can pick up.
 
@@ -69,10 +69,10 @@ Anything that speaks MCP will work. The `.mcp.json` snippet uses an absolute pat
 | `lodestone init` | First-run install for a project. Idempotent — safe to re-run. |
 | `lodestone status` | Index health: file count, symbol count, last ingest, watcher state, ready-gate status. |
 | `lodestone reindex` | Re-run the affected slice. Safe at any time. |
-| `lodestone reindex --from-scratch` | Nuke `.lodestone/store/` and rebuild. ~1 minute on a 10k-symbol repo. Use after a schema bump or if `.lodestone/` is corrupt. |
+| `lodestone reindex --from-scratch` | Rebuild `.lodestone/lodestone.sqlite`. ~1 minute on a 10k-symbol repo. Use after a schema bump or if `.lodestone/` is corrupt. |
 | `lodestone doctor` | Probe the environment — Node version, git presence, RAM, proxy state, CoreML availability, WSL2 detection, offline-mode status, schema-version agreement between CLI and on-disk store. |
 | `lodestone seed-skills` | Re-run the deterministic seed-skill scanners. Useful after adding new error classes or framework imports. |
-| `lodestone setup-models --allow-download` | Opt-in fetch path. Requires both the flag and absence of `LODESTONE_OFFLINE=1`. |
+| `lodestone setup-models --allow-download` | Reserved future opt-in fetch path. Public v0.1.x exits before network until real pinned hashes are published. |
 | `lodestone upgrade` | Help text pointing at `npm install -g @lodestone/cli@latest`. |
 | `lodestone uninstall` | Inverse of `init`. Removes only what `init` created (per the recorded install manifest). Refuses to operate on a manifest from a future schema version. |
 | `lodestone --version` | Prints the version + commit-hash one-liner. |
@@ -83,19 +83,18 @@ Anything that speaks MCP will work. The `.mcp.json` snippet uses an absolute pat
 <your-repo>/.lodestone/
 ├── lodestone.toml          # Project config. Hand-editable.
 ├── ready.json              # Cross-store ready-gate marker. MCP tools check this before responding.
-├── store/
-│   └── lodestone.db        # SQLite + sqlite-vec. Symbols, edges, clusters, skills, embeddings, feedback.
+├── lodestone.sqlite        # SQLite + sqlite-vec. Symbols, edges, clusters, skills, embeddings, feedback.
 ├── runtime/
 │   └── ...                 # Watcher state, MCP server transport bookkeeping.
 ├── skills/
 │   └── *.md                # Emitted SKILL cards. Hand-readable. Agents read via skills_for().
-├── models/                 # Per-project model cache; populated only by `setup-models --allow-download`.
+├── models/                 # Per-project model cache; future setup-models path only.
 └── install-manifest.json   # Records what `init` created, for `lodestone uninstall` to undo.
 ```
 
 Treat `.lodestone/` as a regenerable cache. v0 has no migration runner; if anything gets corrupt, `lodestone reindex --from-scratch` rebuilds in under a minute on most projects.
 
-The `lodestone.toml` and any hand-edited skill cards are preserved across a from-scratch reindex; `.lodestone/store/` is rebuilt fresh.
+The `lodestone.toml` and any hand-edited skill cards are preserved across a from-scratch reindex; `.lodestone/lodestone.sqlite` is rebuilt fresh.
 
 ## 5. Try the synthetic demo first
 
@@ -156,7 +155,7 @@ Restart your editor. CoreML routes ONNX inference through Apple's Neural Engine.
 
 ### Corporate proxy / TLS interception breaks fetch
 
-Stick to the bundled-model default profile (`[embedder].profile = "default"`) — it does not fetch. If you need the `tiny` fallback or `setup-models --allow-download`, set `HTTPS_PROXY` and `NODE_EXTRA_CA_CERTS` per your corporate setup. For full air-gap, `LODESTONE_OFFLINE=1` blocks all fetches loudly.
+Stick to the bundled-model default profile (`[embedder].profile = "default"`) — it does not fetch. The public v0.1.x setup-models path exits before network until real pinned hashes are published. For full air-gap, `LODESTONE_OFFLINE=1` blocks all future fetch paths loudly.
 
 ### "no prebuild found for your platform"
 
@@ -195,7 +194,7 @@ The full troubleshooting matrix is at [`../TROUBLESHOOTING.md`](../TROUBLESHOOTI
 
 ## 7. Privacy posture in one paragraph
 
-Default install: zero outbound network calls at runtime. The only opt-in fetch path is `lodestone setup-models --allow-download`, which requires both an explicit operator flag and the absence of `LODESTONE_OFFLINE=1`. Set `LODESTONE_OFFLINE=1` in your shell or your editor's MCP config block to make the privacy guarantee unconditional. The full implementation lives at [`../PRIVACY.md`](../PRIVACY.md), including the build-time grep audit that fails CI on any unexpected URL in shipped `dist/`.
+Default install: zero outbound network calls at runtime. The reserved opt-in fetch path is `lodestone setup-models --allow-download`, which requires both an explicit operator flag and the absence of `LODESTONE_OFFLINE=1`; the public v0.1.x build also exits before network until real pinned hashes are published. Set `LODESTONE_OFFLINE=1` in your shell or your editor's MCP config block to make the privacy guarantee unconditional. The full implementation lives at [`../PRIVACY.md`](../PRIVACY.md), including the build-time grep audit that fails CI on any unexpected URL in shipped `dist/`.
 
 ## 8. Upgrading
 
@@ -217,7 +216,7 @@ If the CLI version expects a newer schema than the store has, the doctor prints 
 
 ## 9. Known issues at v0.1.x
 
-- **Transitive CVE in `protobufjs` via `@xenova/transformers`** — does not affect runtime (the protobuf code is only exercised when loading model files, and Lodestone's bundled weights are pinned + integrity-checked + loaded from inside the package). Tracking the upstream pin bump.
+- **Production audit status** — `pnpm audit --prod` is clean as of the v0.1.6 friend-install release prep on 2026-06-08. Registry advisories can change, so rerun the audit as a live check before strict security signoff.
 - **No migration runner** — by design. Schema bumps within v0.x require `lodestone reindex --from-scratch`. v0.5 ships the runner alongside the embedder-dim swap option.
 - **A handful of cosmetic items from the §20 e2e pass** — parser edge resolution edge cases, `LODESTONE_DB_PATH` env-var alignment, init/reindex command split. Tracked in §22 backlog; not happy-path.
 

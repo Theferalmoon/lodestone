@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Installation Guide | Lodestone Docs</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --ink: #17202a;
+      --muted: #65758b;
+      --panel: #ffffff;
+      --border: #d8dee8;
+      --nav: #101722;
+      --nav-ink: #e8eef7;
+      --accent: #2c6e49;
+      --accent-2: #0f4c81;
+      --code: #edf2f7;
+      --shadow: 0 14px 36px rgba(16, 23, 34, 0.10);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--nav);
+      color: var(--nav-ink);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      font-size: 18px;
+    }
+    .tagline {
+      color: #a9b6c7;
+      font-size: 12px;
+      margin-bottom: 22px;
+    }
+    .nav-group {
+      color: #8ea0b7;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 7px;
+    }
+    nav a {
+      display: block;
+      color: var(--nav-ink);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    nav a:hover, nav a.active {
+      background: rgba(255, 255, 255, 0.10);
+    }
+    main {
+      padding: 38px;
+    }
+    article {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 42px 52px;
+    }
+    h1 {
+      font-size: 36px;
+      line-height: 1.1;
+      margin: 0 0 12px;
+      color: #10213a;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--accent-2);
+    }
+    h3 {
+      font-size: 17px;
+      margin-top: 24px;
+      color: var(--accent);
+    }
+    p, li {
+      font-size: 15px;
+    }
+    a {
+      color: var(--accent-2);
+    }
+    code {
+      background: var(--code);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+      text-align: left;
+    }
+    blockquote {
+      border-left: 4px solid var(--accent);
+      margin-left: 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .doc-home {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 22px;
+    }
+    .doc-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+    .doc-card a {
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer {
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    @media (max-width: 860px) {
+      .layout { display: block; }
+      nav {
+        height: auto;
+        position: relative;
+      }
+      main { padding: 18px; }
+      article { padding: 26px 20px; }
+      h1 { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <div class="brand">Lodestone</div>
+      <div class="tagline">Local code intelligence for AI coding agents</div>
+      <a href="./index.html">Docs Home</a>
+      <div class="nav-group">Friend Docs</div>
+<a href="./feature-brochure.html">Feature Brochure</a>
+<a class="active" href="./installation-guide.html">Installation Guide</a>
+<a href="./technical-guide.html">Technical Guide</a>
+<div class="nav-group">Core Docs</div>
+<a href="./readme.html">Repository README</a>
+<a href="./docs-readme.html">Technical Docs Overview</a>
+<a href="./friend-install.html">Friend Install Quickstart</a>
+<div class="nav-group">Technical Reference</div>
+<a href="./architecture.html">Architecture</a>
+<a href="./config.html">Configuration</a>
+<a href="./mcp-tools.html">MCP Tools</a>
+<a href="./privacy.html">Privacy</a>
+<a href="./supply-chain.html">Supply Chain</a>
+<a href="./troubleshooting.html">Troubleshooting</a>
+<a href="./upgrade.html">Upgrade</a>
+<a href="./demo-repo.html">Demo Repository</a>
+<a href="./known-issues.html">Known Issues</a>
+    </nav>
+    <main>
+      <article>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="lodestone-installation-guide">Lodestone Installation Guide</h1>
+<h2 id="plain-english-friend-install-instructions">Plain-English friend
+install instructions</h2>
+<p><strong>Prepared by:</strong> Cybersecurity Management &amp; Network
+Defense, Inc. <strong>Document type:</strong> Installation guide
+<strong>Version:</strong> v0.1.6 friend-install documentation
+<strong>Date:</strong> June 8, 2026</p>
+<h2 id="what-you-are-installing">What You Are Installing</h2>
+<p>Lodestone is a local helper for AI coding agents. It reads your
+project, builds a local code map, and lets your coding agent ask better
+questions about the project.</p>
+<p>It installs into your own project folder. It does not give you
+permission to change the official Lodestone source repository.</p>
+<h2 id="before-you-start">Before You Start</h2>
+<p>You need:</p>
+<ul>
+<li>A project or repository where you want to use Lodestone.</li>
+<li>A terminal opened in that project folder.</li>
+<li>Node.js 20 or newer.</li>
+<li>npm.</li>
+<li>curl.</li>
+<li>Internet access during installation.</li>
+<li>An MCP-aware coding agent, such as Claude Code or another
+editor/agent that reads <code>.mcp.json</code>.</li>
+</ul>
+<p>You do not need:</p>
+<ul>
+<li>Write access to the official Lodestone repository.</li>
+<li>A Lodestone account.</li>
+<li>A cloud index.</li>
+<li>A GPU.</li>
+</ul>
+<p>If you use Codex CLI or the Codex IDE extension, you can add the
+Codex adapter during install. Codex will still ask you to trust the
+project before it loads project-local config.</p>
+<h2 id="safety-step-use-a-new-branch">Safety Step: Use a New Branch</h2>
+<p>Before installing any tool into a project, use a new branch. This
+makes it easy to see what changed and undo the install if you do not
+want to keep it.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /path/to/your/project</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-b</span> add-lodestone</span></code></pre></div>
+<p>If your project does not use Git, you can still install Lodestone,
+but using Git is strongly recommended.</p>
+<h2 id="option-1-lite-install">Option 1: Lite Install</h2>
+<p>This is the recommended first install.</p>
+<p>Use this if:</p>
+<ul>
+<li>You are trying Lodestone for the first time.</li>
+<li>You are on a laptop.</li>
+<li>You have limited bandwidth.</li>
+<li>You want the smallest Lodestone download.</li>
+</ul>
+<p>Run this from your project folder:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<p>What this downloads:</p>
+<ul>
+<li>The approved Lodestone v0.1.6 package set.</li>
+<li>The <code>lite</code> ingest package with the Snowflake
+384-dimensional embedder.</li>
+<li>About 16 MB of Lodestone release tarballs.</li>
+</ul>
+<p>Important disk note:</p>
+<p>After npm installs all normal Node dependencies, the full
+<code>node_modules</code> folder can be about 1 GB in either profile.
+That is mostly normal dependency size, not the Lodestone model
+itself.</p>
+<h2 id="option-2-full-install">Option 2: Full Install</h2>
+<p>Use this if:</p>
+<ul>
+<li>You want the larger embedder.</li>
+<li>You have a stronger machine.</li>
+<li>You have enough bandwidth and disk space.</li>
+<li>A CMNDI operator told you to use the full profile.</li>
+</ul>
+<p>Run this from your project folder:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
+<p>What this downloads:</p>
+<ul>
+<li>The approved Lodestone v0.1.6 package set.</li>
+<li>The <code>full</code> ingest package with the Nomic 768-dimensional
+embedder.</li>
+<li>About 89 MB of Lodestone release tarballs.</li>
+</ul>
+<p>The full profile is not required for a successful first test. If you
+are not sure which one to choose, use <code>lite</code>.</p>
+<h2 id="optional-codex-adapter">Optional: Codex Adapter</h2>
+<p>Use this if your coding agent is Codex CLI or the Codex IDE
+extension.</p>
+<p>Run the installer with the Codex adapter:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>This still uses the default <code>lite</code> profile. For full plus
+Codex:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>What this adds:</p>
+<ul>
+<li><code>.codex/config.toml</code></li>
+<li>a <code>lodestone-mcp</code> MCP server entry for this project</li>
+</ul>
+<p>After install, approve the Codex trust prompt for this repo. If Codex
+was already open, start a new Codex session.</p>
+<p>To add Codex later after a normal install:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> init <span class="at">--client</span> codex <span class="at">--no-reindex</span></span></code></pre></div>
+<p>To verify Codex setup:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
+<h2 id="what-the-installer-does">What the Installer Does</h2>
+<p>The installer:</p>
+<ol type="1">
+<li>Downloads the approved Lodestone release files from GitHub.</li>
+<li>Verifies each file with a SHA-256 checksum.</li>
+<li>Installs Lodestone into your project's <code>node_modules</code>
+folder.</li>
+<li>Runs <code>lodestone init</code> in your project.</li>
+<li>Writes <code>.mcp.json</code> so your coding agent can find the
+Lodestone MCP server.</li>
+<li>Optionally writes <code>.codex/config.toml</code> when
+<code>LODESTONE_CLIENT=codex</code> is set.</li>
+<li>Creates <code>.lodestone/</code> for the local index, cache, and
+manifest.</li>
+<li>Runs the first indexing pass.</li>
+</ol>
+<h2 id="what-files-are-created">What Files Are Created</h2>
+<p>Typical new or changed files:</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it is</th>
+<th>Commit it?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.mcp.json</code></td>
+<td>Lets your MCP-aware agent start Lodestone.</td>
+<td>Usually yes, after reviewing.</td>
+</tr>
+<tr>
+<td><code>.codex/config.toml</code></td>
+<td>Optional Codex project MCP config. Created only for Codex
+setup.</td>
+<td>Usually yes, after reviewing.</td>
+</tr>
+<tr>
+<td><code>.gitignore</code></td>
+<td>Adds <code>.lodestone/</code> so local index data is not
+committed.</td>
+<td>Usually yes.</td>
+</tr>
+<tr>
+<td><code>.lodestone/</code></td>
+<td>Local index, cache, manifest, runtime files.</td>
+<td>No.</td>
+</tr>
+<tr>
+<td><code>node_modules/</code></td>
+<td>npm dependencies installed into the project.</td>
+<td>No.</td>
+</tr>
+</tbody>
+</table>
+<p>Lodestone tries to preserve your existing files. If
+<code>.mcp.json</code>, <code>.gitignore</code>, or
+<code>CLAUDE.md</code> already exists, Lodestone updates them
+conservatively.</p>
+<h2 id="after-install">After Install</h2>
+<p>Open your coding agent in the same project folder and ask:</p>
+<pre class="text"><code>what are the main subsystems of this codebase?</code></pre>
+<p>Good follow-up questions:</p>
+<pre class="text"><code>where should I change the login flow?</code></pre>
+<pre class="text"><code>what depends on packages/api/src/auth.ts?</code></pre>
+<pre class="text"><code>what changed recently on this branch?</code></pre>
+<pre class="text"><code>what project-specific patterns should I follow before editing tests?</code></pre>
+<h2 id="where-to-find-the-documentation">Where to Find the
+Documentation</h2>
+<p>Online HTML documentation:</p>
+<pre class="text"><code>https://lodestone.cmndi.ai/docs/</code></pre>
+<p>If your installed package set includes docs, local documentation is
+here:</p>
+<pre class="text"><code>./node_modules/@lodestone/cli/docs/</code></pre>
+<p>In the Lodestone source repository, documentation is here:</p>
+<pre class="text"><code>docs/friend/
+docs/site/
+docs/README.md</code></pre>
+<h2 id="how-to-confirm-it-worked">How to Confirm It Worked</h2>
+<p>From your project folder:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> status</span></code></pre></div>
+<p>You can also check that these exist:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-f</span> .mcp.json <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;MCP config exists&quot;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-d</span> .lodestone <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;Local Lodestone folder exists&quot;</span></span></code></pre></div>
+<p>Then ask the coding agent the subsystem question above.</p>
+<p>If you use Codex, also run:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
+<h2 id="updating-later">Updating Later</h2>
+<p>Use the same installer command when CMNDI tells you there is an
+approved update:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<p>The public installer is pinned to an approved package set. It is
+intentionally not a moving <code>latest</code> installer.</p>
+<h2 id="removing-lodestone">Removing Lodestone</h2>
+<p>From the same project folder:</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
+<p>Then review the branch diff:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff</span></code></pre></div>
+<p>If you installed on a branch and do not want to keep anything, you
+can delete the branch using your normal Git workflow.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="node-is-required">"node is required"</h3>
+<p>Install Node.js 20 or newer, then run the installer again.</p>
+<h3 id="npm-is-required">"npm is required"</h3>
+<p>Install npm. It normally comes with Node.js.</p>
+<h3 id="invalid-lodestone_profile">"invalid LODESTONE_PROFILE"</h3>
+<p>Only these values are supported:</p>
+<pre class="text"><code>lite
+full</code></pre>
+<h3 id="checksum-mismatch">"checksum mismatch"</h3>
+<p>Stop. Do not force the install. The downloaded file did not match the
+checksum embedded in the installer.</p>
+<h3 id="reindex-failed">"Reindex failed"</h3>
+<p>The install side effects may still be present. Try:</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> reindex</span></code></pre></div>
+<p>If that fails, send the error message to the CMNDI operator who gave
+you the installer.</p>
+<h3 id="my-agent-does-not-see-lodestone">"My agent does not see
+Lodestone"</h3>
+<p>Make sure:</p>
+<ul>
+<li>You opened the agent in the same project folder.</li>
+<li><code>.mcp.json</code> exists in that folder.</li>
+<li>Your agent supports MCP.</li>
+<li>You restarted the agent after install.</li>
+</ul>
+<h2 id="best-first-test">Best First Test</h2>
+<p>The simplest useful test is:</p>
+<ol type="1">
+<li>Install the <code>lite</code> profile.</li>
+<li>Open your coding agent in the project.</li>
+<li>Ask:
+<code>what are the main subsystems of this codebase?</code></li>
+<li>Ask:
+<code>what would be impacted if I changed &lt;file or function&gt;?</code></li>
+<li>Review whether the answer points to real files and
+relationships.</li>
+</ol>
+
+      </article>
+      <footer>Generated 2026-06-09 02:58 UTC from repository Markdown sources.</footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -6,7 +6,7 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 
 **Your code never leaves your machine.** Embeddings, the call graph, cluster names, skill cards, feedback events — everything is written to `.lodestone/` inside your project, locally. There is no telemetry, no upload step, and no remote service to call. See [`PRIVACY.md`](./PRIVACY.md) for the implementation details and the build-time grep audit that enforces it.
 
-> **Note (v0.1.4).** The `npx lodestone init` flow described below is the
+> **Note (v0.1.6).** The `npx lodestone init` flow described below is the
 > v0.5+ npm-publish path and is **not yet wired** — `@lodestone/cli` is not
 > on the npm registry. Today's working install is the curl-bash one-liner
 > from the [top-level README](../README.md#install-one-liner):
@@ -30,7 +30,11 @@ npx lodestone init
 curl -sSfL https://lodestone.cmndi.ai/install | bash
 ```
 
-Either command does the magic-moment work: detects your project's languages, writes `.lodestone/lodestone.toml`, scaffolds the SQLite + sqlite-vec store, downloads zero models on the default profile (the embedder is bundled), runs the first ingest pass, and writes a `.mcp.json` snippet your coding agent can pick up. Then open Claude Code (or Cursor, or any other MCP-aware client) in the same directory and ask:
+Either command does the magic-moment work: detects your project's languages, writes `.lodestone/lodestone.toml`, scaffolds the SQLite + sqlite-vec store, downloads zero models on the default profile (the embedder is bundled), runs the first ingest pass, and writes a `.mcp.json` snippet your coding agent can pick up.
+
+If you use Codex, add `LODESTONE_CLIENT=codex` to the installer command or run `lodestone init --client codex --no-reindex` after install. This writes a project-local `.codex/config.toml` MCP entry. Codex loads that file only after the project is trusted; approve the trust prompt, then start a new Codex session if Codex was already open.
+
+Then open Claude Code, Codex, Cursor, or any other MCP-aware client in the same directory and ask:
 
 > *what are the main subsystems of this codebase?*
 
@@ -57,7 +61,7 @@ Full reference (request shapes, response shapes, examples): [`MCP-TOOLS.md`](./M
 $ cd ~/code/your-project
 $ curl -sSfL https://lodestone.cmndi.ai/install | bash
 [lodestone-install] profile = lite
-[lodestone-install] latest = v0.1.4
+[lodestone-install] latest = v0.1.6
 [lodestone-install] downloading tarballs ... (4 files, ~16 MB)
 [lodestone-install] installing into ./node_modules ...
 [lodestone-install] running 'lodestone init' ...
@@ -77,6 +81,10 @@ Open Claude Code (or any MCP client) in the same directory. Ask: *what are the m
 
 | Doc | What's in it |
 |---|---|
+| [`friend/lodestone-feature-brochure.md`](./friend/lodestone-feature-brochure.md) | Friend-facing feature brochure, differentiators, use cases, and honest limits. |
+| [`friend/lodestone-installation-guide.md`](./friend/lodestone-installation-guide.md) | Layperson install guide for the two supported install options: `lite` and `full`. |
+| [`friend/lodestone-technical-guide.md`](./friend/lodestone-technical-guide.md) | Standard technical documentation for the friend install, package layout, privacy, operations, and support checklist. |
+| [`site/index.html`](./site/index.html) | Generated HTML copy of the documentation published at `https://lodestone.cmndi.ai/docs/`. |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Stack choices (Node-only, Louvain not Leiden, SQLite + sqlite-vec, KuzuDB deferred), the `packages/*` monorepo layout, friend-mode vs Pro-mode. |
 | [`CONFIG.md`](./CONFIG.md) | Every key in `lodestone.toml` with its type, default, allowed values, and one-line explanation. Plus environment variable overrides. |
 | [`MCP-TOOLS.md`](./MCP-TOOLS.md) | The 8 MCP tools — request shapes, response shapes, JSON examples, when to use each. |

@@ -1,6 +1,6 @@
 {
   "name": "@lodestone/mcp-server",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "private": true,
   "type": "module",
   "description": "Lodestone MCP server scaffold (§13). Stdio JSON-RPC server, dynamic tool registration, channel-validated envelope wrapper, in-flight backpressure cap, max_response_kb truncation guard. Tool bodies land in §14–§17.",
@@ -51,8 +51,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "@vitest/coverage-v8": "^2.1.0",
+    "@vitest/coverage-v8": "^3.2.6",
     "typescript": "^5.5.0",
-    "vitest": "^2.1.0"
+    "vitest": "^3.2.6"
   }
 }

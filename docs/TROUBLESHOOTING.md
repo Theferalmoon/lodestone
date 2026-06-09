@@ -75,6 +75,39 @@ npx lodestone init
 
 This is intentional — it forces every developer on a project to opt in to the local index. If you want to remove the friction entirely, do not commit `.mcp.json`; have each developer run `lodestone init` themselves.
 
+## Codex does not show Lodestone tools
+
+**Symptom:** Claude Code, Cursor, or another `.mcp.json` client can see
+Lodestone, but Codex does not list the Lodestone MCP tools.
+
+**Fix:** Codex uses project `.codex/config.toml` for project-scoped MCP
+servers. Install with the Codex adapter:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_CLIENT=codex bash
+```
+
+Or refresh an already installed project without rebuilding the index:
+
+```bash
+./node_modules/.bin/lodestone init --client codex --no-reindex
+```
+
+Then verify:
+
+```bash
+./node_modules/.bin/lodestone doctor --client codex
+```
+
+If doctor reports a stale or missing Codex config, rerun the refresh command.
+If doctor reports healthy config but Codex still does not load the server, make
+sure Codex has trusted the project. Approve the Codex trust prompt for this
+repo, then start a new Codex session if Codex was already open. Project-local
+`.codex/config.toml` is not loaded for untrusted projects.
+
+If you do not need Codex, skip the Codex adapter. The default `.mcp.json`
+configuration still works for MCP-aware clients that read `.mcp.json`.
+
 ## `.lodestone/` is corrupt
 
 **Symptom:** MCP tools return errors mentioning schema versions, or `lodestone status` reports the index in an inconsistent state.
@@ -85,10 +118,16 @@ This is intentional — it forces every developer on a project to opt in to the 
 lodestone reindex --from-scratch
 ```
 
-That nukes `.lodestone/store/` and rebuilds from scratch. v0 has no migration runner; that is v0.5+ work. Until then, treat `.lodestone/` as a regenerable cache: a from-scratch reindex on a 10k-symbol repo takes under a minute. For the schema-bump path (e.g. embedder dim changes between versions), see [`UPGRADE.md`](./UPGRADE.md).
+That rebuilds `.lodestone/lodestone.sqlite` from scratch. v0 has no migration runner; that is v0.5+ work. Until then, treat `.lodestone/` as a regenerable cache: a from-scratch reindex on a 10k-symbol repo takes under a minute. For the schema-bump path (e.g. embedder dim changes between versions), see [`UPGRADE.md`](./UPGRADE.md).
 
 ## `lodestone init` says "Pro mode is v0.5+ work"
 
-**Symptom:** `lodestone init --pro` exits cleanly with the message "Pro mode is v0.5+ work; see docs/PRO.md".
+**Symptom:** `lodestone init --pro` exits cleanly with the message "Pro mode is v0.5+ work; no files were changed."
 
 **Fix:** this is the intended exit message. Pro mode (multi-repo, shared index, Docker-Compose orchestrated) is deferred to v0.5+. Use `lodestone init` without `--pro` for friend mode (the v0 ship target).
+
+## `lodestone setup-models` says it is not enabled
+
+**Symptom:** `lodestone setup-models --allow-download` exits before any network call and says setup-models is not enabled in the public v0.1.x build.
+
+**Fix:** this is intentional. The public friend profiles already bundle their model weights. Use the default `lite` installer, or reinstall with `LODESTONE_PROFILE=full` if you want the larger bundled Nomic model. The live setup-models fetch path stays fail-closed until a future release publishes real pinned hashes.

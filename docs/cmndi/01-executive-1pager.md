@@ -2,15 +2,15 @@
 
 # Lodestone — Executive 1-Pager
 
-**Version:** v0.1.2 (HEAD: `f82f02e`, main, tag `v0.1.2`)
-**License:** Apache 2.0 (public, OSS distribution via npm)
-**Status:** First public ship complete; dogfood phase open
+**Version:** v0.1.6 friend-install package set
+**License:** Apache 2.0 (public, download-only friend distribution)
+**Status:** Friend install and dogfood phase open
 
 ## What it is
 
 Lodestone is a project-local, code-aware **Knowledge Graph for coding agents**. It watches one repository, parses every source file with tree-sitter, builds a symbol-and-call graph, embeds each symbol locally with a bundled ONNX model, clusters the graph into emergent architectural modules with Louvain community detection, emits machine-readable SKILL cards for the patterns it sees, and exposes the whole thing to the operator's coding agent over the Model Context Protocol (MCP).
 
-It is a single `npm install` away. It runs entirely on the operator's machine. There is no service to deploy, no account to create, no upload step.
+It is a single curl-based friend install away. It runs entirely on the operator's machine. There is no service to deploy, no account to create, no upload step.
 
 ## Who it is for
 
@@ -32,16 +32,16 @@ The MCP-native surface is the second wedge. Every other code-grounding product i
 | MCP tools shipped | 8 (`query`, `recent_changes`, `context`, `impact`, `cluster`, `skills_for`, `feedback`, `sql`) |
 | Languages parsed in v0 | 5 (TypeScript/TSX, JavaScript/JSX, Python, Go, Rust) |
 | Test files | 106 across the workspace + e2e harness |
-| Bundled model size | ~150 MB (`nomic-embed-text-v1.5` ONNX int8, default profile) |
-| Runtime network calls (default profile) | Zero |
-| Distribution | npm — `npx lodestone init` |
+| Bundled model size | `lite`: Snowflake 384d (~16 MB release download); `full`: Nomic 768d (~89 MB release download) |
+| Runtime network calls (packaged friend profiles) | Zero |
+| Distribution | Download-only friend installer via the branded curl one-liner |
 | License | Apache 2.0 (commercial-friendly; see `LICENSE` + `LICENSE-AUTHORIZATION.md`) |
 
 ## How it stays defensible
 
-- **Bundled embedder weights** — the privacy claim only holds if the default install does not phone home. Lodestone ships its embedder inside the npm package (~150 MB on disk) so day-1 use needs zero outbound calls.
+- **Bundled embedder weights** — the privacy claim only holds if the install does not phone home at runtime. Lodestone ships profiled ingest tarballs so day-1 use needs zero outbound model calls.
 - **Build-time URL audit** — every release runs a grep over the shipped `dist/` against an explicit allowlist (`network-manifest.json`). Anything new fails the build. The privacy claim is enforced at release time, not just at runtime.
-- **Two-gate consent for any model fetch** — the only opt-in fetch path (`lodestone setup-models --allow-download`) requires both an explicit operator flag and a pass through the `LODESTONE_OFFLINE` chokepoint. Either gate can veto.
+- **Two-gate consent for any future model fetch** — the reserved opt-in fetch path (`lodestone setup-models --allow-download`) requires both an explicit operator flag and a pass through the `LODESTONE_OFFLINE` chokepoint. The public v0.1.x build also exits before network until real pinned hashes are published.
 - **MCP-portable** — runs over local stdio. Works with every MCP-aware client, today and tomorrow, with no per-editor adapter.
 
 ## What is on the v0.5 roadmap

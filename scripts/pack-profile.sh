@@ -4,11 +4,11 @@
 # pack-profile.sh — produce lodestone tarballs for a specific install profile.
 #
 # Lodestone ships two friend-facing profiles (tarball download sizes from
-# the published v0.1.4 GitHub release assets):
+# the published v0.1.6 GitHub release assets):
 #   * lite — Snowflake 384d embedder, ~16 MB tarball. For friends with
 #            low-RAM laptops or limited bandwidth. Default for friend
 #            distribution.
-#   * full — Nomic 768d embedder, ~178 MB tarball. For operator + Ryan +
+#   * full — Nomic 768d embedder, ~89 MB tarball. For operator + Ryan +
 #            advanced setups that want the higher-quality embedder.
 #
 # Both profiles ship the same shared/cli/mcp-server tarballs; only the ingest
@@ -47,6 +47,11 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INGEST_DIST="$REPO_ROOT/packages/ingest/dist/models"
 mkdir -p "$OUT_DIR"
 
+if [[ "${LODESTONE_SKIP_DOCS_BUILD:-}" != "1" ]]; then
+  echo "[pack-profile] refreshing friend docs before packing"
+  ( cd "$REPO_ROOT" && pnpm docs:friend )
+fi
+
 if [[ "$PROFILE" == "lite" ]]; then
   KEEP="snowflake"
   REMOVE="nomic"
@@ -59,6 +64,14 @@ fi
 for d in nomic snowflake; do
   if [[ ! -d "$INGEST_DIST/$d" ]]; then
     echo "ERROR: $INGEST_DIST/$d missing. Run 'pnpm --filter @lodestone/ingest bundle-models && pnpm -r build' first." >&2
+    exit 1
+  fi
+done
+
+for stale in "$INGEST_DIST"/nomic/model_quantized.onnx "$INGEST_DIST"/snowflake/model_quantized.onnx; do
+  if [[ -f "$stale" ]]; then
+    echo "ERROR: stale top-level model file would be packaged: $stale" >&2
+    echo "Run 'pnpm clean && pnpm -r build' to rebuild dist/models from source." >&2
     exit 1
   fi
 done

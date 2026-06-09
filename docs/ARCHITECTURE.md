@@ -24,15 +24,17 @@ Why: friends already have Node. Adding a Python venv or a system-package install
 
 Adding a language is a matter of dropping in the language's WASM grammar and writing a small extractor over the parse tree. We chose tree-sitter because it gives us the same AST shape across languages with the same library — important for the cross-language graph builder in `@lodestone/ingest/graph`.
 
-### Embedder: bundled ONNX, no fetch on the default profile
+### Embedder: bundled ONNX, no fetch on packaged friend profiles
 
-The default embedder profile bundles `nomic-embed-text-v1.5` (ONNX int8, ~150 MB) inside `@lodestone/ingest`. No network call is required to embed. A `tiny` profile uses a smaller fallback (`snowflake-arctic-embed-s`) which is fetched on first use **only when** `LODESTONE_OFFLINE=1` is not set; once cached it is reused. A `pro` profile is reserved for v0.5+.
+The friend installer ships two packaged profiles. `lite` bundles `snowflake-arctic-embed-s` (ONNX int8, 384 dimensions) and is the default friend install. `full` bundles `nomic-embed-text-v1.5` (ONNX int8, 768 dimensions) for advanced users. No network call is required to embed when the selected profile's model is bundled.
+
+The internal config still exposes `default`, `tiny`, and reserved `pro` values for development and forward compatibility. In a profiled release tarball, the runtime auto-selects the bundled model that is actually present so a `lite` install does not try to load the larger Nomic model.
 
 Why bundled: the privacy claim ("your code never leaves your machine") only holds if the default install does not phone home. We accept the install size cost.
 
 ### Storage: SQLite (better-sqlite3 + WAL) + sqlite-vec
 
-All persisted state — symbols, edges, PageRank scores, class inheritance, clusters, cluster members, skill rows, embeddings, feedback events, `ready.json` — lives in a single SQLite database under `.lodestone/store/lodestone.db`. The `sqlite-vec` extension provides the `symbol_embeddings` virtual table for vector ANN. WAL mode is on. Foreign keys are enforced. The reader handle is opened in `readonly` mode at the driver layer so MCP tools cannot accidentally write.
+All persisted database state — symbols, edges, PageRank scores, class inheritance, clusters, cluster members, skill rows, embeddings, and feedback events — lives in a single SQLite database at `.lodestone/lodestone.sqlite`. `ready.json` lives next to it under `.lodestone/`. The `sqlite-vec` extension provides the `symbol_embeddings` virtual table for vector ANN. WAL mode is on. Foreign keys are enforced. The reader handle is opened in `readonly` mode at the driver layer so MCP tools cannot accidentally write.
 
 Why SQLite over LanceDB + KuzuDB: the original plan was LanceDB for vectors and KuzuDB for the graph. After the §08 implementation pass we collapsed both into SQLite + sqlite-vec because (a) the graph queries Lodestone actually runs (callers, callees, recursive impact) are well-served by recursive CTEs over an `edges` table, and (b) keeping one process, one file, and one transaction model dramatically simplified the surface for friends installing on macOS, Linux, and WSL2.
 
@@ -112,5 +114,5 @@ lodestone/
 - Leiden clustering as an alternative to Louvain
 - A numbered-migrations runner (v0 treats `.lodestone/` as ephemeral; reindex from scratch on schema bumps — see [`UPGRADE.md`](./UPGRADE.md))
 - KuzuDB as a graph-engine alternative
-- The bigger `nomic-embed-code` weights as an opt-in profile (`LODESTONE_ALLOW_MODEL_DOWNLOAD=1` reserved for this)
+- A vetted larger or code-aware embedder as an opt-in profile (`LODESTONE_ALLOW_MODEL_DOWNLOAD=1` reserved for this once real pins ship)
 - GPU acceleration (tracked separately; not in v0 scope)
