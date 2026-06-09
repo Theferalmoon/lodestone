@@ -48,7 +48,12 @@ jobs:
           python-version: "3.x"
 
       - name: Re-run cmndi docs build
-        run: python3 scripts/docs/cmndi-docs-build.py
+        run: |
+          set -euo pipefail
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct HEAD)"
+          export LODESTONE_DOCS_BUILD_COMMIT="$(git rev-parse --short HEAD)"
+          export LODESTONE_DOCS_BUILD_BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-unknown}}"
+          python3 scripts/docs/cmndi-docs-build.py
 
       - name: Assert docs/cmndi/index.html is in sync with source MDs
         # The HTML embeds the build's commit hash + timestamp in the

@@ -1,7 +1,7 @@
 {
   "name": "lodestone-monorepo",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Lodestone — a project-local code-aware Knowledge Graph for coding agents.",
   "license": "Apache-2.0",
   "type": "module",
@@ -16,7 +16,8 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "docs:friend": "python3 scripts/docs/friend-docs-build.py",
-    "clean": "pnpm -r exec rm -rf dist tsconfig.tsbuildinfo"
+    "mcpb:claude": "node scripts/mcpb/build-claude-desktop-bundle.mjs",
+    "clean": "pnpm -r exec rm -rf dist tsconfig.tsbuildinfo && rm -rf dist tsconfig.tsbuildinfo"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

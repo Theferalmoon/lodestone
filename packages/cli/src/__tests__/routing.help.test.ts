@@ -9,6 +9,7 @@ const EXPECTED_NAMES = [
   "status",
   "reindex",
   "doctor",
+  "plan-tests",
   "seed-skills",
   "upgrade",
   "uninstall",

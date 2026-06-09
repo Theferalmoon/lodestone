@@ -216,7 +216,7 @@ If the CLI version expects a newer schema than the store has, the doctor prints 
 
 ## 9. Known issues at v0.1.x
 
-- **Production audit status** — `pnpm audit --prod` is clean as of the v0.1.6 friend-install release prep on 2026-06-08. Registry advisories can change, so rerun the audit as a live check before strict security signoff.
+- **Production audit status** — `pnpm audit --prod` is clean as of the v0.1.7 friend-install release prep on 2026-06-09. Registry advisories can change, so rerun the audit as a live check before strict security signoff.
 - **No migration runner** — by design. Schema bumps within v0.x require `lodestone reindex --from-scratch`. v0.5 ships the runner alongside the embedder-dim swap option.
 - **A handful of cosmetic items from the §20 e2e pass** — parser edge resolution edge cases, `LODESTONE_DB_PATH` env-var alignment, init/reindex command split. Tracked in §22 backlog; not happy-path.
 

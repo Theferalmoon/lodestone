@@ -1,6 +1,6 @@
 {
   "name": "@lodestone/ingest",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": true,
   "type": "module",
   "description": "Lodestone ingest pipeline runtimes — embedder (transformers.js + ONNX), parsers (tree-sitter), graph builder. Section 05 ships only the embedder runtime.",

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Docs Home | Lodestone Docs</title>
+  <title>Claude Desktop MCPB | Lodestone Docs</title>
   <style>
     :root {
       --bg: #f6f8fb;
@@ -198,7 +198,7 @@
 <a href="./architecture.html">Architecture</a>
 <a href="./config.html">Configuration</a>
 <a href="./mcp-tools.html">MCP Tools</a>
-<a href="./mcpb.html">Claude Desktop MCPB</a>
+<a class="active" href="./mcpb.html">Claude Desktop MCPB</a>
 <a href="./privacy.html">Privacy</a>
 <a href="./supply-chain.html">Supply Chain</a>
 <a href="./troubleshooting.html">Troubleshooting</a>
@@ -208,19 +208,88 @@
     </nav>
     <main>
       <article>
-        
-<h1>Lodestone Documentation</h1>
-<p>Lodestone is a local code intelligence sidecar for AI coding agents. These docs include the friend brochure, layperson installation guide, technical reference, and generated HTML copies of the core repository docs.</p>
-<h2>Start Here</h2>
-<div class="doc-home">
-<div class="doc-card"><a href="./feature-brochure.html">Feature Brochure</a><p>Friend Docs</p></div><div class="doc-card"><a href="./installation-guide.html">Installation Guide</a><p>Friend Docs</p></div><div class="doc-card"><a href="./technical-guide.html">Technical Guide</a><p>Friend Docs</p></div><div class="doc-card"><a href="./readme.html">Repository README</a><p>Core Docs</p></div><div class="doc-card"><a href="./docs-readme.html">Technical Docs Overview</a><p>Core Docs</p></div><div class="doc-card"><a href="./friend-install.html">Friend Install Quickstart</a><p>Core Docs</p></div><div class="doc-card"><a href="./architecture.html">Architecture</a><p>Technical Reference</p></div><div class="doc-card"><a href="./config.html">Configuration</a><p>Technical Reference</p></div><div class="doc-card"><a href="./mcp-tools.html">MCP Tools</a><p>Technical Reference</p></div><div class="doc-card"><a href="./mcpb.html">Claude Desktop MCPB</a><p>Technical Reference</p></div><div class="doc-card"><a href="./privacy.html">Privacy</a><p>Technical Reference</p></div><div class="doc-card"><a href="./supply-chain.html">Supply Chain</a><p>Technical Reference</p></div><div class="doc-card"><a href="./troubleshooting.html">Troubleshooting</a><p>Technical Reference</p></div><div class="doc-card"><a href="./upgrade.html">Upgrade</a><p>Technical Reference</p></div><div class="doc-card"><a href="./demo-repo.html">Demo Repository</a><p>Technical Reference</p></div><div class="doc-card"><a href="./known-issues.html">Known Issues</a><p>Technical Reference</p></div>
-</div>
-<h2>Word Documents</h2>
+        <!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<h1 id="claude-desktop-mcpb-packaging">Claude Desktop MCPB
+Packaging</h1>
+<p>Lodestone can be packaged as a private Claude Desktop MCPB bundle for
+users who prefer a one-click desktop install over editing MCP JSON by
+hand.</p>
+<p>Use this path when:</p>
 <ul>
-<li><a href="./downloads/Lodestone-Feature-Brochure.docx">Lodestone-Feature-Brochure.docx</a></li><li><a href="./downloads/Lodestone-Installation-Guide.docx">Lodestone-Installation-Guide.docx</a></li><li><a href="./downloads/Lodestone-Technical-Guide.docx">Lodestone-Technical-Guide.docx</a></li>
+<li>the user already has Claude Desktop;</li>
+<li>the target project already ran <code>lodestone init</code> and
+<code>lodestone reindex</code>;</li>
+<li>the operator wants a local-only MCP server with no remote
+telemetry;</li>
+<li>the bundle will be built on the same operating system family where
+it will be installed.</li>
 </ul>
-<h2>Installer</h2>
-<pre><code>curl -sSfL https://lodestone.cmndi.ai/install | bash</code></pre>
+<p>Do not use this path as a replacement for the friend installer. The
+public installer remains the simplest way to install Lodestone into a
+repo and build the local index.</p>
+<h2 id="build">Build</h2>
+<p>Build a private bundle for the current platform:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/mcpb/build-claude-desktop-bundle.mjs</span> <span class="at">--profile</span> lite</span></code></pre></div>
+<p>The default output directory is ignored by Git:</p>
+<pre class="text"><code>dist/mcpb/</code></pre>
+<p>The full profile is also available:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/mcpb/build-claude-desktop-bundle.mjs</span> <span class="at">--profile</span> full</span></code></pre></div>
+<p>The packer creates a current-platform artifact because Lodestone
+includes native Node dependencies. Build separate bundles on separate
+target platforms. During packaging, it prunes non-current ONNX Runtime
+binaries and obvious GPU provider libraries from the bundled
+<code>node_modules</code> tree.</p>
+<p>For a fast structural smoke that does not include
+<code>node_modules</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/mcpb/build-claude-desktop-bundle.mjs</span> <span class="at">--manifest-only</span> <span class="at">--out-dir</span> /tmp/lodestone-mcpb-smoke</span></code></pre></div>
+<p>Manifest-only artifacts are not distribution-ready.</p>
+<h2 id="install-in-claude-desktop">Install In Claude Desktop</h2>
+<ol type="1">
+<li>Open Claude Desktop.</li>
+<li>Go to Settings, then Extensions.</li>
+<li>Install the generated <code>.mcpb</code> file.</li>
+<li>When Claude asks for the Project folder, select the repository where
+Lodestone is already initialized.</li>
+<li>Start a new Claude Desktop conversation for that project and ask
+Claude to use Lodestone's MCP tools.</li>
+</ol>
+<p>The selected project must contain:</p>
+<pre class="text"><code>.lodestone/lodestone.toml
+.lodestone/ready.json</code></pre>
+<p>If the project is not ready, run:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> init</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> reindex</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> status</span></code></pre></div>
+<h2 id="how-it-works">How It Works</h2>
+<p>The MCPB manifest asks Claude Desktop for one setting:
+<code>Project folder</code>.</p>
+<p>At launch time, the bundle:</p>
+<ol type="1">
+<li>reads the selected folder from
+<code>LODESTONE_REPO_ROOT</code>;</li>
+<li>verifies that <code>.lodestone/lodestone.toml</code> exists;</li>
+<li>changes the process working directory to that project;</li>
+<li>starts the bundled <code>@lodestone/mcp-server</code> over
+stdio.</li>
+</ol>
+<p>This keeps Lodestone local to the user's machine. The MCP server
+reads the selected project's local <code>.lodestone/</code> index and
+does not contact CMNDI.</p>
+<h2 id="cleanup">Cleanup</h2>
+<p>The packer removes temporary staging directories automatically. The
+only intentional output is the <code>.mcpb</code> artifact under
+<code>dist/mcpb/</code> or the directory passed with
+<code>--out-dir</code>.</p>
+<p>Delete old local artifacts when they are no longer needed:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> dist/mcpb</span></code></pre></div>
+<p>Do not commit generated <code>.mcpb</code> files to the
+repository.</p>
 
       </article>
       <footer>Generated 2026-06-09 14:20 UTC from repository Markdown sources.</footer>

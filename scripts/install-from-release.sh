@@ -17,25 +17,30 @@
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_CLIENT=codex bash
 #
 #   # Pin a specific version, if this installer carries checksums for it
-#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.6 LODESTONE_PROFILE=lite bash
+#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.7 LODESTONE_PROFILE=lite bash
+#
+#   # Strict npm advisory mode for existing projects with old/stale lockfiles
+#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_STRICT_NPM_OVERRIDES=1 bash
 #
 # (lodestone.cmndi.ai/install redirects to a fixed installer ref. If this
 # script is moved forward for a new Lodestone release, update the checksum
 # table below before publishing the installer ref.)
 #
 # What it does:
-#   1. Resolves the version (env LODESTONE_VERSION, default v0.1.6).
+#   1. Resolves the version (env LODESTONE_VERSION, default v0.1.7).
 #   2. Resolves the profile (env LODESTONE_PROFILE, default "lite").
 #   3. Downloads the tarballs from the GH release into a temp dir.
 #   4. Verifies each tarball's SHA-256 before installation.
 #   5. Installs them into ./node_modules using `npm install ./*.tgz`.
 #   6. Adds npm root overrides for patched transitive packages that npm
-#      consumers do not inherit from the monorepo's pnpm overrides.
+#      consumers do not inherit from the monorepo's pnpm overrides. By default
+#      this is the narrow protobufjs pin; strict mode also pins the broader
+#      advisory-sensitive transitive set from the release workspace.
 #   7. Runs the lodestone bin's `init` against the current dir, optionally
 #      with `--client codex` when LODESTONE_CLIENT=codex is set.
 #   8. Points the friend at the installed docs path when the package carries it.
 #
-# Disk footprint (lite profile verified e2e 2026-06-08 against v0.1.6 on Node 22;
+# Disk footprint (lite profile verified e2e 2026-06-09 against v0.1.7 on Node 22;
 # full profile sizes from the published GitHub release assets):
 #   • Tarball download (what your bandwidth pays for):
 #         ~16 MB (lite)   /   ~89 MB (full)
@@ -64,9 +69,10 @@
 set -euo pipefail
 
 REPO="Theferalmoon/lodestone"
-LODESTONE_VERSION="${LODESTONE_VERSION:-v0.1.6}"
+LODESTONE_VERSION="${LODESTONE_VERSION:-v0.1.7}"
 LODESTONE_PROFILE="${LODESTONE_PROFILE:-lite}"
 LODESTONE_CLIENT="${LODESTONE_CLIENT:-}"
+LODESTONE_STRICT_NPM_OVERRIDES="${LODESTONE_STRICT_NPM_OVERRIDES:-0}"
 WORK_DIR="$(mktemp -d -t lodestone-install-XXXXXX)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
@@ -88,6 +94,11 @@ expected_sha256() {
   local tag="$1"
   local file="$2"
   case "$tag:$file" in
+    v0.1.7:lodestone-cli-0.1.7.tgz) printf '%s\n' "3e9fee2ccc5678baca15e492f17a8994b6300b20f65a14ab528cf4c7c887c9a8" ;;
+    v0.1.7:lodestone-shared-0.1.7.tgz) printf '%s\n' "1fcdd55fc0313dbf672f7ec5160f305ae8948355a3005d8f17e1057c1b8aafcb" ;;
+    v0.1.7:lodestone-mcp-server-0.1.7.tgz) printf '%s\n' "db7cb4d0bb7f6e741b986e2ab1ceef98d6138317eb1b71908597d59bf96dca45" ;;
+    v0.1.7:lodestone-ingest-0.1.7-lite.tgz) printf '%s\n' "8b362528a7b218840dac7eb430cdeae65e426f3448dc01a86b413aac78a0c442" ;;
+    v0.1.7:lodestone-ingest-0.1.7-full.tgz) printf '%s\n' "6fcba618a3aaf319a140a732df794c414d10fcb3dba882ff57dca4817070f99f" ;;
     v0.1.6:lodestone-cli-0.1.6.tgz) printf '%s\n' "1af67869d56c483bf70700c25cfb6dbbcb7fe00c7a5df8a21383e4924beb3171" ;;
     v0.1.6:lodestone-shared-0.1.6.tgz) printf '%s\n' "61b22b2d4485cdaf316aaa6aaf3070862875f7a90a69278272fb20cb5c7e0f0c" ;;
     v0.1.6:lodestone-mcp-server-0.1.6.tgz) printf '%s\n' "244f18ca1e0bb82d22f4dc43d760783bc77bcb805fd559cb755de28071606813" ;;
@@ -134,6 +145,14 @@ if [[ -n "$LODESTONE_CLIENT" ]]; then
   log "client adapter = $LODESTONE_CLIENT"
 fi
 
+case "$LODESTONE_STRICT_NPM_OVERRIDES" in
+  0|false|FALSE|no|NO|"") ;;
+  1|true|TRUE|yes|YES)
+    log "strict npm overrides = enabled"
+    ;;
+  *) fail "invalid LODESTONE_STRICT_NPM_OVERRIDES: '$LODESTONE_STRICT_NPM_OVERRIDES' (allowed: 0 | 1 | true | false | yes | no)" ;;
+esac
+
 # ── Tooling check ──
 command -v curl >/dev/null || fail "curl is required"
 command -v node >/dev/null || fail "node is required (v20+)"
@@ -157,7 +176,7 @@ fi
 
 # ── Resolve "latest" to an actual tag via the GitHub release API ──
 if [[ "$LODESTONE_VERSION" == "latest" ]]; then
-  fail "this pinned friend installer does not support LODESTONE_VERSION=latest; use LODESTONE_VERSION=v0.1.6 or fetch a newer installer"
+  fail "this pinned friend installer does not support LODESTONE_VERSION=latest; use LODESTONE_VERSION=v0.1.7 or fetch a newer installer"
 else
   TAG="$LODESTONE_VERSION"
 fi
@@ -201,7 +220,7 @@ mv "$WORK_DIR/lodestone-ingest-$VERSION_NUM-$LODESTONE_PROFILE.tgz" \
    "$WORK_DIR/lodestone-ingest-$VERSION_NUM.tgz"
 
 log "installing into $(pwd)/node_modules ..."
-log "ensuring npm override protobufjs=7.5.8 for advisory-clean consumer installs ..."
+log "ensuring Lodestone npm overrides for advisory-clean consumer installs ..."
 node <<'NODE'
 const fs = require("node:fs");
 
@@ -224,9 +243,18 @@ if (!data.overrides || typeof data.overrides !== "object" || Array.isArray(data.
   data.overrides = {};
 }
 
+const strict = /^(1|true|yes)$/i.test(process.env.LODESTONE_STRICT_NPM_OVERRIDES ?? "");
 const pins = {
   protobufjs: "7.5.8"
 };
+if (strict) {
+  Object.assign(pins, {
+    "fast-uri": "3.1.2",
+    hono: "4.12.21",
+    "ip-address": "10.1.1",
+    qs: "6.15.2"
+  });
+}
 
 let changed = !existed;
 for (const [name, version] of Object.entries(pins)) {
@@ -246,6 +274,11 @@ if (changed) {
 } else {
   console.error("[lodestone-install] package.json already has required Lodestone npm overrides");
 }
+console.error(
+  strict
+    ? "[lodestone-install] strict npm override mode: protobufjs, fast-uri, hono, ip-address, qs"
+    : "[lodestone-install] default npm override mode: protobufjs only"
+);
 NODE
 
 # Order matters: shared first (depended on by others), then ingest +

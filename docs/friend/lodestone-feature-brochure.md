@@ -6,7 +6,7 @@
 
 **Prepared by:** Cybersecurity Management & Network Defense, Inc.
 **Document type:** Feature brochure
-**Version:** v0.1.6 friend-install documentation
+**Version:** v0.1.7 friend-install documentation
 **Date:** June 8, 2026
 
 ## Executive Overview

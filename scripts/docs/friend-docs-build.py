@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import html
 import os
+import re
 import shutil
 import subprocess
 import zipfile
@@ -35,6 +36,65 @@ INTERNAL_LEAK_TERMS = [
     "/home/theferalmoon",
     "local-opus-lab",
 ]
+_BUILD_DATETIME: datetime | None = None
+
+
+def first_env(*names: str) -> str | None:
+    for name in names:
+        value = os.environ.get(name)
+        if value is not None and value.strip():
+            return value.strip()
+    return None
+
+
+def build_datetime() -> datetime:
+    global _BUILD_DATETIME
+    if _BUILD_DATETIME is not None:
+        return _BUILD_DATETIME
+
+    raw = first_env("LODESTONE_DOCS_BUILD_TIMESTAMP")
+    if raw is None:
+        raw = first_env("SOURCE_DATE_EPOCH")
+    if raw is None:
+        _BUILD_DATETIME = datetime.now(timezone.utc)
+        return _BUILD_DATETIME
+
+    if raw.isdigit():
+        _BUILD_DATETIME = datetime.fromtimestamp(int(raw), timezone.utc)
+        return _BUILD_DATETIME
+
+    normalized = raw.removesuffix(" UTC").replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise SystemExit(
+            "LODESTONE_DOCS_BUILD_TIMESTAMP must be an ISO-8601 timestamp "
+            "or SOURCE_DATE_EPOCH must be an epoch second"
+        ) from exc
+    if parsed.tzinfo is None:
+        _BUILD_DATETIME = parsed.replace(tzinfo=timezone.utc)
+        return _BUILD_DATETIME
+    _BUILD_DATETIME = parsed.astimezone(timezone.utc)
+    return _BUILD_DATETIME
+
+
+def generated_stamp() -> str:
+    return build_datetime().strftime("%Y-%m-%d %H:%M UTC")
+
+
+def docx_zip_datetime() -> tuple[int, int, int, int, int, int]:
+    dt = build_datetime()
+    minimum = datetime(1980, 1, 1, tzinfo=timezone.utc)
+    maximum = datetime(2107, 12, 31, 23, 59, 58, tzinfo=timezone.utc)
+    if dt < minimum:
+        dt = minimum
+    if dt > maximum:
+        dt = maximum
+    return (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+
+
+def docx_iso_stamp() -> str:
+    return build_datetime().strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 @dataclass(frozen=True)
@@ -63,6 +123,7 @@ DOCS = [
     Doc(REPO_ROOT / "docs/ARCHITECTURE.md", "architecture", "Architecture", "Technical Reference"),
     Doc(REPO_ROOT / "docs/CONFIG.md", "config", "Configuration", "Technical Reference"),
     Doc(REPO_ROOT / "docs/MCP-TOOLS.md", "mcp-tools", "MCP Tools", "Technical Reference"),
+    Doc(REPO_ROOT / "docs/MCPB.md", "mcpb", "Claude Desktop MCPB", "Technical Reference"),
     Doc(REPO_ROOT / "docs/PRIVACY.md", "privacy", "Privacy", "Technical Reference"),
     Doc(REPO_ROOT / "docs/SUPPLY-CHAIN.md", "supply-chain", "Supply Chain", "Technical Reference"),
     Doc(REPO_ROOT / "docs/TROUBLESHOOTING.md", "troubleshooting", "Troubleshooting", "Technical Reference"),
@@ -150,7 +211,7 @@ def docfactory_pandoc(
 
 
 def page_shell(title: str, body: str, current_slug: str) -> str:
-    generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    generated = generated_stamp()
     nav_items = []
     current_group = None
     for doc in DOCS:
@@ -380,6 +441,35 @@ def build_docx(renderer: Renderer) -> None:
             if REFERENCE_DOC.exists():
                 cmd[1:1] = [f"--reference-doc={REFERENCE_DOC}"]
             run(cmd)
+        normalize_docx(out)
+
+
+def normalize_docx(path: Path) -> None:
+    """Normalize generated DOCX timestamps when stable build metadata is set."""
+    zip_dt = docx_zip_datetime()
+    iso = docx_iso_stamp()
+    tmp = path.with_suffix(f"{path.suffix}.tmp")
+    with zipfile.ZipFile(path, "r") as src, zipfile.ZipFile(
+        tmp, "w", compression=zipfile.ZIP_DEFLATED
+    ) as dst:
+        for name in sorted(src.namelist()):
+            data = src.read(name)
+            if name == "docProps/core.xml":
+                text = data.decode("utf-8", errors="ignore")
+                for tag in ("created", "modified"):
+                    text = re.sub(
+                        rf"(<dcterms:{tag}\b[^>]*>).*?(</dcterms:{tag}>)",
+                        rf"\g<1>{iso}\g<2>",
+                        text,
+                    )
+                data = text.encode("utf-8")
+            original = src.getinfo(name)
+            info = zipfile.ZipInfo(name, zip_dt)
+            info.compress_type = original.compress_type
+            info.external_attr = original.external_attr
+            info.comment = original.comment
+            dst.writestr(info, data)
+    tmp.replace(path)
 
 
 def pandoc_body(renderer: Renderer, source: Path) -> str:
@@ -435,7 +525,12 @@ def build_package_docs() -> None:
     if PACKAGE_DOCS_DIR.exists():
         shutil.rmtree(PACKAGE_DOCS_DIR)
     PACKAGE_DOCS_DIR.mkdir(parents=True)
-    shutil.copy2(FRIEND_DIR / "README.md", PACKAGE_DOCS_DIR / "README.md")
+    package_readme = (FRIEND_DIR / "README.md").read_text(encoding="utf-8")
+    package_readme = package_readme.replace(
+        "HTML copies are generated into [../site/](../site/) and published at:",
+        "HTML copies are included in [html/](./html/) and published at:",
+    )
+    (PACKAGE_DOCS_DIR / "README.md").write_text(package_readme, encoding="utf-8")
     for doc in DOCS:
         if doc.source.is_relative_to(FRIEND_DIR):
             shutil.copy2(doc.source, PACKAGE_DOCS_DIR / doc.source.name)

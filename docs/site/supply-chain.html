@@ -198,6 +198,7 @@
 <a href="./architecture.html">Architecture</a>
 <a href="./config.html">Configuration</a>
 <a href="./mcp-tools.html">MCP Tools</a>
+<a href="./mcpb.html">Claude Desktop MCPB</a>
 <a href="./privacy.html">Privacy</a>
 <a class="active" href="./supply-chain.html">Supply Chain</a>
 <a href="./troubleshooting.html">Troubleshooting</a>
@@ -371,12 +372,16 @@ dependency tree</h2>
 dependency walked, every license read, every maintainer org checked. The
 audit lives in the workspace lockfile (<code>pnpm-lock.yaml</code>) and
 in the per-package <code>package.json</code> files;
-<code>pnpm audit</code> is a CI gate. The v0.1.6 friend-install release
+<code>pnpm audit</code> is a CI gate. The v0.1.7 friend-install release
 prep also pins patched transitive releases for packages that were
 advisory-sensitive at release time, so <code>pnpm audit --prod</code> is
-clean as of 2026-06-08. The public friend installer carries the same
+clean as of 2026-06-09. The public friend installer carries the same
 intent into npm consumer projects by adding a root npm override for
-<code>protobufjs@7.5.8</code> before install.</p>
+<code>protobufjs@7.5.8</code> before install. Operators installing into
+an existing project with an old lockfile can opt into
+<code>LODESTONE_STRICT_NPM_OVERRIDES=1</code>, which also pins the
+broader advisory-sensitive transitive set from the release
+workspace.</p>
 <p>If you want to verify any of the above on your machine:
 <code>pnpm why &lt;package&gt;</code> shows where a dep entered the
 graph; <code>pnpm audit</code> lists open advisories; the Hugging Face
@@ -395,7 +400,7 @@ href="./PRIVACY.md"><code>PRIVACY.md</code></a> for how the two-gate
 consent path interacts with the manifest.</p>
 
       </article>
-      <footer>Generated 2026-06-09 02:58 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 14:20 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>
