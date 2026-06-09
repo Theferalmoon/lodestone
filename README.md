@@ -26,12 +26,29 @@ Friends do not need collaborator access to this repository. They can download an
 curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 ```
 
-**Disk footprint.** The numbers above are what you actually download from the GitHub release. After `npm install`, the full `./node_modules` tree — Lodestone plus its transitive npm dependencies (tree-sitter parsers, `better-sqlite3`, `onnxruntime-node`, ~240 others) — is **~1 GB** in either profile. The bulk on disk is the npm dep tree, not Lodestone itself. Plan accordingly on metered/slow connections.
-
-**Pinning.** The friend installer defaults to the approved `v0.1.5` package set. To make that explicit:
+**Optional Codex adapter.** If your friend uses Codex CLI or the Codex IDE
+extension, they can ask the installer to also write project-local Codex MCP
+config:
 
 ```bash
-curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.5 bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_CLIENT=codex bash
+```
+
+That adds a `lodestone-mcp` entry to `.codex/config.toml` in the target
+project. Codex only loads project `.codex/config.toml` after the project is
+trusted. Approve the Codex trust prompt for this repo, then start a new Codex
+session if Codex was already open. To verify the adapter later:
+
+```bash
+./node_modules/.bin/lodestone doctor --client codex
+```
+
+**Disk footprint.** The numbers above are what you actually download from the GitHub release. After `npm install`, the full `./node_modules` tree — Lodestone plus its transitive npm dependencies (tree-sitter parsers, `better-sqlite3`, `onnxruntime-node`, ~240 others) — is **~1 GB** in either profile. The bulk on disk is the npm dep tree, not Lodestone itself. Plan accordingly on metered/slow connections.
+
+**Pinning.** The friend installer defaults to the approved `v0.1.6` package set. To make that explicit:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.6 bash
 ```
 
 **Access.** The `Theferalmoon/lodestone` repo is currently public, so no GitHub auth is required to fetch this installer or the release tarballs. The `lodestone.cmndi.ai/install` URL is a brand URL for the installer and should point at an immutable installer ref, not a mutable development branch.

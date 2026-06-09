@@ -333,13 +333,39 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="
 in to the local index. If you want to remove the friction entirely, do
 not commit <code>.mcp.json</code>; have each developer run
 <code>lodestone init</code> themselves.</p>
+<h2 id="codex-does-not-show-lodestone-tools">Codex does not show
+Lodestone tools</h2>
+<p><strong>Symptom:</strong> Claude Code, Cursor, or another
+<code>.mcp.json</code> client can see Lodestone, but Codex does not list
+the Lodestone MCP tools.</p>
+<p><strong>Fix:</strong> Codex uses project
+<code>.codex/config.toml</code> for project-scoped MCP servers. Install
+with the Codex adapter:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>Or refresh an already installed project without rebuilding the
+index:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> init <span class="at">--client</span> codex <span class="at">--no-reindex</span></span></code></pre></div>
+<p>Then verify:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
+<p>If doctor reports a stale or missing Codex config, rerun the refresh
+command. If doctor reports healthy config but Codex still does not load
+the server, make sure Codex has trusted the project. Approve the Codex
+trust prompt for this repo, then start a new Codex session if Codex was
+already open. Project-local <code>.codex/config.toml</code> is not
+loaded for untrusted projects.</p>
+<p>If you do not need Codex, skip the Codex adapter. The default
+<code>.mcp.json</code> configuration still works for MCP-aware clients
+that read <code>.mcp.json</code>.</p>
 <h2 id="lodestone-is-corrupt"><code>.lodestone/</code> is corrupt</h2>
 <p><strong>Symptom:</strong> MCP tools return errors mentioning schema
 versions, or <code>lodestone status</code> reports the index in an
 inconsistent state.</p>
 <p><strong>Fix:</strong></p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> reindex <span class="at">--from-scratch</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> reindex <span class="at">--from-scratch</span></span></code></pre></div>
 <p>That rebuilds <code>.lodestone/lodestone.sqlite</code> from scratch.
 v0 has no migration runner; that is v0.5+ work. Until then, treat
 <code>.lodestone/</code> as a regenerable cache: a from-scratch reindex
@@ -371,7 +397,7 @@ stays fail-closed until a future release publishes real pinned
 hashes.</p>
 
       </article>
-      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:58 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

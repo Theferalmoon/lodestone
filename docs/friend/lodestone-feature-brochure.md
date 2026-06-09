@@ -4,9 +4,9 @@
 
 ## Local code intelligence for AI coding agents
 
-**Prepared by:** Cybersecurity Management & Network Defense, Inc.  
-**Document type:** Feature brochure  
-**Version:** v0.1.5 friend-install documentation  
+**Prepared by:** Cybersecurity Management & Network Defense, Inc.
+**Document type:** Feature brochure
+**Version:** v0.1.6 friend-install documentation
 **Date:** June 8, 2026
 
 ## Executive Overview
@@ -122,6 +122,13 @@ The installer supports two download profiles:
 Both profiles keep source code local. The difference is the model packaged into
 the ingest tarball.
 
+### Optional Codex adapter
+
+Lodestone can write project-local Codex MCP configuration during install. A
+Codex user adds `LODESTONE_CLIENT=codex` to the installer command, then verifies
+with `lodestone doctor --client codex`. Codex still decides whether the project
+is trusted before loading `.codex/config.toml`.
+
 ## Why Lodestone Is Better Than Common Alternatives
 
 | Common approach | Typical issue | Lodestone difference |
@@ -143,7 +150,9 @@ project, not a remote service that owns the project context.
 ### Agent native
 
 Lodestone is exposed through MCP because coding agents already know how to call
-MCP tools. The user should not have to copy and paste large context packets.
+MCP tools. The default `.mcp.json` path works for common MCP-aware editors, and
+the optional Codex adapter writes Codex's project-local MCP config. The user
+should not have to copy and paste large context packets.
 
 ### Beginner friendly
 

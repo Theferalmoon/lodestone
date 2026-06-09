@@ -248,6 +248,14 @@ smallest download and the normal choice for first-time use.</p>
 <p>For the larger model profile:</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
+<p>For Codex CLI or the Codex IDE extension, add the optional Codex
+adapter:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>That writes <code>.codex/config.toml</code> for this project. Codex
+still requires the project to be trusted before it loads project-local
+config. Approve the Codex trust prompt for this repo, then start a new
+Codex session if Codex was already open.</p>
 <h2 id="what-access-you-get">What Access You Get</h2>
 <p>You get a local installed copy of Lodestone inside your own
 project.</p>
@@ -260,11 +268,16 @@ ask:</p>
 <pre class="text"><code>what are the main subsystems of this codebase?</code></pre>
 <p>The agent should use Lodestone to inspect the local project
 index.</p>
+<p>For Codex, verify the project adapter first:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
 <h2 id="files-created-locally">Files Created Locally</h2>
 <p>Lodestone creates project-local files such as:</p>
 <ul>
 <li><code>.lodestone/</code></li>
 <li><code>.mcp.json</code></li>
+<li>optional <code>.codex/config.toml</code> when
+<code>LODESTONE_CLIENT=codex</code> is used</li>
 <li>entries in <code>.gitignore</code></li>
 </ul>
 <p>The <code>.lodestone/</code> directory is local cache and index data.
@@ -272,15 +285,15 @@ Do not commit it.</p>
 <h2 id="updating-later">Updating Later</h2>
 <p>The operator controls the approved installer and release. Use the
 same command again when told to upgrade:</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
 <h2 id="removing-lodestone">Removing Lodestone</h2>
 <p>From the same project directory:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
 
       </article>
-      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:58 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

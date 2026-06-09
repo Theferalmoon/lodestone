@@ -214,9 +214,8 @@
 id="standard-technical-documentation-for-the-friend-install">Standard
 technical documentation for the friend install</h2>
 <p><strong>Prepared by:</strong> Cybersecurity Management &amp; Network
-Defense, Inc.<br />
-<strong>Document type:</strong> Technical guide<br />
-<strong>Version:</strong> v0.1.5 friend-install documentation<br />
+Defense, Inc. <strong>Document type:</strong> Technical guide
+<strong>Version:</strong> v0.1.6 friend-install documentation
 <strong>Date:</strong> June 8, 2026</p>
 <h2 id="system-summary">System Summary</h2>
 <p>Lodestone is a project-local code intelligence sidecar for AI coding
@@ -293,6 +292,29 @@ desired.</td>
 <p>The profile controls the release asset that is downloaded. It is
 separate from the internal <code>[embedder].profile</code> config values
 used by <code>lodestone.toml</code>.</p>
+<h2 id="client-adapter-option">Client Adapter Option</h2>
+<p>The public installer accepts optional
+<code>LODESTONE_CLIENT=codex</code> or
+<code>LODESTONE_CLIENT=all</code>. In v0.1.x, <code>all</code> maps to
+the Codex adapter.</p>
+<p>When enabled, <code>lodestone init --client codex</code> writes
+<code>.codex/config.toml</code> with:</p>
+<ul>
+<li><code>[mcp_servers.lodestone-mcp]</code></li>
+<li><code>command</code> pointing at
+<code>.lodestone/runtime/lodestone-mcp</code></li>
+<li><code>cwd</code> set to the installed project root</li>
+<li><code>enabled = true</code></li>
+</ul>
+<p>This is project-local Codex configuration. Codex still controls
+trust: project <code>.codex/config.toml</code> is loaded only after the
+project is trusted. Users should approve the Codex trust prompt for the
+repo and start a new Codex session if Codex was already open.</p>
+<p>Validation command:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
+<p>The doctor check exits non-zero when the Codex config file is
+missing, stale, malformed, or points at the wrong runtime command.</p>
 <h2 id="installer-flow">Installer Flow</h2>
 <p>The friend installer at
 <code>https://lodestone.cmndi.ai/install</code> redirects to a pinned
@@ -300,6 +322,7 @@ raw GitHub installer ref. The script is designed to fail closed.</p>
 <p>High-level flow:</p>
 <ol type="1">
 <li>Validate <code>LODESTONE_PROFILE</code>.</li>
+<li>Validate optional <code>LODESTONE_CLIENT</code>.</li>
 <li>Validate Node.js 20+, npm, and curl.</li>
 <li>Resolve the pinned <code>LODESTONE_VERSION</code>.</li>
 <li>Download four release tarballs:
@@ -313,6 +336,8 @@ raw GitHub installer ref. The script is designed to fail closed.</p>
 <li>Install the tarballs into the target project's
 <code>node_modules</code>.</li>
 <li>Run <code>./node_modules/.bin/lodestone init</code>.</li>
+<li>Pass <code>--client codex</code> when
+<code>LODESTONE_CLIENT=codex</code> or <code>all</code> is set.</li>
 <li>Leave no temporary download directory behind.</li>
 </ol>
 <p>The installer does not grant repository write access. It only
@@ -422,20 +447,29 @@ Lodestone-managed network calls.</li>
 </ul>
 <h2 id="operational-commands">Operational Commands</h2>
 <p>Install lite:</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
-<p>Install full:</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
-<p>Status:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<p>Install full:</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> status</span></code></pre></div>
-<p>Rebuild the local index:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
+<p>Install lite with Codex project config:</p>
 <div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> reindex</span></code></pre></div>
-<p>Uninstall:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>Install full with Codex project config:</p>
 <div class="sourceCode" id="cb8"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>Status:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> status</span></code></pre></div>
+<p>Doctor, including Codex adapter validation:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
+<p>Rebuild the local index:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> reindex</span></code></pre></div>
+<p>Uninstall:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
 <h2 id="upgrade-model">Upgrade Model</h2>
 <p>The public friend installer is pinned to an approved package set.
 Operators move the installer forward after building, testing,
@@ -461,16 +495,20 @@ priority is a small, local, auditable install path.</p>
 <li>npm version: <code>npm --version</code>.</li>
 <li>Installer command used.</li>
 <li><code>LODESTONE_PROFILE</code> value, if any.</li>
+<li><code>LODESTONE_CLIENT</code> value, if any.</li>
 <li>Last 50 lines of installer output.</li>
 <li><code>git status --short</code>.</li>
 <li>Whether <code>.mcp.json</code> exists.</li>
 <li>Whether <code>.lodestone/install-manifest.json</code> exists.</li>
 <li>Output from <code>./node_modules/.bin/lodestone status</code>, if
 available.</li>
+<li>Output from
+<code>./node_modules/.bin/lodestone doctor --client codex</code>, if
+Codex setup was used.</li>
 </ul>
 
       </article>
-      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:58 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

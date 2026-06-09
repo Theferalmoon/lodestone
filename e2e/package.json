@@ -1,6 +1,6 @@
 {
   "name": "@lodestone/e2e",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "type": "module",
   "description": "Lodestone §20 — end-to-end integration tests + synthetic demo repo. Drives the real CLI install, the real ingest pipeline, and the real MCP tool handlers against a hand-built multi-language fixture (e2e/synthetic-demo-repo). Asserts predictions declared in FIXTURE_MANIFEST.json. Network is intercepted for the duration of the run (POST-CODEX-001 §18 amendment §3 — proves the privacy promise at integration scale).",

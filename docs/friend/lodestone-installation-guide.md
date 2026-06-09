@@ -4,9 +4,9 @@
 
 ## Plain-English friend install instructions
 
-**Prepared by:** Cybersecurity Management & Network Defense, Inc.  
-**Document type:** Installation guide  
-**Version:** v0.1.5 friend-install documentation  
+**Prepared by:** Cybersecurity Management & Network Defense, Inc.
+**Document type:** Installation guide
+**Version:** v0.1.6 friend-install documentation
 **Date:** June 8, 2026
 
 ## What You Are Installing
@@ -37,6 +37,10 @@ You do not need:
 - A Lodestone account.
 - A cloud index.
 - A GPU.
+
+If you use Codex CLI or the Codex IDE extension, you can add the Codex adapter during
+install. Codex will still ask you to trust the project before it loads
+project-local config.
 
 ## Safety Step: Use a New Branch
 
@@ -70,7 +74,7 @@ curl -sSfL https://lodestone.cmndi.ai/install | bash
 
 What this downloads:
 
-- The approved Lodestone v0.1.5 package set.
+- The approved Lodestone v0.1.6 package set.
 - The `lite` ingest package with the Snowflake 384-dimensional embedder.
 - About 16 MB of Lodestone release tarballs.
 
@@ -97,12 +101,48 @@ curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 
 What this downloads:
 
-- The approved Lodestone v0.1.5 package set.
+- The approved Lodestone v0.1.6 package set.
 - The `full` ingest package with the Nomic 768-dimensional embedder.
 - About 89 MB of Lodestone release tarballs.
 
 The full profile is not required for a successful first test. If you are not
 sure which one to choose, use `lite`.
+
+## Optional: Codex Adapter
+
+Use this if your coding agent is Codex CLI or the Codex IDE extension.
+
+Run the installer with the Codex adapter:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_CLIENT=codex bash
+```
+
+This still uses the default `lite` profile. For full plus Codex:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full LODESTONE_CLIENT=codex bash
+```
+
+What this adds:
+
+- `.codex/config.toml`
+- a `lodestone-mcp` MCP server entry for this project
+
+After install, approve the Codex trust prompt for this repo. If Codex was
+already open, start a new Codex session.
+
+To add Codex later after a normal install:
+
+```bash
+./node_modules/.bin/lodestone init --client codex --no-reindex
+```
+
+To verify Codex setup:
+
+```bash
+./node_modules/.bin/lodestone doctor --client codex
+```
 
 ## What the Installer Does
 
@@ -113,8 +153,9 @@ The installer:
 3. Installs Lodestone into your project's `node_modules` folder.
 4. Runs `lodestone init` in your project.
 5. Writes `.mcp.json` so your coding agent can find the Lodestone MCP server.
-6. Creates `.lodestone/` for the local index, cache, and manifest.
-7. Runs the first indexing pass.
+6. Optionally writes `.codex/config.toml` when `LODESTONE_CLIENT=codex` is set.
+7. Creates `.lodestone/` for the local index, cache, and manifest.
+8. Runs the first indexing pass.
 
 ## What Files Are Created
 
@@ -123,6 +164,7 @@ Typical new or changed files:
 | Path | What it is | Commit it? |
 |---|---|---|
 | `.mcp.json` | Lets your MCP-aware agent start Lodestone. | Usually yes, after reviewing. |
+| `.codex/config.toml` | Optional Codex project MCP config. Created only for Codex setup. | Usually yes, after reviewing. |
 | `.gitignore` | Adds `.lodestone/` so local index data is not committed. | Usually yes. |
 | `.lodestone/` | Local index, cache, manifest, runtime files. | No. |
 | `node_modules/` | npm dependencies installed into the project. | No. |
@@ -194,6 +236,12 @@ test -d .lodestone && echo "Local Lodestone folder exists"
 ```
 
 Then ask the coding agent the subsystem question above.
+
+If you use Codex, also run:
+
+```bash
+./node_modules/.bin/lodestone doctor --client codex
+```
 
 ## Updating Later
 
@@ -277,4 +325,3 @@ The simplest useful test is:
 3. Ask: `what are the main subsystems of this codebase?`
 4. Ask: `what would be impacted if I changed <file or function>?`
 5. Review whether the answer points to real files and relationships.
-

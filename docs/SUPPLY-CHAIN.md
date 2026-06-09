@@ -56,7 +56,7 @@ Every direct dependency is Apache 2.0 or MIT. Lodestone itself is Apache 2.0 (se
 
 ## A note on the rebuilt dependency tree
 
-The v0 dependency graph was rebuilt from scratch — every transitive dependency walked, every license read, every maintainer org checked. The audit lives in the workspace lockfile (`pnpm-lock.yaml`) and in the per-package `package.json` files; `pnpm audit` is a CI gate. The v0.1.5 friend-install release prep also pins patched transitive releases for packages that were advisory-sensitive at release time, so `pnpm audit --prod` is clean as of 2026-06-08. The public friend installer carries the same intent into npm consumer projects by adding a root npm override for `protobufjs@7.5.8` before install.
+The v0 dependency graph was rebuilt from scratch — every transitive dependency walked, every license read, every maintainer org checked. The audit lives in the workspace lockfile (`pnpm-lock.yaml`) and in the per-package `package.json` files; `pnpm audit` is a CI gate. The v0.1.6 friend-install release prep also pins patched transitive releases for packages that were advisory-sensitive at release time, so `pnpm audit --prod` is clean as of 2026-06-08. The public friend installer carries the same intent into npm consumer projects by adding a root npm override for `protobufjs@7.5.8` before install.
 
 If you want to verify any of the above on your machine: `pnpm why <package>` shows where a dep entered the graph; `pnpm audit` lists open advisories; the Hugging Face model card pages link directly to the maintainer organization.
 

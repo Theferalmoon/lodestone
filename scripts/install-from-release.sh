@@ -13,25 +13,29 @@
 #   # Full (Nomic 768d embedder; ~89 MB to download — advanced setups)
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 #
+#   # Also wire project-local Codex MCP config (opt-in)
+#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_CLIENT=codex bash
+#
 #   # Pin a specific version, if this installer carries checksums for it
-#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.5 LODESTONE_PROFILE=lite bash
+#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.6 LODESTONE_PROFILE=lite bash
 #
 # (lodestone.cmndi.ai/install redirects to a fixed installer ref. If this
 # script is moved forward for a new Lodestone release, update the checksum
 # table below before publishing the installer ref.)
 #
 # What it does:
-#   1. Resolves the version (env LODESTONE_VERSION, default v0.1.5).
+#   1. Resolves the version (env LODESTONE_VERSION, default v0.1.6).
 #   2. Resolves the profile (env LODESTONE_PROFILE, default "lite").
 #   3. Downloads the tarballs from the GH release into a temp dir.
 #   4. Verifies each tarball's SHA-256 before installation.
 #   5. Installs them into ./node_modules using `npm install ./*.tgz`.
 #   6. Adds npm root overrides for patched transitive packages that npm
 #      consumers do not inherit from the monorepo's pnpm overrides.
-#   7. Runs the lodestone bin's `init` against the current dir.
+#   7. Runs the lodestone bin's `init` against the current dir, optionally
+#      with `--client codex` when LODESTONE_CLIENT=codex is set.
 #   8. Points the friend at the installed docs path when the package carries it.
 #
-# Disk footprint (lite profile verified e2e 2026-06-08 against v0.1.5 on Node 22;
+# Disk footprint (lite profile verified e2e 2026-06-08 against v0.1.6 on Node 22;
 # full profile sizes from the published GitHub release assets):
 #   • Tarball download (what your bandwidth pays for):
 #         ~16 MB (lite)   /   ~89 MB (full)
@@ -60,8 +64,9 @@
 set -euo pipefail
 
 REPO="Theferalmoon/lodestone"
-LODESTONE_VERSION="${LODESTONE_VERSION:-v0.1.5}"
+LODESTONE_VERSION="${LODESTONE_VERSION:-v0.1.6}"
 LODESTONE_PROFILE="${LODESTONE_PROFILE:-lite}"
+LODESTONE_CLIENT="${LODESTONE_CLIENT:-}"
 WORK_DIR="$(mktemp -d -t lodestone-install-XXXXXX)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
@@ -83,6 +88,11 @@ expected_sha256() {
   local tag="$1"
   local file="$2"
   case "$tag:$file" in
+    v0.1.6:lodestone-cli-0.1.6.tgz) printf '%s\n' "1af67869d56c483bf70700c25cfb6dbbcb7fe00c7a5df8a21383e4924beb3171" ;;
+    v0.1.6:lodestone-shared-0.1.6.tgz) printf '%s\n' "61b22b2d4485cdaf316aaa6aaf3070862875f7a90a69278272fb20cb5c7e0f0c" ;;
+    v0.1.6:lodestone-mcp-server-0.1.6.tgz) printf '%s\n' "244f18ca1e0bb82d22f4dc43d760783bc77bcb805fd559cb755de28071606813" ;;
+    v0.1.6:lodestone-ingest-0.1.6-lite.tgz) printf '%s\n' "a19c231b3c33252fdf9412ded65f17983609f71fdba8e17994c2925fb1ab669a" ;;
+    v0.1.6:lodestone-ingest-0.1.6-full.tgz) printf '%s\n' "d5fca413eb49f67143e4fadfe9ad39cb3df6058868e49d38fadd66e8e867c53a" ;;
     v0.1.5:lodestone-cli-0.1.5.tgz) printf '%s\n' "22c05536b2265f51c334e13413416fe6aeb753cf10b7736930f0c203db56d2e1" ;;
     v0.1.5:lodestone-shared-0.1.5.tgz) printf '%s\n' "51d79614cf2dd0e11c92090604dfdb0e461540eaac5a1c0d645dd2ac70cadf24" ;;
     v0.1.5:lodestone-mcp-server-0.1.5.tgz) printf '%s\n' "9f718ab1649efb7ae02bcd02ed37e4bc3cc822b75587bc452192147314cc8ae8" ;;
@@ -116,6 +126,14 @@ case "$LODESTONE_PROFILE" in
 esac
 log "profile = $LODESTONE_PROFILE"
 
+case "$LODESTONE_CLIENT" in
+  ""|codex|all) ;;
+  *) fail "invalid LODESTONE_CLIENT: '$LODESTONE_CLIENT' (allowed: codex | all)" ;;
+esac
+if [[ -n "$LODESTONE_CLIENT" ]]; then
+  log "client adapter = $LODESTONE_CLIENT"
+fi
+
 # ── Tooling check ──
 command -v curl >/dev/null || fail "curl is required"
 command -v node >/dev/null || fail "node is required (v20+)"
@@ -139,7 +157,7 @@ fi
 
 # ── Resolve "latest" to an actual tag via the GitHub release API ──
 if [[ "$LODESTONE_VERSION" == "latest" ]]; then
-  fail "this pinned friend installer does not support LODESTONE_VERSION=latest; use LODESTONE_VERSION=v0.1.5 or fetch a newer installer"
+  fail "this pinned friend installer does not support LODESTONE_VERSION=latest; use LODESTONE_VERSION=v0.1.6 or fetch a newer installer"
 else
   TAG="$LODESTONE_VERSION"
 fi
@@ -241,8 +259,13 @@ npm install --no-save \
   "$WORK_DIR/lodestone-cli-$VERSION_NUM.tgz" \
   || fail "npm install failed"
 
-log "running 'lodestone init' ..."
-./node_modules/.bin/lodestone init
+INIT_ARGS=(init)
+if [[ -n "$LODESTONE_CLIENT" ]]; then
+  INIT_ARGS+=(--client "$LODESTONE_CLIENT")
+fi
+
+log "running 'lodestone ${INIT_ARGS[*]}' ..."
+./node_modules/.bin/lodestone "${INIT_ARGS[@]}"
 
 log ""
 log "done. Lodestone $TAG ($LODESTONE_PROFILE profile) installed."

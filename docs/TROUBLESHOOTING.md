@@ -75,6 +75,39 @@ npx lodestone init
 
 This is intentional — it forces every developer on a project to opt in to the local index. If you want to remove the friction entirely, do not commit `.mcp.json`; have each developer run `lodestone init` themselves.
 
+## Codex does not show Lodestone tools
+
+**Symptom:** Claude Code, Cursor, or another `.mcp.json` client can see
+Lodestone, but Codex does not list the Lodestone MCP tools.
+
+**Fix:** Codex uses project `.codex/config.toml` for project-scoped MCP
+servers. Install with the Codex adapter:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_CLIENT=codex bash
+```
+
+Or refresh an already installed project without rebuilding the index:
+
+```bash
+./node_modules/.bin/lodestone init --client codex --no-reindex
+```
+
+Then verify:
+
+```bash
+./node_modules/.bin/lodestone doctor --client codex
+```
+
+If doctor reports a stale or missing Codex config, rerun the refresh command.
+If doctor reports healthy config but Codex still does not load the server, make
+sure Codex has trusted the project. Approve the Codex trust prompt for this
+repo, then start a new Codex session if Codex was already open. Project-local
+`.codex/config.toml` is not loaded for untrusted projects.
+
+If you do not need Codex, skip the Codex adapter. The default `.mcp.json`
+configuration still works for MCP-aware clients that read `.mcp.json`.
+
 ## `.lodestone/` is corrupt
 
 **Symptom:** MCP tools return errors mentioning schema versions, or `lodestone status` reports the index in an inconsistent state.
