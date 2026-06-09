@@ -239,9 +239,18 @@ href="./UPGRADE.md"><code>UPGRADE.md</code></a>. Schema bumps within
 v0.x require <code>lodestone reindex --from-scratch</code>. The
 numbered-migrations runner ships in v0.5 alongside the embedder-dim swap
 option.</p>
+<h2
+id="setup-models-is-fail-closed-in-the-public-v01x-build"><code>setup-models</code>
+is fail-closed in the public v0.1.x build</h2>
+<p>The public <code>lite</code> and <code>full</code> friend profiles
+bundle their model weights, so normal friend runtime does not need a
+model download. The <code>lodestone setup-models</code> command remains
+the reserved future path for pinned, consent-gated model downloads, but
+the public v0.1.x build exits before any network call until real release
+hashes are published.</p>
 
       </article>
-      <footer>Generated 2026-06-08 23:53 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

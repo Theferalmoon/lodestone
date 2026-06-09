@@ -99,23 +99,24 @@ Schema bumps within v0.x require `lodestone reindex --from-scratch`. The numbere
 
 The friend installer publishes two profiled ingest tarballs. The `lite` profile bundles `snowflake-arctic-embed-s` (ONNX int8, 384 dimensions). The `full` profile bundles `nomic-embed-text-v1.5` (ONNX int8, 768 dimensions). The internal `default`, `tiny`, and `pro` config values are still used by `lodestone.toml`; in profiled release tarballs, the runtime auto-selects the bundled model that is actually present.
 
-Inference goes through `@xenova/transformers` (Apache 2.0; ONNX Runtime under the hood). The runtime path makes zero outbound calls; the operator's machine never speaks to Hugging Face for embedding. The **only** runtime fetch path Lodestone exposes is `lodestone setup-models --allow-download`, gated by two consents (operator `--allow-download` flag plus the `LODESTONE_OFFLINE` chokepoint). Both gates must permit; either can veto. See [`../PRIVACY.md`](../PRIVACY.md) for the full opt-in model.
+Inference goes through `@xenova/transformers` (Apache 2.0; ONNX Runtime under the hood). The packaged `lite` and `full` runtime paths make zero outbound calls; the operator's machine never speaks to Hugging Face for embedding. The **only** reserved runtime fetch path is `lodestone setup-models --allow-download`, gated by two consents (operator `--allow-download` flag plus the `LODESTONE_OFFLINE` chokepoint). The public v0.1.x build also exits before network until real pinned hashes are published. See [`../PRIVACY.md`](../PRIVACY.md) for the full opt-in model.
 
 ### Consent-gated download path
 
 ```bash
-# Default behavior: refuses to do anything network-side.
-lodestone setup-models nomic-embed-text-v1.5
-# → exits non-zero with "model download is opt-in; pass --allow-download
-#   or set LODESTONE_ALLOW_MODEL_DOWNLOAD=1"
+# Public v0.1.x behavior: refuses before any network call because live
+# setup-models pins are not published yet.
+lodestone setup-models --embedder nomic-text-v1.5
+# → exits non-zero with "setup-models is not enabled in this public v0.1.x build"
 
-# Opt in explicitly:
-lodestone setup-models nomic-embed-text-v1.5 --allow-download
-# → still hits assertNetworkAllowed("setup-models: nomic-embed-text-v1.5")
-#   and so still fails when LODESTONE_OFFLINE=1.
+# Future pinned build, opt in explicitly:
+lodestone setup-models --embedder nomic-text-v1.5 --allow-download
+# → public v0.1.x exits before network until real setup-models pins ship.
+# → future pinned builds still hit assertNetworkAllowed("setup-models: ...")
+#   and so still fail when LODESTONE_OFFLINE=1.
 ```
 
-Weights land per-project at `<repoRoot>/.lodestone/models/<id>/`, never in a shared global cache. Each downloaded file is sha256-verified against a pinned manifest baked into the CLI binary; a mismatch quarantines the file and exits non-zero.
+Once real pins ship, weights land per-project at `<repoRoot>/.lodestone/models/<id>/`, never in a shared global cache. Each downloaded file is sha256-verified against a pinned manifest baked into the CLI binary; a mismatch quarantines the file and exits non-zero.
 
 ## 6. MCP tool surface
 

@@ -147,6 +147,6 @@ Some runtime flags are env-var-only because they apply across the toolchain (CLI
 | `LODESTONE_OFFLINE` | `"1"` to enable | Block every outbound network call. The chokepoint in `@lodestone/shared/net/fetch` throws `NetworkBlockedError` with a clear reason. Recommended for air-gapped or paranoid setups. See [`PRIVACY.md`](./PRIVACY.md). |
 | `LODESTONE_LOG_LEVEL` | `error` \| `warn` \| `info` \| `debug` | CLI and worker log verbosity. Default is `info`. |
 | `LODESTONE_COMMIT_HASH` | string | Build-time injection of the commit hash into the CLI's `--version` output. If unset, `lodestone --version` falls back to a runtime `git rev-parse`, then to `dev`. |
-| `LODESTONE_ALLOW_MODEL_DOWNLOAD` | `"1"` to enable | Reserved for v0.5+. Will gate the larger `nomic-embed-code` weights opt-in. Currently a no-op. |
+| `LODESTONE_ALLOW_MODEL_DOWNLOAD` | `"1"` to enable | Reserved for future pinned model downloads. Public v0.1.x setup-models exits before network until real hashes ship. |
 
 `LODESTONE_OFFLINE=1` is the load-bearing one for the privacy claim. Set it in your shell profile or your editor's MCP config block.

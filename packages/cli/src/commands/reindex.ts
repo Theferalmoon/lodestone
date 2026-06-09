@@ -174,10 +174,10 @@ export async function reindex(argv: readonly string[]): Promise<number> {
     if (isBundledModelMissing(err)) {
       output.error("");
       output.error(
-        "Hint: bundled embedder weights are missing. Run `lodestone setup-models --allow-download`"
+        "Hint: bundled embedder weights are missing. Reinstall the matching lite/full release"
       );
       output.error(
-        "to fetch them on demand (consent-gated, see docs/PRIVACY.md)."
+        "or use a future build with published setup-models pins."
       );
     }
     return 1;

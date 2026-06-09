@@ -271,8 +271,10 @@ table)</td>
 <h2 id="what-leaves-the-machine">What leaves the machine</h2>
 <p>In friend mode, <strong>nothing</strong> leaves the machine at
 runtime for the packaged <code>lite</code> and <code>full</code>
-profiles. Once installed, Lodestone runs entirely offline unless the
-operator explicitly invokes a consent-gated model setup path.</p>
+profiles. Once installed, Lodestone runs entirely offline. A
+consent-gated model setup path is reserved for future releases, but the
+public v0.1.x build keeps it fail-closed until real release pins are
+published.</p>
 <p>The two scenarios where bytes might leave your machine are:</p>
 <ol type="1">
 <li><strong>Installing or upgrading Lodestone itself.</strong> The
@@ -280,13 +282,14 @@ friend installer downloads pinned Lodestone release tarballs from GitHub
 and lets npm resolve normal package dependencies. Future npm-published
 paths will hit the public npm registry. This is normal package
 installation traffic, not runtime code upload.</li>
-<li><strong>Consent-gated model setup.</strong> If an operator runs
-<code>lodestone setup-models --allow-download</code>, Lodestone can
-fetch a pinned model file and cache it locally. Setting
-<code>LODESTONE_OFFLINE=1</code> blocks this path with a clear error.
-The packaged <code>lite</code> and <code>full</code> friend profiles
-already bundle their model weights, so normal friend runtime does not
-need this fetch.</li>
+<li><strong>Future consent-gated model setup.</strong> The
+<code>lodestone setup-models --allow-download</code> command is the
+reserved path for pinned, operator-approved model downloads. In the
+public v0.1.x friend build it exits before any network call because the
+built-in live-fetch manifest intentionally has placeholder hashes. The
+packaged <code>lite</code> and <code>full</code> friend profiles already
+bundle their model weights, so normal friend runtime does not need this
+fetch.</li>
 </ol>
 <p>That is the complete list. There is no third path.</p>
 <h2 id="the-lodestone_offline1-guard">The
@@ -304,19 +307,23 @@ they fail loudly with a message naming the caller.</p>
 so you can verify it without restarting your editor.</p>
 <h2 id="the-opt-in-setup-models-path">The opt-in
 <code>setup-models</code> path</h2>
-<p>There is exactly one runtime-fetch path Lodestone exposes to the
-friend, and it is gated by <strong>two</strong> consents that both have
-to say yes:</p>
+<p>There is exactly one runtime-fetch path Lodestone reserves for
+friends, and it is gated by <strong>two</strong> consents that both have
+to say yes. In the public v0.1.x friend build, the command also has a
+release-pin gate and exits before network because live fetch pins are
+not published yet:</p>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Default behavior: refuses to do anything network-side.</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> setup-models nomic-embed-text-v1.5</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># → exits non-zero with &quot;model download is opt-in; pass --allow-download</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   or set LODESTONE_ALLOW_MODEL_DOWNLOAD=1&quot;</span></span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Public v0.1.x behavior: refuses before any network call because live</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># setup-models pins are not published yet.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> setup-models <span class="at">--embedder</span> nomic-text-v1.5</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># → exits non-zero with &quot;setup-models is not enabled in this public v0.1.x build&quot;</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Opt in explicitly:</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> setup-models nomic-embed-text-v1.5 <span class="at">--allow-download</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># → still hits assertNetworkAllowed(&quot;setup-models: nomic-embed-text-v1.5&quot;)</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#   and so still fails when LODESTONE_OFFLINE=1.</span></span></code></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Future pinned build, opt in explicitly:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> setup-models <span class="at">--embedder</span> nomic-text-v1.5 <span class="at">--allow-download</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># → public v0.1.x: exits before network because live setup-models pins</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#   are not published yet.</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># → future pinned build: still hits assertNetworkAllowed(&quot;setup-models: ...&quot;)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#   and so still fails when LODESTONE_OFFLINE=1.</span></span></code></pre></div>
 <p>The two gates:</p>
 <ol type="1">
 <li><strong>Operator opt-in.</strong> The <code>--allow-download</code>
@@ -330,8 +337,8 @@ command refuses.</li>
 this throws — the operator opt-in is overridden by the offline
 guard.</li>
 </ol>
-<p>This is the only deliberate path that touches the network at runtime.
-Weights land per-project at
+<p>This is the only deliberate path that may touch the network at
+runtime once real pins ship. Weights land per-project at
 <code>&lt;repoRoot&gt;/.lodestone/models/&lt;id&gt;/</code>, never in a
 shared global cache, so one friend's <code>setup-models</code> cannot
 leak weights into another friend's project.</p>
@@ -365,11 +372,11 @@ list.</li>
 only by <code>npm install</code> / <code>pnpm install</code> itself, not
 by the running tool.</li>
 <li><code>https://huggingface.co/Xenova/nomic-embed-text-v1.5/</code> —
-the default embedder, fetched only via the opt-in
-<code>setup-models</code> path above.</li>
+reserved for the future opt-in <code>setup-models</code> path above; the
+public v0.1.x build fails closed before reaching it.</li>
 <li><code>https://huggingface.co/Snowflake/snowflake-arctic-embed-s/</code>
-— the tiny-profile fallback embedder, fetched only via the opt-in
-<code>setup-models</code> path above.</li>
+— reserved for the future opt-in <code>setup-models</code> path above;
+the public v0.1.x build fails closed before reaching it.</li>
 <li><code>https://huggingface.co/nomic-ai/</code>,
 <code>https://huggingface.co/ibm-granite/</code> — pre-approved
 maintainer orgs reserved for future bundled embedder variants. Currently
@@ -411,7 +418,7 @@ run <code>lodestone init &amp;&amp; lodestone reindex</code> under
 and you will see no outbound traffic on the default profile.</p>
 
       </article>
-      <footer>Generated 2026-06-08 23:53 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

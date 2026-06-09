@@ -158,8 +158,8 @@ SQLite database, and operate Lodestone from the CLI.
 ### Honest about limits
 
 Lodestone v0.1.x is a one-repository friend install. Pro mode, multi-repo
-operation, migration automation, and heavier enterprise orchestration are later
-work.
+operation, migration automation, and heavier enterprise orchestration are v0.5+
+or later work.
 
 ## Who Should Use It
 
@@ -188,4 +188,3 @@ what depends on a file, or what changed on the branch.
 
 Lodestone gives an AI coding agent a private, local, structured understanding of
 the repository before it starts editing.
-

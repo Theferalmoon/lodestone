@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect, vi } from "vitest";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { reindex } from "../commands/reindex.js";
 import { doctor } from "../commands/doctor.js";
 import { upgrade } from "../commands/upgrade.js";
@@ -21,12 +24,71 @@ describe("stub commands (return 0, warn, accept future flags)", () => {
     log.mockRestore();
   });
 
-  it("doctor() stub returns 0 and warns about future probes", async () => {
+  it("doctor() returns 0 and reports baseline install state", async () => {
+    const tmp = mkdtempSync(path.join(tmpdir(), "lodestone-doctor-"));
+    const prevCwd = process.cwd();
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    try {
+      process.chdir(tmp);
+      expect(await doctor([])).toBe(0);
+      const printed = log.mock.calls.flat().join("\n");
+      expect(printed.toLowerCase()).toContain("doctor");
+      expect(printed.toLowerCase()).toContain("install manifest");
+    } finally {
+      process.chdir(prevCwd);
+      log.mockRestore();
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("doctor() returns 1 when install manifest records failed reindex", async () => {
+    const tmp = mkdtempSync(path.join(tmpdir(), "lodestone-doctor-"));
+    const prevCwd = process.cwd();
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    expect(await doctor([])).toBe(0);
-    const printed = err.mock.calls.flat().join("\n");
-    expect(printed.toLowerCase()).toContain("doctor");
-    err.mockRestore();
+    try {
+      process.chdir(tmp);
+      mkdirSync(path.join(tmp, ".lodestone"), { recursive: true });
+      writeFileSync(
+        path.join(tmp, ".lodestone", "install-manifest.json"),
+        JSON.stringify({
+          schema_version: 2,
+          installed_at: new Date().toISOString(),
+          install_state: "complete",
+          reindex_state: "failed",
+          mcp_json: { action: "created", path: path.join(tmp, ".mcp.json") },
+          claude_md: { action: "skipped" },
+          gitignore: { action: "created", path: path.join(tmp, ".gitignore") },
+        })
+      );
+      expect(await doctor([])).toBe(1);
+      expect(log.mock.calls.flat().join("\n")).toContain("reindex state");
+      expect(err.mock.calls.flat().join("\n")).toContain("not fully healthy");
+    } finally {
+      process.chdir(prevCwd);
+      log.mockRestore();
+      err.mockRestore();
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("doctor() returns 1 when install manifest is unreadable or corrupt", async () => {
+    const tmp = mkdtempSync(path.join(tmpdir(), "lodestone-doctor-"));
+    const prevCwd = process.cwd();
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    try {
+      process.chdir(tmp);
+      mkdirSync(path.join(tmp, ".lodestone"), { recursive: true });
+      writeFileSync(path.join(tmp, ".lodestone", "install-manifest.json"), "{not-json");
+      expect(await doctor([])).toBe(1);
+      const printed = log.mock.calls.flat().join("\n");
+      expect(printed).toContain("invalid-json");
+      expect(printed).toContain("manifest detail");
+    } finally {
+      process.chdir(prevCwd);
+      log.mockRestore();
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   it("upgrade stub returns 0", async () => {

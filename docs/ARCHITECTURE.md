@@ -114,5 +114,5 @@ lodestone/
 - Leiden clustering as an alternative to Louvain
 - A numbered-migrations runner (v0 treats `.lodestone/` as ephemeral; reindex from scratch on schema bumps — see [`UPGRADE.md`](./UPGRADE.md))
 - KuzuDB as a graph-engine alternative
-- The bigger `nomic-embed-code` weights as an opt-in profile (`LODESTONE_ALLOW_MODEL_DOWNLOAD=1` reserved for this)
+- A vetted larger or code-aware embedder as an opt-in profile (`LODESTONE_ALLOW_MODEL_DOWNLOAD=1` reserved for this once real pins ship)
 - GPU acceleration (tracked separately; not in v0 scope)

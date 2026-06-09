@@ -36,6 +36,19 @@ function canonicalReadyJson(over: Partial<MarkerFixture> = {}): MarkerFixture {
   };
 }
 
+function canonicalInstallManifest(over: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    schema_version: 2,
+    installed_at: new Date().toISOString(),
+    install_state: "complete",
+    reindex_state: "complete",
+    mcp_json: { action: "created", path: path.join(process.cwd(), ".mcp.json") },
+    claude_md: { action: "skipped" },
+    gitignore: { action: "created", path: path.join(process.cwd(), ".gitignore") },
+    ...over,
+  };
+}
+
 describe("`lodestone status`", () => {
   let tmp: string;
   let originalCwd: string;
@@ -89,6 +102,10 @@ describe("`lodestone status`", () => {
   it("`status --json` emits a single parseable JSON object with canonical fields", async () => {
     mkdirSync(path.join(tmp, ".lodestone"));
     writeFileSync(
+      path.join(tmp, ".lodestone", "install-manifest.json"),
+      JSON.stringify(canonicalInstallManifest({ reindex_state: "skipped" }))
+    );
+    writeFileSync(
       path.join(tmp, ".lodestone", "ready.json"),
       JSON.stringify(canonicalReadyJson({ index_epoch: 1 }))
     );
@@ -104,8 +121,24 @@ describe("`lodestone status`", () => {
     expect(parsed.embedder.id).toBe("nomic-embed-text-v1.5");
     expect(parsed.indexed_at).toBeDefined();
     expect(parsed.index_epoch).toBe(1);
+    expect(parsed.install_manifest.reindex_state).toBe("skipped");
     expect(parsed.clock_skew_detected).toBe(false);
     log.mockRestore();
+  });
+
+  it("missing ready.json surfaces failed reindex_state from install manifest", async () => {
+    mkdirSync(path.join(tmp, ".lodestone"));
+    writeFileSync(
+      path.join(tmp, ".lodestone", "install-manifest.json"),
+      JSON.stringify(canonicalInstallManifest({ reindex_state: "failed" }))
+    );
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const code = await main(["status"]);
+    expect(code).toBe(1);
+    const printed = err.mock.calls.flat().join("\n");
+    expect(printed).toContain("reindex_state=failed");
+    expect(printed).toContain("last install-side reindex failed");
+    err.mockRestore();
   });
 
   it("malformed JSON: prints clean error + exit 1 (no V8 stack frames)", async () => {

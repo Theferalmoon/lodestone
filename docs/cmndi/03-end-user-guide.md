@@ -72,7 +72,7 @@ Anything that speaks MCP will work. The `.mcp.json` snippet uses an absolute pat
 | `lodestone reindex --from-scratch` | Rebuild `.lodestone/lodestone.sqlite`. ~1 minute on a 10k-symbol repo. Use after a schema bump or if `.lodestone/` is corrupt. |
 | `lodestone doctor` | Probe the environment — Node version, git presence, RAM, proxy state, CoreML availability, WSL2 detection, offline-mode status, schema-version agreement between CLI and on-disk store. |
 | `lodestone seed-skills` | Re-run the deterministic seed-skill scanners. Useful after adding new error classes or framework imports. |
-| `lodestone setup-models --allow-download` | Opt-in fetch path. Requires both the flag and absence of `LODESTONE_OFFLINE=1`. |
+| `lodestone setup-models --allow-download` | Reserved future opt-in fetch path. Public v0.1.x exits before network until real pinned hashes are published. |
 | `lodestone upgrade` | Help text pointing at `npm install -g @lodestone/cli@latest`. |
 | `lodestone uninstall` | Inverse of `init`. Removes only what `init` created (per the recorded install manifest). Refuses to operate on a manifest from a future schema version. |
 | `lodestone --version` | Prints the version + commit-hash one-liner. |
@@ -88,7 +88,7 @@ Anything that speaks MCP will work. The `.mcp.json` snippet uses an absolute pat
 │   └── ...                 # Watcher state, MCP server transport bookkeeping.
 ├── skills/
 │   └── *.md                # Emitted SKILL cards. Hand-readable. Agents read via skills_for().
-├── models/                 # Per-project model cache; populated only by `setup-models --allow-download`.
+├── models/                 # Per-project model cache; future setup-models path only.
 └── install-manifest.json   # Records what `init` created, for `lodestone uninstall` to undo.
 ```
 
@@ -155,7 +155,7 @@ Restart your editor. CoreML routes ONNX inference through Apple's Neural Engine.
 
 ### Corporate proxy / TLS interception breaks fetch
 
-Stick to the bundled-model default profile (`[embedder].profile = "default"`) — it does not fetch. If you need the `tiny` fallback or `setup-models --allow-download`, set `HTTPS_PROXY` and `NODE_EXTRA_CA_CERTS` per your corporate setup. For full air-gap, `LODESTONE_OFFLINE=1` blocks all fetches loudly.
+Stick to the bundled-model default profile (`[embedder].profile = "default"`) — it does not fetch. The public v0.1.x setup-models path exits before network until real pinned hashes are published. For full air-gap, `LODESTONE_OFFLINE=1` blocks all future fetch paths loudly.
 
 ### "no prebuild found for your platform"
 
@@ -194,7 +194,7 @@ The full troubleshooting matrix is at [`../TROUBLESHOOTING.md`](../TROUBLESHOOTI
 
 ## 7. Privacy posture in one paragraph
 
-Default install: zero outbound network calls at runtime. The only opt-in fetch path is `lodestone setup-models --allow-download`, which requires both an explicit operator flag and the absence of `LODESTONE_OFFLINE=1`. Set `LODESTONE_OFFLINE=1` in your shell or your editor's MCP config block to make the privacy guarantee unconditional. The full implementation lives at [`../PRIVACY.md`](../PRIVACY.md), including the build-time grep audit that fails CI on any unexpected URL in shipped `dist/`.
+Default install: zero outbound network calls at runtime. The reserved opt-in fetch path is `lodestone setup-models --allow-download`, which requires both an explicit operator flag and the absence of `LODESTONE_OFFLINE=1`; the public v0.1.x build also exits before network until real pinned hashes are published. Set `LODESTONE_OFFLINE=1` in your shell or your editor's MCP config block to make the privacy guarantee unconditional. The full implementation lives at [`../PRIVACY.md`](../PRIVACY.md), including the build-time grep audit that fails CI on any unexpected URL in shipped `dist/`.
 
 ## 8. Upgrading
 

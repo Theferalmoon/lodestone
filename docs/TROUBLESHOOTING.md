@@ -89,6 +89,12 @@ That rebuilds `.lodestone/lodestone.sqlite` from scratch. v0 has no migration ru
 
 ## `lodestone init` says "Pro mode is v0.5+ work"
 
-**Symptom:** `lodestone init --pro` exits cleanly with the message "Pro mode is v0.5+ work; see docs/PRO.md".
+**Symptom:** `lodestone init --pro` exits cleanly with the message "Pro mode is v0.5+ work; no files were changed."
 
 **Fix:** this is the intended exit message. Pro mode (multi-repo, shared index, Docker-Compose orchestrated) is deferred to v0.5+. Use `lodestone init` without `--pro` for friend mode (the v0 ship target).
+
+## `lodestone setup-models` says it is not enabled
+
+**Symptom:** `lodestone setup-models --allow-download` exits before any network call and says setup-models is not enabled in the public v0.1.x build.
+
+**Fix:** this is intentional. The public friend profiles already bundle their model weights. Use the default `lite` installer, or reinstall with `LODESTONE_PROFILE=full` if you want the larger bundled Nomic model. The live setup-models fetch path stays fail-closed until a future release publishes real pinned hashes.

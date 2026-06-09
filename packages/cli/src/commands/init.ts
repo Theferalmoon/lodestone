@@ -173,7 +173,9 @@ export async function init(argv: readonly string[]): Promise<number> {
   const cwd = process.cwd();
 
   if (opts.pro) {
-    output.warn("`--pro` is not yet implemented in this build (filled by §22).");
+    output.warn("Pro mode is v0.5+ work; no files were changed.");
+    output.warn("Run `lodestone init` without `--pro` for the v0 friend-mode install.");
+    return 0;
   }
 
   if (opts.dryRun) {
@@ -250,10 +252,10 @@ export async function init(argv: readonly string[]): Promise<number> {
     if (isBundledModelMissing(err)) {
       output.error("");
       output.error(
-        "Hint: bundled embedder weights are missing. Run `lodestone setup-models --allow-download`"
+        "Hint: bundled embedder weights are missing. Reinstall the matching lite/full release"
       );
       output.error(
-        "to fetch them on demand (consent-gated, see docs/PRIVACY.md)."
+        "or use a future build with published setup-models pins."
       );
     }
     recordReindexState(cwd, manifest, "failed");
