@@ -398,6 +398,22 @@ why it exists, and how to use it as a teaching example.</td>
 </tr>
 </tbody>
 </table>
+<h2 id="generated-docs-policy">Generated Docs Policy</h2>
+<p>The generated docs under <code>docs/site/</code>,
+<code>docs/friend/word/</code>, and <code>packages/cli/docs/</code> are
+intentionally tracked. They are distribution artifacts:
+<code>docs/site/</code> is what gets published at
+<code>https://lodestone.cmndi.ai/docs/</code>, and
+<code>packages/cli/docs/</code> is copied into the friend install
+package so the installer can point users at local documentation.</p>
+<p>Release packaging sets stable docs metadata from the release commit
+before packing. For manual rebuilds that need byte-for-byte stable
+output, set either <code>SOURCE_DATE_EPOCH</code> or
+<code>LODESTONE_DOCS_BUILD_TIMESTAMP</code> before running:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">SOURCE_DATE_EPOCH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> log <span class="at">-1</span> <span class="at">--format</span><span class="op">=</span>%ct HEAD<span class="va">)</span><span class="st">&quot;</span> <span class="ex">pnpm</span> docs:friend</span></code></pre></div>
+<p>Do not add these generated docs directories to
+<code>.gitignore</code> unless the distribution model changes.</p>
 <h2 id="status">Status</h2>
 <p>Lodestone v0.1.0 is the first ship. Sections §01 through §20 of the
 implementation plan are landed and tested (790 unit + e2e tests). Pro

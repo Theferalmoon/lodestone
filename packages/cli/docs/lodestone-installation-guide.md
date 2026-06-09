@@ -157,6 +157,11 @@ The installer:
 7. Creates `.lodestone/` for the local index, cache, and manifest.
 8. Runs the first indexing pass.
 
+Advanced operators can set `LODESTONE_STRICT_NPM_OVERRIDES=1` when installing
+into an existing project with an old lockfile. Do not use that option unless
+you specifically want Lodestone to add stricter root dependency overrides to
+the project.
+
 ## What Files Are Created
 
 Typical new or changed files:

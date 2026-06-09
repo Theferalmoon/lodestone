@@ -336,6 +336,11 @@ Lodestone MCP server.</li>
 manifest.</li>
 <li>Runs the first indexing pass.</li>
 </ol>
+<p>Advanced operators can set
+<code>LODESTONE_STRICT_NPM_OVERRIDES=1</code> when installing into an
+existing project with an old lockfile. Do not use that option unless you
+specifically want Lodestone to add stricter root dependency overrides to
+the project.</p>
 <h2 id="what-files-are-created">What Files Are Created</h2>
 <p>Typical new or changed files:</p>
 <table>

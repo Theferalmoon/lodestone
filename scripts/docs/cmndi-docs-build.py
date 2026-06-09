@@ -38,6 +38,46 @@ ALL_DOCS = [
 ]
 # Floor: every CMNDI tier requires at least 02 + 03.
 MIN_REQUIRED = {"02-technical-spec.md", "03-end-user-guide.md"}
+_BUILD_DATETIME: datetime | None = None
+
+
+def first_env(*names: str) -> str | None:
+    for name in names:
+        value = os.environ.get(name)
+        if value is not None and value.strip():
+            return value.strip()
+    return None
+
+
+def build_datetime() -> datetime:
+    global _BUILD_DATETIME
+    if _BUILD_DATETIME is not None:
+        return _BUILD_DATETIME
+
+    raw = first_env("LODESTONE_DOCS_BUILD_TIMESTAMP", "CMNDI_DOCS_BUILD_TIMESTAMP")
+    if raw is None:
+        raw = first_env("SOURCE_DATE_EPOCH")
+    if raw is None:
+        _BUILD_DATETIME = datetime.now(timezone.utc)
+        return _BUILD_DATETIME
+
+    if raw.isdigit():
+        _BUILD_DATETIME = datetime.fromtimestamp(int(raw), timezone.utc)
+        return _BUILD_DATETIME
+
+    normalized = raw.removesuffix(" UTC").replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise SystemExit(
+            "LODESTONE_DOCS_BUILD_TIMESTAMP/CMNDI_DOCS_BUILD_TIMESTAMP must be "
+            "an ISO-8601 timestamp or SOURCE_DATE_EPOCH must be an epoch second"
+        ) from exc
+    if parsed.tzinfo is None:
+        _BUILD_DATETIME = parsed.replace(tzinfo=timezone.utc)
+        return _BUILD_DATETIME
+    _BUILD_DATETIME = parsed.astimezone(timezone.utc)
+    return _BUILD_DATETIME
 
 
 def slugify(text: str) -> str:
@@ -336,6 +376,9 @@ JS = """
 
 
 def git_head() -> str:
+    override = first_env("LODESTONE_DOCS_BUILD_COMMIT", "CMNDI_DOCS_BUILD_COMMIT")
+    if override:
+        return override
     try:
         return subprocess.check_output(
             ["git", "-C", str(REPO_ROOT), "rev-parse", "--short", "HEAD"],
@@ -346,6 +389,9 @@ def git_head() -> str:
 
 
 def git_branch() -> str:
+    override = first_env("LODESTONE_DOCS_BUILD_BRANCH", "CMNDI_DOCS_BUILD_BRANCH")
+    if override:
+        return override
     try:
         return subprocess.check_output(
             ["git", "-C", str(REPO_ROOT), "rev-parse", "--abbrev-ref", "HEAD"],
@@ -394,7 +440,7 @@ def main() -> int:
 
     head = git_head()
     branch = git_branch()
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    timestamp = build_datetime().strftime("%Y-%m-%d %H:%M:%S UTC")
 
     out = f"""<!DOCTYPE html>
 <html lang="en">

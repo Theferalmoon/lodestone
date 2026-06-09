@@ -215,4 +215,65 @@ describe("section 21 documentation pass", () => {
       });
     }
   });
+
+  describe("release hygiene helpers", () => {
+    it("docs builders support stable release metadata", () => {
+      const cmndiBuilder = readFile("scripts/docs/cmndi-docs-build.py");
+      const friendBuilder = readFile("scripts/docs/friend-docs-build.py");
+      const packProfile = readFile("scripts/pack-profile.sh");
+      const cmndiHook = readFile("scripts/docs/cmndi-docs-hook.sh");
+      const cmndiWorkflow = readFile(".github/workflows/cmndi-docs.yml");
+
+      expect(cmndiBuilder).toContain("SOURCE_DATE_EPOCH");
+      expect(cmndiBuilder).toContain("LODESTONE_DOCS_BUILD_TIMESTAMP");
+      expect(cmndiBuilder).toContain("LODESTONE_DOCS_BUILD_COMMIT");
+      expect(cmndiBuilder).toContain("LODESTONE_DOCS_BUILD_BRANCH");
+
+      expect(friendBuilder).toContain("SOURCE_DATE_EPOCH");
+      expect(friendBuilder).toContain("LODESTONE_DOCS_BUILD_TIMESTAMP");
+      expect(friendBuilder).toContain("normalize_docx");
+
+      expect(packProfile).toContain("SOURCE_DATE_EPOCH");
+      expect(packProfile).toContain("git -C \"$REPO_ROOT\" log -1 --format=%ct HEAD");
+      expect(cmndiHook).toContain("SOURCE_DATE_EPOCH");
+      expect(cmndiHook).toContain("git log -1 --format=%ct HEAD");
+      expect(cmndiWorkflow).toContain("SOURCE_DATE_EPOCH");
+      expect(cmndiWorkflow).toContain("git log -1 --format=%ct HEAD");
+    });
+
+    it("documents why generated friend docs are tracked", () => {
+      const docsReadme = readFile("docs/README.md");
+      const friendReadme = readFile("docs/friend/README.md");
+
+      expect(docsReadme).toContain("Generated Docs Policy");
+      expect(docsReadme).toContain("intentionally tracked");
+      expect(docsReadme).toContain("Do not add these generated docs directories to `.gitignore`");
+      expect(friendReadme).toContain("intentionally committed");
+      expect(friendReadme).toContain("manual");
+      expect(friendReadme).toContain("reproducible rebuild");
+    });
+
+    it("installer keeps strict transitive overrides opt-in", () => {
+      const installer = readFile("scripts/install-from-release.sh");
+
+      expect(installer).toContain("LODESTONE_STRICT_NPM_OVERRIDES");
+      expect(installer).toContain('protobufjs: "7.5.8"');
+      expect(installer).toContain('"fast-uri": "3.1.2"');
+      expect(installer).toContain('hono: "4.12.21"');
+      expect(installer).toContain('"ip-address": "10.1.1"');
+      expect(installer).toContain('qs: "6.15.2"');
+      expect(installer).toContain("strict npm override mode");
+      expect(installer).toContain("default npm override mode: protobufjs only");
+    });
+
+    it("friend docs document the strict override option as advanced", () => {
+      const technical = readFile("docs/friend/lodestone-technical-guide.md");
+      const installation = readFile("docs/friend/lodestone-installation-guide.md");
+
+      expect(technical).toContain("LODESTONE_STRICT_NPM_OVERRIDES=1");
+      expect(technical).toContain("Strict npm override mode");
+      expect(installation).toContain("Advanced operators can set");
+      expect(installation).toContain("LODESTONE_STRICT_NPM_OVERRIDES=1");
+    });
+  });
 });

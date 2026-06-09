@@ -94,6 +94,25 @@ Open Claude Code (or any MCP client) in the same directory. Ask: *what are the m
 | [`UPGRADE.md`](./UPGRADE.md) | How to upgrade the CLI, schema-version expectations, and the v0 → v0.5 migration path. |
 | [`DEMO-REPO.md`](./DEMO-REPO.md) | The synthetic demo repo at `e2e/synthetic-demo-repo/`, why it exists, and how to use it as a teaching example. |
 
+## Generated Docs Policy
+
+The generated docs under `docs/site/`, `docs/friend/word/`, and
+`packages/cli/docs/` are intentionally tracked. They are distribution
+artifacts: `docs/site/` is what gets published at
+`https://lodestone.cmndi.ai/docs/`, and `packages/cli/docs/` is copied into the
+friend install package so the installer can point users at local documentation.
+
+Release packaging sets stable docs metadata from the release commit before
+packing. For manual rebuilds that need byte-for-byte stable output, set either
+`SOURCE_DATE_EPOCH` or `LODESTONE_DOCS_BUILD_TIMESTAMP` before running:
+
+```bash
+SOURCE_DATE_EPOCH="$(git log -1 --format=%ct HEAD)" pnpm docs:friend
+```
+
+Do not add these generated docs directories to `.gitignore` unless the
+distribution model changes.
+
 ## Status
 
 Lodestone v0.1.0 is the first ship. Sections §01 through §20 of the implementation plan are landed and tested (790 unit + e2e tests). Pro mode (multi-repo / shared index) is deferred to v0.5+; the `lodestone init --pro` flag returns a clear "v0.5+ work" message and exits cleanly.

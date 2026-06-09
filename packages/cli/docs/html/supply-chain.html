@@ -376,7 +376,11 @@ prep also pins patched transitive releases for packages that were
 advisory-sensitive at release time, so <code>pnpm audit --prod</code> is
 clean as of 2026-06-08. The public friend installer carries the same
 intent into npm consumer projects by adding a root npm override for
-<code>protobufjs@7.5.8</code> before install.</p>
+<code>protobufjs@7.5.8</code> before install. Operators installing into
+an existing project with an old lockfile can opt into
+<code>LODESTONE_STRICT_NPM_OVERRIDES=1</code>, which also pins the
+broader advisory-sensitive transitive set from the release
+workspace.</p>
 <p>If you want to verify any of the above on your machine:
 <code>pnpm why &lt;package&gt;</code> shows where a dep entered the
 graph; <code>pnpm audit</code> lists open advisories; the Hugging Face

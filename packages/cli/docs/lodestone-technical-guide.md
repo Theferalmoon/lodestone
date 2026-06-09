@@ -119,13 +119,30 @@ High-level flow:
    - `lodestone-cli`
    - profile-specific `lodestone-ingest`
 6. Verify each tarball against an embedded SHA-256 checksum.
-7. Install the tarballs into the target project's `node_modules`.
-8. Run `./node_modules/.bin/lodestone init`.
-9. Pass `--client codex` when `LODESTONE_CLIENT=codex` or `all` is set.
-10. Leave no temporary download directory behind.
+7. Add a narrow npm root override for `protobufjs@7.5.8`, because npm
+   consumer projects do not inherit the release workspace's pnpm overrides.
+8. Install the tarballs into the target project's `node_modules`.
+9. Run `./node_modules/.bin/lodestone init`.
+10. Pass `--client codex` when `LODESTONE_CLIENT=codex` or `all` is set.
+11. Leave no temporary download directory behind.
 
 The installer does not grant repository write access. It only downloads release
 artifacts.
+
+### Strict npm override mode
+
+Fresh installs resolve the broader advisory-sensitive transitive packages to
+safe versions through normal npm resolution. Existing projects with old
+lockfiles may want a stricter posture. For that case, the installer supports:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_STRICT_NPM_OVERRIDES=1 bash
+```
+
+Strict mode adds root overrides for `fast-uri`, `hono`, `ip-address`, and `qs`
+in addition to the default `protobufjs` override. It is opt-in because these
+are common packages and root overrides can affect the host project's own
+dependency tree.
 
 ## Runtime Architecture
 
@@ -226,6 +243,12 @@ Install full with Codex project config:
 curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full LODESTONE_CLIENT=codex bash
 ```
 
+Install with strict npm advisory overrides:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_STRICT_NPM_OVERRIDES=1 bash
+```
+
 Status:
 
 ```bash
@@ -282,6 +305,7 @@ When troubleshooting a friend install, collect:
 - Installer command used.
 - `LODESTONE_PROFILE` value, if any.
 - `LODESTONE_CLIENT` value, if any.
+- `LODESTONE_STRICT_NPM_OVERRIDES` value, if any.
 - Last 50 lines of installer output.
 - `git status --short`.
 - Whether `.mcp.json` exists.

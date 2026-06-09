@@ -333,6 +333,9 @@ raw GitHub installer ref. The script is designed to fail closed.</p>
 <li>profile-specific <code>lodestone-ingest</code></li>
 </ul></li>
 <li>Verify each tarball against an embedded SHA-256 checksum.</li>
+<li>Add a narrow npm root override for <code>protobufjs@7.5.8</code>,
+because npm consumer projects do not inherit the release workspace's
+pnpm overrides.</li>
 <li>Install the tarballs into the target project's
 <code>node_modules</code>.</li>
 <li>Run <code>./node_modules/.bin/lodestone init</code>.</li>
@@ -342,6 +345,18 @@ raw GitHub installer ref. The script is designed to fail closed.</p>
 </ol>
 <p>The installer does not grant repository write access. It only
 downloads release artifacts.</p>
+<h3 id="strict-npm-override-mode">Strict npm override mode</h3>
+<p>Fresh installs resolve the broader advisory-sensitive transitive
+packages to safe versions through normal npm resolution. Existing
+projects with old lockfiles may want a stricter posture. For that case,
+the installer supports:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_STRICT_NPM_OVERRIDES</span><span class="op">=</span>1 <span class="fu">bash</span></span></code></pre></div>
+<p>Strict mode adds root overrides for <code>fast-uri</code>,
+<code>hono</code>, <code>ip-address</code>, and <code>qs</code> in
+addition to the default <code>protobufjs</code> override. It is opt-in
+because these are common packages and root overrides can affect the host
+project's own dependency tree.</p>
 <h2 id="runtime-architecture">Runtime Architecture</h2>
 <pre class="text"><code>source files
    |
@@ -447,29 +462,32 @@ Lodestone-managed network calls.</li>
 </ul>
 <h2 id="operational-commands">Operational Commands</h2>
 <p>Install lite:</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
-<p>Install full:</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
-<p>Install lite with Codex project config:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<p>Install full:</p>
 <div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
-<p>Install full with Codex project config:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
+<p>Install lite with Codex project config:</p>
 <div class="sourceCode" id="cb8"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
-<p>Status:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>Install full with Codex project config:</p>
 <div class="sourceCode" id="cb9"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> status</span></code></pre></div>
-<p>Doctor, including Codex adapter validation:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>Install with strict npm advisory overrides:</p>
 <div class="sourceCode" id="cb10"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
-<p>Rebuild the local index:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_STRICT_NPM_OVERRIDES</span><span class="op">=</span>1 <span class="fu">bash</span></span></code></pre></div>
+<p>Status:</p>
 <div class="sourceCode" id="cb11"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> reindex</span></code></pre></div>
-<p>Uninstall:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> status</span></code></pre></div>
+<p>Doctor, including Codex adapter validation:</p>
 <div class="sourceCode" id="cb12"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
+<p>Rebuild the local index:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> reindex</span></code></pre></div>
+<p>Uninstall:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
 <h2 id="upgrade-model">Upgrade Model</h2>
 <p>The public friend installer is pinned to an approved package set.
 Operators move the installer forward after building, testing,
@@ -496,6 +514,7 @@ priority is a small, local, auditable install path.</p>
 <li>Installer command used.</li>
 <li><code>LODESTONE_PROFILE</code> value, if any.</li>
 <li><code>LODESTONE_CLIENT</code> value, if any.</li>
+<li><code>LODESTONE_STRICT_NPM_OVERRIDES</code> value, if any.</li>
 <li>Last 50 lines of installer output.</li>
 <li><code>git status --short</code>.</li>
 <li>Whether <code>.mcp.json</code> exists.</li>

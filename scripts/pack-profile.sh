@@ -49,7 +49,16 @@ mkdir -p "$OUT_DIR"
 
 if [[ "${LODESTONE_SKIP_DOCS_BUILD:-}" != "1" ]]; then
   echo "[pack-profile] refreshing friend docs before packing"
-  ( cd "$REPO_ROOT" && pnpm docs:friend )
+  DOCS_SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -C "$REPO_ROOT" log -1 --format=%ct HEAD 2>/dev/null || date +%s)}"
+  DOCS_BUILD_COMMIT="${LODESTONE_DOCS_BUILD_COMMIT:-$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)}"
+  DOCS_BUILD_BRANCH="${LODESTONE_DOCS_BUILD_BRANCH:-$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)}"
+  (
+    cd "$REPO_ROOT"
+    SOURCE_DATE_EPOCH="$DOCS_SOURCE_DATE_EPOCH" \
+      LODESTONE_DOCS_BUILD_COMMIT="$DOCS_BUILD_COMMIT" \
+      LODESTONE_DOCS_BUILD_BRANCH="$DOCS_BUILD_BRANCH" \
+      pnpm docs:friend
+  )
 fi
 
 if [[ "$PROFILE" == "lite" ]]; then
