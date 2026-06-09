@@ -213,9 +213,8 @@
 <h2 id="local-code-intelligence-for-ai-coding-agents">Local code
 intelligence for AI coding agents</h2>
 <p><strong>Prepared by:</strong> Cybersecurity Management &amp; Network
-Defense, Inc.<br />
-<strong>Document type:</strong> Feature brochure<br />
-<strong>Version:</strong> v0.1.5 friend-install documentation<br />
+Defense, Inc. <strong>Document type:</strong> Feature brochure
+<strong>Version:</strong> v0.1.6 friend-install documentation
 <strong>Date:</strong> June 8, 2026</p>
 <h2 id="executive-overview">Executive Overview</h2>
 <p>Lodestone gives an AI coding agent a local map of a software project
@@ -324,6 +323,13 @@ index for power users and debugging.</p>
 </table>
 <p>Both profiles keep source code local. The difference is the model
 packaged into the ingest tarball.</p>
+<h3 id="optional-codex-adapter">Optional Codex adapter</h3>
+<p>Lodestone can write project-local Codex MCP configuration during
+install. A Codex user adds <code>LODESTONE_CLIENT=codex</code> to the
+installer command, then verifies with
+<code>lodestone doctor --client codex</code>. Codex still decides
+whether the project is trusted before loading
+<code>.codex/config.toml</code>.</p>
 <h2 id="why-lodestone-is-better-than-common-alternatives">Why Lodestone
 Is Better Than Common Alternatives</h2>
 <table>
@@ -378,8 +384,10 @@ codebase.</td>
 the project, not a remote service that owns the project context.</p>
 <h3 id="agent-native">Agent native</h3>
 <p>Lodestone is exposed through MCP because coding agents already know
-how to call MCP tools. The user should not have to copy and paste large
-context packets.</p>
+how to call MCP tools. The default <code>.mcp.json</code> path works for
+common MCP-aware editors, and the optional Codex adapter writes Codex's
+project-local MCP config. The user should not have to copy and paste
+large context packets.</p>
 <h3 id="beginner-friendly">Beginner friendly</h3>
 <p>The install path is intentionally simple. The default path is the
 <code>lite</code> profile and the first recommended question is
@@ -417,7 +425,7 @@ branch.</p>
 understanding of the repository before it starts editing.</p>
 
       </article>
-      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:58 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

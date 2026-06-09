@@ -163,4 +163,41 @@ describe("readInstallManifest", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe("schema-mismatch");
   });
+
+  it("returns schema-mismatch when codex_config is malformed", () => {
+    mkdirSync(path.join(tmp, ".lodestone"), { recursive: true });
+    writeFileSync(
+      path.join(tmp, ".lodestone", "install-manifest.json"),
+      JSON.stringify({
+        schema_version: 2,
+        installed_at: "2026-05-01T00:00:00.000Z",
+        install_state: "complete",
+        mcp_json: { action: "created", path: "/x" },
+        claude_md: { action: "skipped" },
+        gitignore: { action: "created", path: "/y" },
+        codex_config: { action: "invalid-action", path: 123 }
+      })
+    );
+    const r = readInstallManifest(tmp);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("schema-mismatch");
+  });
+
+  it("returns ok when codex_config is valid", () => {
+    mkdirSync(path.join(tmp, ".lodestone"), { recursive: true });
+    writeFileSync(
+      path.join(tmp, ".lodestone", "install-manifest.json"),
+      JSON.stringify({
+        schema_version: 2,
+        installed_at: "2026-05-01T00:00:00.000Z",
+        install_state: "complete",
+        mcp_json: { action: "created", path: "/x" },
+        claude_md: { action: "skipped" },
+        gitignore: { action: "created", path: "/y" },
+        codex_config: { action: "created", path: "/some/path" }
+      })
+    );
+    const r = readInstallManifest(tmp);
+    expect(r.ok).toBe(true);
+  });
 });

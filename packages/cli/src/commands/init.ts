@@ -26,6 +26,11 @@ import { writeFileAtomic } from "../install/atomic.js";
 import { augmentClaudeMd, type AugmentClaudeMdResult } from "../install/claude-md.js";
 import { updateGitignore, type UpdateGitignoreResult } from "../install/gitignore.js";
 import { writeMcpJson, type McpConfigResult } from "../install/mcp-config.js";
+import {
+  codexConfigPath,
+  writeCodexConfig,
+  type CodexConfigResult,
+} from "../install/codex-config.js";
 import { installRuntime } from "../install/runtime.js";
 import { writeLodestoneToml } from "../install/toml.js";
 import { printClaudeMdSnippet } from "../install/snippet.js";
@@ -36,6 +41,8 @@ export interface InitOptions {
   writeClaudeMd: boolean;
   pro: boolean;
   dryRun: boolean;
+  clients: readonly ClientTarget[];
+  clientError?: string;
   /**
    * POST-§20 Issue C: `init` runs the ingest pipeline by default so a friend
    * gets a fully-indexed project from a single command. `--no-reindex` skips
@@ -44,6 +51,8 @@ export interface InitOptions {
    */
   noReindex: boolean;
 }
+
+export type ClientTarget = "codex";
 
 /**
  * `install_state` semantics (schema v2):
@@ -72,13 +81,44 @@ export interface InstallManifest {
   mcp_json: McpConfigResult;
   claude_md: AugmentClaudeMdResult;
   gitignore: UpdateGitignoreResult;
+  codex_config?: CodexConfigResult;
 }
 
 export function parseInitArgv(argv: readonly string[]): InitOptions {
+  const clients = new Set<ClientTarget>();
+  let clientError: string | undefined;
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = argv[i] ?? "";
+    let value: string | undefined;
+    if (token === "--client") {
+      value = argv[i + 1];
+      if (value === undefined || value.startsWith("--")) {
+        clientError = "--client requires a value: codex or all";
+        break;
+      }
+      i += 1;
+    } else if (token.startsWith("--client=")) {
+      value = token.slice("--client=".length);
+      if (value === "") {
+        clientError = "--client requires a value: codex or all";
+        break;
+      }
+    } else {
+      continue;
+    }
+    if (value === "codex" || value === "all") {
+      clients.add("codex");
+    } else {
+      clientError = `Unknown client '${value}'. Known clients: codex, all`;
+      break;
+    }
+  }
   return {
     writeClaudeMd: argv.includes("--write-claude-md"),
     pro: argv.includes("--pro"),
     dryRun: argv.includes("--dry-run"),
+    clients: [...clients],
+    ...(clientError !== undefined ? { clientError } : {}),
     noReindex: argv.includes("--no-reindex"),
   };
 }
@@ -102,7 +142,7 @@ export function parseInitArgv(argv: readonly string[]): InitOptions {
  */
 export function runInstallSteps(
   repoRoot: string,
-  opts: { writeClaudeMd: boolean }
+  opts: { writeClaudeMd: boolean; clients?: readonly ClientTarget[] }
 ): InstallManifest {
   // Manifest lives inside .lodestone/ — make sure the dir exists before writing.
   // canonicalLodestoneDir creates the parent (cwd) but not .lodestone itself;
@@ -123,6 +163,7 @@ export function runInstallSteps(
     action: "noop",
     path: path.join(repoRoot, ".gitignore"),
   };
+  const clients = opts.clients ?? [];
   const manifest: InstallManifest = {
     schema_version: 2,
     installed_at: new Date().toISOString(),
@@ -130,6 +171,9 @@ export function runInstallSteps(
     mcp_json: stagingMcp,
     claude_md: stagingClaude,
     gitignore: stagingGitignore,
+    ...(clients.includes("codex")
+      ? { codex_config: { action: "merged", path: codexConfigPath(repoRoot) } }
+      : {}),
   };
   const writeManifest = (): void => {
     writeFileAtomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -149,6 +193,11 @@ export function runInstallSteps(
   installRuntime(repoRoot);
   manifest.mcp_json = writeMcpJson(repoRoot);
   writeManifest();
+
+  if (clients.includes("codex")) {
+    manifest.codex_config = writeCodexConfig(repoRoot);
+    writeManifest();
+  }
 
   manifest.claude_md = opts.writeClaudeMd
     ? augmentClaudeMd({ write: true, repoRoot })
@@ -172,6 +221,11 @@ export async function init(argv: readonly string[]): Promise<number> {
   const opts = parseInitArgv(argv);
   const cwd = process.cwd();
 
+  if (opts.clientError !== undefined) {
+    output.error(opts.clientError);
+    return 2;
+  }
+
   if (opts.pro) {
     output.warn("Pro mode is v0.5+ work; no files were changed.");
     output.warn("Run `lodestone init` without `--pro` for the v0 friend-mode install.");
@@ -182,6 +236,9 @@ export async function init(argv: readonly string[]): Promise<number> {
     output.info("--dry-run set; no install side-effects will be applied.");
     output.info(`would write: ${path.join(cwd, ".mcp.json")}`);
     output.info(`would patch: ${path.join(cwd, ".gitignore")}`);
+    if (opts.clients.includes("codex")) {
+      output.info(`would write: ${codexConfigPath(cwd)}`);
+    }
     if (opts.writeClaudeMd) {
       output.info(`would augment: ${path.join(cwd, "CLAUDE.md")}`);
     }
@@ -194,7 +251,10 @@ export async function init(argv: readonly string[]): Promise<number> {
 
   let manifest: InstallManifest;
   try {
-    manifest = runInstallSteps(cwd, { writeClaudeMd: opts.writeClaudeMd });
+    manifest = runInstallSteps(cwd, {
+      writeClaudeMd: opts.writeClaudeMd,
+      clients: opts.clients,
+    });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     output.error(`Install failed: ${detail}`);
@@ -204,6 +264,14 @@ export async function init(argv: readonly string[]): Promise<number> {
   output.success("Lodestone install complete.");
   output.info(`  .mcp.json:        ${manifest.mcp_json.action} (${manifest.mcp_json.path})`);
   output.info(`  .gitignore:       ${manifest.gitignore.action} (${manifest.gitignore.path})`);
+  if (manifest.codex_config !== undefined) {
+    output.info(
+      `  Codex config:      ${manifest.codex_config.action} (${manifest.codex_config.path})`
+    );
+    output.info(
+      "  note: Codex loads project .codex/config.toml only after this repo is trusted."
+    );
+  }
   output.info(
     `  CLAUDE.md:        ${manifest.claude_md.action}${
       manifest.claude_md.path ? ` (${manifest.claude_md.path})` : ""

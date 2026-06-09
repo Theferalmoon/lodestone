@@ -225,7 +225,7 @@ is no telemetry, no upload step, and no remote service to call. See <a
 href="./PRIVACY.md"><code>PRIVACY.md</code></a> for the implementation
 details and the build-time grep audit that enforces it.</p>
 <blockquote>
-<p><strong>Note (v0.1.5).</strong> The <code>npx lodestone init</code>
+<p><strong>Note (v0.1.6).</strong> The <code>npx lodestone init</code>
 flow described below is the v0.5+ npm-publish path and is <strong>not
 yet wired</strong> — <code>@lodestone/cli</code> is not on the npm
 registry. Today's working install is the curl-bash one-liner from the <a
@@ -249,9 +249,16 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="
 languages, writes <code>.lodestone/lodestone.toml</code>, scaffolds the
 SQLite + sqlite-vec store, downloads zero models on the default profile
 (the embedder is bundled), runs the first ingest pass, and writes a
-<code>.mcp.json</code> snippet your coding agent can pick up. Then open
-Claude Code (or Cursor, or any other MCP-aware client) in the same
-directory and ask:</p>
+<code>.mcp.json</code> snippet your coding agent can pick up.</p>
+<p>If you use Codex, add <code>LODESTONE_CLIENT=codex</code> to the
+installer command or run
+<code>lodestone init --client codex --no-reindex</code> after install.
+This writes a project-local <code>.codex/config.toml</code> MCP entry.
+Codex loads that file only after the project is trusted; approve the
+trust prompt, then start a new Codex session if Codex was already
+open.</p>
+<p>Then open Claude Code, Codex, Cursor, or any other MCP-aware client
+in the same directory and ask:</p>
 <blockquote>
 <p><em>what are the main subsystems of this codebase?</em></p>
 </blockquote>
@@ -299,7 +306,7 @@ href="./MCP-TOOLS.md"><code>MCP-TOOLS.md</code></a>.</p>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ~/code/your-project</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> curl <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> profile = lite</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> latest = v0.1.5</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> latest = v0.1.6</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> downloading tarballs ... <span class="er">(</span><span class="ex">4</span> files, ~16 MB<span class="kw">)</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> installing into ./node_modules ...</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">[lodestone-install]</span> running <span class="st">&#39;lodestone init&#39;</span> ...</span>
@@ -403,7 +410,7 @@ href="../NOTICE"><code>../NOTICE</code></a>, and <a
 href="../LICENSE-AUTHORIZATION.md"><code>../LICENSE-AUTHORIZATION.md</code></a>.</p>
 
       </article>
-      <footer>Generated 2026-06-09 02:12 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 02:58 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

@@ -148,6 +148,15 @@ function normalizeManifest(value: unknown): InstallManifest | null {
     reindexState = r;
   }
 
+  let codexConfig: InstallManifest["codex_config"] | undefined;
+  if (obj.codex_config !== undefined) {
+    if (typeof obj.codex_config !== "object" || obj.codex_config === null) return null;
+    const cc = obj.codex_config as Record<string, unknown>;
+    if (typeof cc.action !== "string" || !["created", "merged", "updated"].includes(cc.action)) return null;
+    if (typeof cc.path !== "string") return null;
+    codexConfig = cc as unknown as InstallManifest["codex_config"];
+  }
+
   return {
     schema_version: 2,
     installed_at: obj.installed_at,
@@ -156,5 +165,6 @@ function normalizeManifest(value: unknown): InstallManifest | null {
     mcp_json: mcp as unknown as InstallManifest["mcp_json"],
     claude_md: cm as unknown as InstallManifest["claude_md"],
     gitignore: gi as unknown as InstallManifest["gitignore"],
+    ...(codexConfig !== undefined ? { codex_config: codexConfig } : {}),
   };
 }

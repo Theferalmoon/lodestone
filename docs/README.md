@@ -6,7 +6,7 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 
 **Your code never leaves your machine.** Embeddings, the call graph, cluster names, skill cards, feedback events — everything is written to `.lodestone/` inside your project, locally. There is no telemetry, no upload step, and no remote service to call. See [`PRIVACY.md`](./PRIVACY.md) for the implementation details and the build-time grep audit that enforces it.
 
-> **Note (v0.1.5).** The `npx lodestone init` flow described below is the
+> **Note (v0.1.6).** The `npx lodestone init` flow described below is the
 > v0.5+ npm-publish path and is **not yet wired** — `@lodestone/cli` is not
 > on the npm registry. Today's working install is the curl-bash one-liner
 > from the [top-level README](../README.md#install-one-liner):
@@ -30,7 +30,11 @@ npx lodestone init
 curl -sSfL https://lodestone.cmndi.ai/install | bash
 ```
 
-Either command does the magic-moment work: detects your project's languages, writes `.lodestone/lodestone.toml`, scaffolds the SQLite + sqlite-vec store, downloads zero models on the default profile (the embedder is bundled), runs the first ingest pass, and writes a `.mcp.json` snippet your coding agent can pick up. Then open Claude Code (or Cursor, or any other MCP-aware client) in the same directory and ask:
+Either command does the magic-moment work: detects your project's languages, writes `.lodestone/lodestone.toml`, scaffolds the SQLite + sqlite-vec store, downloads zero models on the default profile (the embedder is bundled), runs the first ingest pass, and writes a `.mcp.json` snippet your coding agent can pick up.
+
+If you use Codex, add `LODESTONE_CLIENT=codex` to the installer command or run `lodestone init --client codex --no-reindex` after install. This writes a project-local `.codex/config.toml` MCP entry. Codex loads that file only after the project is trusted; approve the trust prompt, then start a new Codex session if Codex was already open.
+
+Then open Claude Code, Codex, Cursor, or any other MCP-aware client in the same directory and ask:
 
 > *what are the main subsystems of this codebase?*
 
@@ -57,7 +61,7 @@ Full reference (request shapes, response shapes, examples): [`MCP-TOOLS.md`](./M
 $ cd ~/code/your-project
 $ curl -sSfL https://lodestone.cmndi.ai/install | bash
 [lodestone-install] profile = lite
-[lodestone-install] latest = v0.1.5
+[lodestone-install] latest = v0.1.6
 [lodestone-install] downloading tarballs ... (4 files, ~16 MB)
 [lodestone-install] installing into ./node_modules ...
 [lodestone-install] running 'lodestone init' ...

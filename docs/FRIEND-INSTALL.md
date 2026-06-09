@@ -59,6 +59,17 @@ For the larger model profile:
 curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 ```
 
+For Codex CLI or the Codex IDE extension, add the optional Codex adapter:
+
+```bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_CLIENT=codex bash
+```
+
+That writes `.codex/config.toml` for this project. Codex still requires the
+project to be trusted before it loads project-local config. Approve the Codex
+trust prompt for this repo, then start a new Codex session if Codex was already
+open.
+
 ## What Access You Get
 
 You get a local installed copy of Lodestone inside your own project.
@@ -77,12 +88,19 @@ what are the main subsystems of this codebase?
 
 The agent should use Lodestone to inspect the local project index.
 
+For Codex, verify the project adapter first:
+
+```bash
+./node_modules/.bin/lodestone doctor --client codex
+```
+
 ## Files Created Locally
 
 Lodestone creates project-local files such as:
 
 - `.lodestone/`
 - `.mcp.json`
+- optional `.codex/config.toml` when `LODESTONE_CLIENT=codex` is used
 - entries in `.gitignore`
 
 The `.lodestone/` directory is local cache and index data. Do not commit it.

@@ -89,6 +89,22 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     expect(readFileSync(path.join(tmp, ".gitignore"), "utf8")).toBe(friendBody);
   });
 
+  it("removes only Lodestone's Codex entry and preserves friend Codex settings", async () => {
+    mkdirSync(path.join(tmp, ".codex"), { recursive: true });
+    writeFileSync(path.join(tmp, ".codex", "config.toml"), 'model = "gpt-5.5"\n');
+
+    runInstallSteps(tmp, { writeClaudeMd: false, clients: ["codex"] });
+    expect(readFileSync(path.join(tmp, ".codex", "config.toml"), "utf8")).toContain(
+      "lodestone-mcp"
+    );
+
+    expect(await uninstall([])).toBe(0);
+
+    const after = readFileSync(path.join(tmp, ".codex", "config.toml"), "utf8");
+    expect(after).toContain('model = "gpt-5.5"');
+    expect(after).not.toContain("lodestone-mcp");
+  });
+
   it("removes only the appended line from a friend-authored .gitignore", async () => {
     const friendBody = "node_modules/\n.env\n";
     writeFileSync(path.join(tmp, ".gitignore"), friendBody);
