@@ -14,6 +14,7 @@ export const SUBCOMMANDS: readonly SubcommandSummary[] = [
   { name: "status", description: "Show index coverage, last ingest, staleness, embedder identity." },
   { name: "reindex", description: "Re-ingest the project (use --from-scratch for a clean rebuild)." },
   { name: "doctor", description: "Probe the environment (Node, git, RAM, proxies, CoreML, WSL2)." },
+  { name: "plan-tests", description: "Suggest targeted and full test gates for the current diff." },
   { name: "seed-skills", description: "Pre-populate common-pattern skills from project structure." },
   { name: "upgrade", description: "Pull latest Lodestone and run any required schema migrations." },
   { name: "uninstall", description: "Cleanly reverse a Lodestone install (idempotent)." },

@@ -8,6 +8,7 @@ import { init } from "../commands/init.js";
 import { status } from "../commands/status.js";
 import { reindex } from "../commands/reindex.js";
 import { doctor } from "../commands/doctor.js";
+import { planTests } from "../commands/plan-tests.js";
 import { seedSkills } from "../commands/seed-skills.js";
 import { upgrade } from "../commands/upgrade.js";
 import { uninstall } from "../commands/uninstall.js";
@@ -24,6 +25,7 @@ export const HANDLERS: Readonly<Record<string, Handler>> = Object.freeze({
   status,
   reindex,
   doctor,
+  "plan-tests": planTests,
   "seed-skills": seedSkills,
   upgrade,
   uninstall,
