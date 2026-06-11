@@ -635,9 +635,10 @@ href="./PRIVACY.md"><code>PRIVACY.md</code></a>.</td>
 <td><code>LODESTONE_COMMIT_HASH</code></td>
 <td>string</td>
 <td>Build-time injection of the commit hash into the CLI's
-<code>--version</code> output. If unset,
-<code>lodestone --version</code> falls back to a runtime
-<code>git rev-parse</code>, then to <code>dev</code>.</td>
+<code>--version</code> output. If unset, source checkouts fall back to
+runtime <code>git rev-parse</code>; installed packages under
+<code>node_modules</code> use packaged
+<code>dist/build-info.json</code>, then <code>dev</code>.</td>
 </tr>
 <tr>
 <td><code>LODESTONE_ALLOW_MODEL_DOWNLOAD</code></td>
@@ -652,7 +653,7 @@ privacy claim. Set it in your shell profile or your editor's MCP config
 block.</p>
 
       </article>
-      <footer>Generated 2026-06-11 21:56 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-11 22:39 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

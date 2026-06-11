@@ -219,15 +219,16 @@ release.</p>
 status</h2>
 <p>As of the v0.1.9 friend-install release prep on 2026-06-11,
 <code>pnpm audit --prod</code> is clean after root-level package
-overrides for patched transitive releases of <code>hono</code>,
-<code>ip-address</code>, <code>protobufjs</code>, and <code>qs</code>.
-The public friend installer also adds a root npm override for
-<code>protobufjs@7.5.8</code> before installation because npm consumers
-do not inherit this monorepo's pnpm overrides. Existing projects with
-old lockfiles can opt into <code>LODESTONE_STRICT_NPM_OVERRIDES=1</code>
-to add the broader release-workspace override set, but that mode is
-intentionally not the default because root overrides for common packages
-can affect the host project's own dependency tree.</p>
+overrides for patched transitive releases of <code>fast-uri</code>,
+<code>hono</code>, <code>ip-address</code>, <code>protobufjs</code>, and
+<code>qs</code>. The public friend installer also adds a root npm
+override for <code>protobufjs@7.5.8</code> before installation because
+npm consumers do not inherit this monorepo's pnpm overrides. Existing
+projects with old lockfiles can opt into
+<code>LODESTONE_STRICT_NPM_OVERRIDES=1</code> to add the broader
+release-workspace override set, but that mode is intentionally not the
+default because root overrides for common packages can affect the host
+project's own dependency tree.</p>
 <p>Because registry advisories can change after a release, treat
 <code>pnpm audit --prod</code> as a live verification command rather
 than a permanent guarantee.</p>
@@ -256,7 +257,7 @@ the public v0.1.x build exits before any network call until real release
 hashes are published.</p>
 
       </article>
-      <footer>Generated 2026-06-11 21:56 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-11 22:39 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>
