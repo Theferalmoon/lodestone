@@ -80,7 +80,7 @@ The tool rejects the call. The `request_id` is how Lodestone correlates the sign
 
 ### What about transitive CVEs in the dep tree?
 
-As of the v0.1.8 friend-install release prep on 2026-06-11, `pnpm audit --prod` is clean after patched transitive overrides. Treat audit status as live: rerun `pnpm audit --prod` during strict intake because registry advisories can change after release.
+As of the v0.1.9 friend-install release prep on 2026-06-11, `pnpm audit --prod` is clean after patched transitive overrides. Treat audit status as live: rerun `pnpm audit --prod` during strict intake because registry advisories can change after release.
 
 ### How do I undo the install?
 
@@ -94,7 +94,7 @@ As of the v0.1.8 friend-install release prep on 2026-06-11, `pnpm audit --prod` 
 - Apache 2.0, every direct dep Apache 2.0 or MIT, every maintainer org vetted.
 - Five languages parsed in v0; cluster names emerge from Louvain communities; skill cards mature with index age.
 - Friend mode is the v0 ship; Pro mode is wired but deferred.
-- Production dependency audit clean at v0.1.8 release prep; rerun `pnpm audit --prod` for live intake.
+- Production dependency audit clean at v0.1.9 release prep; rerun `pnpm audit --prod` for live intake.
 - The synthetic demo repo at `e2e/synthetic-demo-repo/` is the contract — its `FIXTURE_MANIFEST.json` is what e2e asserts against, and a Lodestone change that breaks one of its predictions fails CI.
 
 ## What we DON'T claim
