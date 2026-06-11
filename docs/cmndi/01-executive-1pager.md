@@ -2,7 +2,7 @@
 
 # Lodestone — Executive 1-Pager
 
-**Version:** v0.1.8 friend-install package set
+**Version:** v0.1.9 friend-install package set
 **License:** Apache 2.0 (public, download-only friend distribution)
 **Status:** Friend install and dogfood phase open
 

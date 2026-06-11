@@ -182,7 +182,7 @@ Notable env-var-only flags:
 | `LODESTONE_OFFLINE=1` | Block every outbound network call. The chokepoint in `@lodestone/shared/net/fetch` throws `NetworkBlockedError` with a clear reason. The load-bearing variable for the privacy claim. |
 | `LODESTONE_ALLOW_MODEL_DOWNLOAD=1` | Per-shell consent gate for `lodestone setup-models`. Equivalent to passing `--allow-download` per invocation. |
 | `LODESTONE_LOG_LEVEL` | `error` \| `warn` \| `info` \| `debug`. CLI and worker verbosity. Default `info`. |
-| `LODESTONE_COMMIT_HASH` | Build-time injection of the commit hash into `lodestone --version`. Falls back to a runtime `git rev-parse`, then to `dev`. |
+| `LODESTONE_COMMIT_HASH` | Build-time injection of the commit hash into `lodestone --version`. Source checkouts fall back to runtime `git rev-parse`; installed packages under `node_modules` use packaged `dist/build-info.json`, then `dev`. |
 | `LODESTONE_DANGEROUS_TOOLS` | Wires the `[mcp].dangerous_tools_enabled` config from the environment for ephemeral test setups. |
 
 ## 8. Watcher
