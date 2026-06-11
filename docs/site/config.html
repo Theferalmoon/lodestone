@@ -197,6 +197,7 @@
 <div class="nav-group">Technical Reference</div>
 <a href="./architecture.html">Architecture</a>
 <a class="active" href="./config.html">Configuration</a>
+<a href="./roadmap.html">Roadmap</a>
 <a href="./mcp-tools.html">MCP Tools</a>
 <a href="./mcpb.html">Claude Desktop MCPB</a>
 <a href="./privacy.html">Privacy</a>
@@ -259,7 +260,8 @@ class="sourceCode toml"><code class="sourceCode toml"><span id="cb1-1"><a href="
 <span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="kw">[pro]</span></span>
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="dt">enabled</span> <span class="op">=</span> <span class="cn">false</span></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="dt">docker_compose_path</span> <span class="op">=</span> <span class="st">&quot;./pro/docker-compose.yml&quot;</span></span></code></pre></div>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="dt">docker_compose_path</span> <span class="op">=</span> <span class="st">&quot;./pro/docker-compose.yml&quot;</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="dt">temporal_kg_enabled</span> <span class="op">=</span> <span class="cn">false</span></span></code></pre></div>
 <h2 id="project"><code>[project]</code></h2>
 <p>Required block. Identifies the project to Lodestone.</p>
 <table>
@@ -563,7 +565,8 @@ class="sourceCode toml"><code class="sourceCode toml"><span id="cb2-1"><a href="
 <code>expose</code> are required; the schema enforces both.</p>
 <h2 id="pro"><code>[pro]</code></h2>
 <p>Pro-mode flags. v0 honors only <code>enabled</code>; the rest is
-plumbing for v0.5+.</p>
+fail-closed plumbing for v0.5+ so friend installs cannot accidentally
+opt into unfinished Pro features.</p>
 <table>
 <thead>
 <tr>
@@ -588,6 +591,14 @@ cleanly.</td>
 <td><code>"./pro/docker-compose.yml"</code></td>
 <td>Reserved for v0.5+. Path to the Pro-mode Docker Compose file.
 Ignored in v0.</td>
+</tr>
+<tr>
+<td><code>temporal_kg_enabled</code></td>
+<td><code>false</code> only</td>
+<td><code>false</code></td>
+<td>Reserved for the Pro temporal KG. Current friend builds reject
+<code>true</code> instead of pretending historical graph storage is
+active.</td>
 </tr>
 </tbody>
 </table>
@@ -641,7 +652,7 @@ privacy claim. Set it in your shell profile or your editor's MCP config
 block.</p>
 
       </article>
-      <footer>Generated 2026-06-09 14:20 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 14:31 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

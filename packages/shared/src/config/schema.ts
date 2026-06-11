@@ -119,6 +119,9 @@ const proSchema = z
   .object({
     enabled: z.boolean().default(false),
     docker_compose_path: z.string().default("./pro/docker-compose.yml"),
+    // Reserved for Pro. v0 accepts only false so friend installs fail closed
+    // instead of silently accepting a temporal KG setting that is not implemented.
+    temporal_kg_enabled: z.literal(false).default(false),
   })
   .strict();
 

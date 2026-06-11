@@ -7,7 +7,7 @@
 **Prepared by:** Cybersecurity Management & Network Defense, Inc.
 **Document type:** Feature brochure
 **Version:** v0.1.7 friend-install documentation
-**Date:** June 8, 2026
+**Date:** June 9, 2026
 
 ## Executive Overview
 
@@ -86,7 +86,8 @@ depends on this?" It uses reverse dependency traversal over the local graph.
 ### Recent changes
 
 The `recent_changes` tool lets the agent ask what changed recently without
-blindly scanning the repo or relying on a human to summarize the branch.
+blindly scanning the repo or relying on a human to summarize the branch. This
+is git-aware current-index context, not a historical temporal graph.
 
 ### Architectural clustering
 
@@ -167,8 +168,8 @@ SQLite database, and operate Lodestone from the CLI.
 ### Honest about limits
 
 Lodestone v0.1.x is a one-repository friend install. Pro mode, multi-repo
-operation, migration automation, and heavier enterprise orchestration are v0.5+
-or later work.
+operation, temporal KG history, migration automation, and heavier enterprise
+orchestration are v0.5+ or later work.
 
 ## Who Should Use It
 

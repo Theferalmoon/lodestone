@@ -197,6 +197,7 @@
 <div class="nav-group">Technical Reference</div>
 <a class="active" href="./architecture.html">Architecture</a>
 <a href="./config.html">Configuration</a>
+<a href="./roadmap.html">Roadmap</a>
 <a href="./mcp-tools.html">MCP Tools</a>
 <a href="./mcpb.html">Claude Desktop MCPB</a>
 <a href="./privacy.html">Privacy</a>
@@ -304,12 +305,18 @@ read access to the index is a power-user feature, not a default.</p>
 per-tool contracts.</p>
 <h3 id="friend-mode-vs-pro-mode">Friend mode vs Pro mode</h3>
 <p>v0 ships <strong>friend mode</strong>: one repository, one local
-index, one MCP server. Pro mode (multiple repositories sharing a
-Docker-Compose-orchestrated index, multi-user feedback aggregation,
-periodic re-clustering jobs) is deferred to v0.5+. The
+current-state index, one MCP server. Friend mode includes git-aware
+recent-change queries, but it does not retain historical node/edge
+snapshots or answer "as of commit/date" graph questions.</p>
+<p>Pro mode (multiple repositories sharing a Docker-Compose-orchestrated
+index, multi-user feedback aggregation, periodic re-clustering jobs, and
+a temporal KG) is deferred to v0.5+. The
 <code>lodestone init --pro</code> flag is wired to print a clear "Pro
 mode is v0.5+ work" exit message and not crash, so forward-looking
-config files do not break.</p>
+config files do not break. The reserved
+<code>pro.temporal_kg_enabled</code> config key accepts only
+<code>false</code> in v0, making the friend distribution fail closed
+instead of silently pretending temporal graph history is active.</p>
 <h2 id="repo-layout">Repo layout</h2>
 <pre><code>lodestone/
 ├── packages/
@@ -385,6 +392,8 @@ re-running the affected slice on file changes, debounced by
 <h2 id="whats-deferred-to-v05">What's deferred to v0.5+</h2>
 <ul>
 <li>Pro mode (multi-repo, Docker-Compose, shared index)</li>
+<li>Temporal KG for Pro: node/edge history, graph snapshots, "as of
+commit/date" queries, and changed-between graph diffs</li>
 <li>Leiden clustering as an alternative to Louvain</li>
 <li>A numbered-migrations runner (v0 treats <code>.lodestone/</code> as
 ephemeral; reindex from scratch on schema bumps — see <a
@@ -397,7 +406,7 @@ real pins ship)</li>
 </ul>
 
       </article>
-      <footer>Generated 2026-06-09 14:20 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 14:31 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

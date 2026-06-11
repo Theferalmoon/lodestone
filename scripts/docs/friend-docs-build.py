@@ -122,6 +122,7 @@ DOCS = [
     Doc(REPO_ROOT / "docs/FRIEND-INSTALL.md", "friend-install", "Friend Install Quickstart", "Core Docs"),
     Doc(REPO_ROOT / "docs/ARCHITECTURE.md", "architecture", "Architecture", "Technical Reference"),
     Doc(REPO_ROOT / "docs/CONFIG.md", "config", "Configuration", "Technical Reference"),
+    Doc(REPO_ROOT / "docs/ROADMAP.md", "roadmap", "Roadmap", "Technical Reference"),
     Doc(REPO_ROOT / "docs/MCP-TOOLS.md", "mcp-tools", "MCP Tools", "Technical Reference"),
     Doc(REPO_ROOT / "docs/MCPB.md", "mcpb", "Claude Desktop MCPB", "Technical Reference"),
     Doc(REPO_ROOT / "docs/PRIVACY.md", "privacy", "Privacy", "Technical Reference"),
@@ -500,20 +501,26 @@ def build_site(renderer: Renderer) -> None:
         shutil.copy2(docx, downloads / docx.name)
         word_links.append(f'<li><a href="./downloads/{html.escape(docx.name)}">{html.escape(docx.name)}</a></li>')
 
-    index_body = f"""
-<h1>Lodestone Documentation</h1>
-<p>Lodestone is a local code intelligence sidecar for AI coding agents. These docs include the friend brochure, layperson installation guide, technical reference, and generated HTML copies of the core repository docs.</p>
-<h2>Start Here</h2>
-<div class="doc-home">
-{''.join(cards)}
-</div>
-<h2>Word Documents</h2>
-<ul>
-{''.join(word_links)}
-</ul>
-<h2>Installer</h2>
-<pre><code>curl -sSfL https://lodestone.cmndi.ai/install | bash</code></pre>
-"""
+    index_body = "\n".join(
+        [
+            "<h1>Lodestone Documentation</h1>",
+            "<p>Lodestone is a local code intelligence sidecar for AI coding agents. These docs include the friend brochure, layperson installation guide, technical reference, and generated HTML copies of the core repository docs.</p>",
+            "<h2>Start Here</h2>",
+            '<div class="doc-home">',
+            "".join(cards),
+            "</div>",
+            "<h2>Word Documents</h2>",
+            "<ul>",
+            "".join(word_links),
+            "</ul>",
+            "<h2>Install Routes</h2>",
+            "<p>The installer is non-interactive. Choose one command before running it; if you are not sure, use Lite.</p>",
+            "<h3>Lite - recommended first install</h3>",
+            "<pre><code>curl -sSfL https://lodestone.cmndi.ai/install | bash</code></pre>",
+            "<h3>Full - larger embedder</h3>",
+            "<pre><code>curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash</code></pre>",
+        ]
+    )
     (SITE_DIR / "index.html").write_text(page_shell("Docs Home", index_body, ""), encoding="utf-8")
 
     for doc in DOCS:

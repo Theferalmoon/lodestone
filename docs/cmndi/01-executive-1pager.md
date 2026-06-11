@@ -47,6 +47,7 @@ The MCP-native surface is the second wedge. Every other code-grounding product i
 ## What is on the v0.5 roadmap
 
 - Multi-repo "Pro mode" + Docker-Compose orchestration (the `--pro` flag is wired but exits with a clear "v0.5+ work" message in v0).
+- Temporal KG for Pro: historical node/edge state, "as of commit/date" graph questions, and changed-between graph diffs. Friend mode stays current-state only.
 - Code-aware embedder swap (currently waiting on a vetted, US/allied-jurisdiction maintainer; PRC-origin code embedders are explicitly excluded).
 - Numbered-migrations runner (today, schema bumps require `lodestone reindex --from-scratch`; a 10k-symbol repo rebuilds in under a minute).
 - Specialty agent plugins (the `lodestone.review_diff` follow-behind reviewer is the first concrete planned tool, sketched in the v0.5 plan).

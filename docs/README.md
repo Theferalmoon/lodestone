@@ -97,6 +97,7 @@ Open Claude Code (or any MCP client) in the same directory. Ask: *what are the m
 | [`site/index.html`](./site/index.html) | Generated HTML copy of the documentation published at `https://lodestone.cmndi.ai/docs/`. |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Stack choices (Node-only, Louvain not Leiden, SQLite + sqlite-vec, KuzuDB deferred), the `packages/*` monorepo layout, friend-mode vs Pro-mode. |
 | [`CONFIG.md`](./CONFIG.md) | Every key in `lodestone.toml` with its type, default, allowed values, and one-line explanation. Plus environment variable overrides. |
+| [`ROADMAP.md`](./ROADMAP.md) | Friend-distribution boundaries and Pro-only temporal KG direction. |
 | [`MCP-TOOLS.md`](./MCP-TOOLS.md) | The 8 MCP tools — request shapes, response shapes, JSON examples, when to use each. |
 | [`MCPB.md`](./MCPB.md) | Private Claude Desktop MCPB bundle build and install path. |
 | [`PRIVACY.md`](./PRIVACY.md) | The "never leaves your machine" claim, what it actually means, and the build-time enforcement. |

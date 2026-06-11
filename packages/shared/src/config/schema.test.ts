@@ -27,6 +27,7 @@ describe("lodestoneConfigSchema (mirror of claude-plan.md §5)", () => {
     expect(config.mcp.max_response_kb).toBe(256);
 
     expect(config.pro.enabled).toBe(false);
+    expect(config.pro.temporal_kg_enabled).toBe(false);
   });
 
   it("`cypher` (and its post-Codex rename `sql`) are NOT in the default expose list", () => {
@@ -135,5 +136,14 @@ describe("lodestoneConfigSchema (mirror of claude-plan.md §5)", () => {
     });
     expect(config.mcp.expose).toContain("sql");
     expect(config.mcp.dangerous_tools_enabled).toBe(true);
+  });
+
+  it("rejects enabling the reserved Pro temporal KG flag in v0 friend mode", () => {
+    expect(() =>
+      parseLodestoneConfig({
+        project: { name: "demo" },
+        pro: { temporal_kg_enabled: true },
+      })
+    ).toThrow(/temporal_kg_enabled/);
   });
 });

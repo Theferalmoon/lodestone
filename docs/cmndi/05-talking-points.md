@@ -104,6 +104,7 @@ As of the v0.1.7 friend-install release prep on 2026-06-09, `pnpm audit --prod` 
 - We do not claim the seed skills extracted at init time are as rich as the emitted skills after a week of watching — they are a useful day-1 baseline, not a finished product.
 - We do not claim multi-language extraction is bug-free — tree-sitter grammars occasionally choke on unusual syntax (decorators, nested f-strings, macros). The pipeline catches the parse error, marks the file as skipped, and moves on rather than crashing. `lodestone doctor` reports skipped files.
 - We do not claim Pro mode works in v0 — it is wired to exit with a clean "v0.5+ work" message.
+- We do not claim temporal KG history in friend mode — v0 has current-state graph context plus git-aware recent changes. Historical graph snapshots and "as of commit/date" questions are Pro-only roadmap work.
 - We do not claim numbered-migrations across schema bumps — v0.x requires `lodestone reindex --from-scratch` on a schema bump. Migrations runner is v0.5.
 - We do not claim GPU acceleration in v0.
 - We do not quote performance numbers we have not measured. The number "10k symbols ingest in under a minute on a modern laptop" is the order of magnitude reflected in the synthetic-demo e2e harness; your mileage on a real codebase will vary.
