@@ -26,7 +26,7 @@ Bullet-list reference for demos, interviews, and Q&A. Use these as starting poin
 - **~16 MB / ~89 MB** release tarball download for `lite` / `full`
 - **0** runtime model network calls on packaged friend installs
 - **Apache 2.0**, every direct dep
-- **v0.1.8** friend-install package set
+- **v0.1.9** friend-install package set
 
 ## FAQ
 

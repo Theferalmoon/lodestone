@@ -90,7 +90,7 @@ Two products, one strategy:
 
 | Product | Tier | Status | What it is |
 |---|---|---|---|
-| **Lodestone** (this) | C | v0.1.8 friend install | Single-KG per-project package set. Privacy-first. The local sidecar. |
+| **Lodestone** (this) | C | v0.1.9 friend install | Single-KG per-project package set. Privacy-first. The local sidecar. |
 | **Lodestone Forge** | C | Planned post-v0 dogfood | Docker-Compose bundle: per-project code KG (lifts Lodestone) + operational KG + coding training corpus + federation router + LoRA training factory. Friend wires DNS / secrets / GPU; Forge ships the logic. |
 
 Both products federate by query — a friend on the Forge stack can route a question through one MCP entrypoint and get answers from the right channel (code / ops / training corpus) tagged so the calling agent knows which channel each hit came from. Lodestone alone is the per-project privacy-first wedge; Forge is the operator-side multi-channel stack.

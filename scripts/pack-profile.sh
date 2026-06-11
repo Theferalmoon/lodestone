@@ -4,7 +4,7 @@
 # pack-profile.sh — produce lodestone tarballs for a specific install profile.
 #
 # Lodestone ships two friend-facing profiles (tarball download sizes from
-# the published v0.1.8 GitHub release assets):
+# the published v0.1.9 GitHub release assets):
 #   * lite — Snowflake 384d embedder, ~16 MB tarball. For friends with
 #            low-RAM laptops or limited bandwidth. Default for friend
 #            distribution.
@@ -45,6 +45,7 @@ esac
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INGEST_DIST="$REPO_ROOT/packages/ingest/dist/models"
+CLI_DIST="$REPO_ROOT/packages/cli/dist"
 mkdir -p "$OUT_DIR"
 
 if [[ "${LODESTONE_SKIP_DOCS_BUILD:-}" != "1" ]]; then
@@ -86,6 +87,28 @@ for stale in "$INGEST_DIST"/nomic/model_quantized.onnx "$INGEST_DIST"/snowflake/
 done
 
 echo "[pack-profile] profile=$PROFILE keep=$KEEP remove=$REMOVE out=$OUT_DIR"
+
+if [[ ! -d "$CLI_DIST" ]]; then
+  echo "ERROR: $CLI_DIST missing. Run 'pnpm -r build' before packing." >&2
+  exit 1
+fi
+
+BUILD_COMMIT="${LODESTONE_BUILD_COMMIT:-$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)}"
+BUILD_SOURCE_COMMIT="${LODESTONE_BUILD_SOURCE_COMMIT:-$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)}"
+BUILD_TIMESTAMP="${SOURCE_DATE_EPOCH:-}"
+if [[ -n "$BUILD_TIMESTAMP" && "$BUILD_TIMESTAMP" =~ ^[0-9]+$ ]]; then
+  BUILD_TIMESTAMP="$(node -e 'console.log(new Date(Number(process.argv[1]) * 1000).toISOString().replace(/\.\d{3}Z$/, "Z"))' "$BUILD_TIMESTAMP")"
+else
+  BUILD_TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+fi
+cat > "$CLI_DIST/build-info.json" <<EOF
+{
+  "commit_hash": "$BUILD_COMMIT",
+  "source_commit": "$BUILD_SOURCE_COMMIT",
+  "built_at": "$BUILD_TIMESTAMP"
+}
+EOF
+echo "[pack-profile] wrote CLI build metadata ($BUILD_COMMIT)"
 
 # ── Temporarily move the not-wanted model dir out of dist ──
 STASH_DIR="$(mktemp -d -t lodestone-pack-stash-XXXXXX)"
