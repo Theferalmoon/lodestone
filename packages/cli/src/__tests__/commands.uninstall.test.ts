@@ -15,24 +15,43 @@ import { uninstall, parseUninstallArgv } from "../commands/uninstall.js";
 
 describe("parseUninstallArgv", () => {
   it("default flags are all false", () => {
-    expect(parseUninstallArgv([])).toEqual({ dryRun: false, keepIndex: false });
+    expect(parseUninstallArgv([])).toEqual({
+      dryRun: false,
+      help: false,
+      keepIndex: false,
+    });
   });
   it("--dry-run", () => {
     expect(parseUninstallArgv(["--dry-run"])).toEqual({
       dryRun: true,
+      help: false,
       keepIndex: false,
     });
   });
   it("--keep-index", () => {
     expect(parseUninstallArgv(["--keep-index"])).toEqual({
       dryRun: false,
+      help: false,
       keepIndex: true,
     });
   });
   it("both flags together", () => {
     expect(parseUninstallArgv(["--dry-run", "--keep-index"])).toEqual({
       dryRun: true,
+      help: false,
       keepIndex: true,
+    });
+  });
+  it("--help and -h", () => {
+    expect(parseUninstallArgv(["--help"])).toEqual({
+      dryRun: false,
+      help: true,
+      keepIndex: false,
+    });
+    expect(parseUninstallArgv(["-h"])).toEqual({
+      dryRun: false,
+      help: true,
+      keepIndex: false,
     });
   });
 });
@@ -176,9 +195,15 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     expect(await uninstall(["--dry-run"])).toBe(0);
 
     // All four files byte-identical.
-    expect(Buffer.compare(mcpBefore, readFileSync(path.join(tmp, ".mcp.json")))).toBe(0);
-    expect(Buffer.compare(giBefore, readFileSync(path.join(tmp, ".gitignore")))).toBe(0);
-    expect(Buffer.compare(cmBefore, readFileSync(path.join(tmp, "CLAUDE.md")))).toBe(0);
+    expect(
+      Buffer.compare(mcpBefore, readFileSync(path.join(tmp, ".mcp.json")))
+    ).toBe(0);
+    expect(
+      Buffer.compare(giBefore, readFileSync(path.join(tmp, ".gitignore")))
+    ).toBe(0);
+    expect(
+      Buffer.compare(cmBefore, readFileSync(path.join(tmp, "CLAUDE.md")))
+    ).toBe(0);
     expect(
       Buffer.compare(
         manifestBefore,
@@ -190,6 +215,33 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     // Stdout described what WOULD happen.
     const stdout = log.mock.calls.flat().join("\n");
     expect(stdout).toMatch(/dry-run/i);
+  });
+
+  it("--help prints usage and mutates nothing on disk", async () => {
+    runInstallSteps(tmp, { writeClaudeMd: true });
+    const mcpBefore = readFileSync(path.join(tmp, ".mcp.json"));
+    const giBefore = readFileSync(path.join(tmp, ".gitignore"));
+    const cmBefore = readFileSync(path.join(tmp, "CLAUDE.md"));
+    const manifestBefore = readFileSync(
+      path.join(tmp, ".lodestone", "install-manifest.json")
+    );
+
+    expect(await uninstall(["--help"])).toBe(0);
+
+    expect(Buffer.compare(mcpBefore, readFileSync(path.join(tmp, ".mcp.json")))).toBe(0);
+    expect(Buffer.compare(giBefore, readFileSync(path.join(tmp, ".gitignore")))).toBe(0);
+    expect(Buffer.compare(cmBefore, readFileSync(path.join(tmp, "CLAUDE.md")))).toBe(0);
+    expect(
+      Buffer.compare(
+        manifestBefore,
+        readFileSync(path.join(tmp, ".lodestone", "install-manifest.json"))
+      )
+    ).toBe(0);
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(true);
+
+    const stdout = log.mock.calls.flat().join("\n");
+    expect(stdout).toContain("lodestone uninstall");
+    expect(stdout).toContain("--keep-index");
   });
 
   it("--keep-index removes agent integration but preserves .lodestone/ tree", async () => {

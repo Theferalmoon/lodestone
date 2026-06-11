@@ -8,6 +8,7 @@
 //   --dry-run     plan only, no filesystem writes
 //   --keep-index  remove agent integration (.mcp.json, CLAUDE.md, .gitignore)
 //                 but keep .lodestone/ data
+//   -h, --help    show usage, no filesystem writes
 //
 // Exit codes: 0 on success, 1 on partial failure (any helper returned a
 // non-recoverable result), 2 on argv error (currently impossible — all flags
@@ -34,12 +35,14 @@ function expectedRuntimeCommandFor(repoRoot: string): string {
 
 export interface UninstallOptions {
   dryRun: boolean;
+  help: boolean;
   keepIndex: boolean;
 }
 
 export function parseUninstallArgv(argv: readonly string[]): UninstallOptions {
   return {
     dryRun: argv.includes("--dry-run"),
+    help: argv.includes("--help") || argv.includes("-h"),
     keepIndex: argv.includes("--keep-index"),
   };
 }
@@ -47,6 +50,11 @@ export function parseUninstallArgv(argv: readonly string[]): UninstallOptions {
 export async function uninstall(argv: readonly string[]): Promise<number> {
   const opts = parseUninstallArgv(argv);
   const cwd = process.cwd();
+
+  if (opts.help) {
+    printUninstallHelp();
+    return 0;
+  }
 
   if (opts.dryRun) {
     output.info("--dry-run set; no filesystem changes will be applied.");
@@ -204,6 +212,22 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
   }
 
   return exitCode;
+}
+
+function printUninstallHelp(): void {
+  output.info(
+    [
+      "lodestone uninstall — cleanly reverse a Lodestone install.",
+      "",
+      "USAGE",
+      "  lodestone uninstall [--dry-run] [--keep-index]",
+      "",
+      "OPTIONS",
+      "  --dry-run     Plan only; do not change files.",
+      "  --keep-index  Remove agent integration but keep .lodestone/ data.",
+      "  -h, --help    Show this help message.",
+    ].join("\n")
+  );
 }
 
 function reportClaude(

@@ -1,0 +1,5 @@
+e740dc310478e7baf8934d48fed29c37d7d32ada55befd4d48b30fe19ae0a698  lodestone-cli-0.1.8.tgz
+c6fa5a237776efe07fde031af78a17e91407e9c9818d7c5ff85e08b9cc9f69fe  lodestone-mcp-server-0.1.8.tgz
+28aaac5d55185076997a419f256cff3067a7caa83bd98a3178cfdff9ed527f75  lodestone-shared-0.1.8.tgz
+a59088d8d255d9d64fa15cd9127d58255a8e6ccc8cee648a25ef19294b713f3d  lodestone-ingest-0.1.8-lite.tgz
+3acb258ddf8b414bd9f282279432fc3f9279896f97b0855b1906cbe3b441a77c  lodestone-ingest-0.1.8-full.tgz
