@@ -138,6 +138,31 @@ export function parseInitArgv(argv: readonly string[]): InitOptions {
   };
 }
 
+function initArgvIncludesHelp(argv: readonly string[]): boolean {
+  return argv.includes("--help") || argv.includes("-h");
+}
+
+function printInitHelp(): void {
+  output.info(
+    [
+      "lodestone init — set up Lodestone in this project.",
+      "",
+      "USAGE",
+      "  lodestone init [--write-claude-md] [--client <name>] [--no-reindex]",
+      "  lodestone init --dry-run",
+      "  lodestone init --help",
+      "",
+      "OPTIONS",
+      "  --write-claude-md  Add the Lodestone usage block to CLAUDE.md.",
+      `  --client <name>     Configure a client integration: ${CLIENT_USAGE}.`,
+      "  --no-reindex        Install config only; skip the initial KG build.",
+      "  --dry-run           Show planned writes without touching the filesystem.",
+      "  --pro               Reserved for v0.5+; exits without changing files.",
+      "  -h, --help          Show this help message.",
+    ].join("\n")
+  );
+}
+
 /**
  * Runs the install side-effects against `repoRoot` and returns the manifest.
  * Exposed for testability — the CLI handler delegates to this so tests can
@@ -233,6 +258,11 @@ export function runInstallSteps(
 }
 
 export async function init(argv: readonly string[]): Promise<number> {
+  if (initArgvIncludesHelp(argv)) {
+    printInitHelp();
+    return 0;
+  }
+
   const opts = parseInitArgv(argv);
   const cwd = process.cwd();
 

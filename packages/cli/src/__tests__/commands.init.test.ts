@@ -266,6 +266,47 @@ describe("init() handler", () => {
     expect(existsSync(path.join(tmp, ".lodestone", "install-manifest.json"))).toBe(true);
   });
 
+  it("--help and -h print usage and do not touch the filesystem", async () => {
+    expect(await init(["--help"])).toBe(0);
+    expect(await init(["-h"])).toBe(0);
+
+    const stdout = log.mock.calls.flat().join("\n");
+    expect(stdout).toContain("lodestone init");
+    expect(stdout).toContain("--client <name>");
+    expect(stdout).toContain("--no-reindex");
+    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".gitignore"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
+    expect(existsSync(path.join(tmp, "CLAUDE.md"))).toBe(false);
+  });
+
+  it("--help leaves an existing install byte-identical", async () => {
+    runInstallSteps(tmp, { writeClaudeMd: true });
+    const mcpBefore = readFileSync(path.join(tmp, ".mcp.json"));
+    const giBefore = readFileSync(path.join(tmp, ".gitignore"));
+    const cmBefore = readFileSync(path.join(tmp, "CLAUDE.md"));
+    const manifestBefore = readFileSync(
+      path.join(tmp, ".lodestone", "install-manifest.json")
+    );
+
+    log.mockClear();
+    expect(await init(["--help"])).toBe(0);
+
+    expect(Buffer.compare(mcpBefore, readFileSync(path.join(tmp, ".mcp.json")))).toBe(0);
+    expect(Buffer.compare(giBefore, readFileSync(path.join(tmp, ".gitignore")))).toBe(0);
+    expect(Buffer.compare(cmBefore, readFileSync(path.join(tmp, "CLAUDE.md")))).toBe(0);
+    expect(
+      Buffer.compare(
+        manifestBefore,
+        readFileSync(path.join(tmp, ".lodestone", "install-manifest.json"))
+      )
+    ).toBe(0);
+
+    const stdout = log.mock.calls.flat().join("\n");
+    expect(stdout).toContain("lodestone init");
+    expect(stdout).not.toContain("Lodestone install complete");
+  });
+
   it("--dry-run does not touch the filesystem", async () => {
     expect(await init(["--dry-run"])).toBe(0);
     expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
