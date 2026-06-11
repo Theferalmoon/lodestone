@@ -75,7 +75,7 @@ Hybrid semantic + keyword + graph search over the project's symbols. Returns the
 
 ## `recent_changes`
 
-List symbols (functions, methods, classes) most recently touched by git commits in the project. Optional ISO-8601 `since` filter narrows to a time window; default `top_k=20` returns the freshest changes. Useful when the agent needs to orient on what just changed before answering a question, debugging a regression, or summarizing the day's work. Reads from the SQLite `symbols.updated_at_commit` index — no shell-out to git on the request path.
+List symbols (functions, methods, classes) most recently touched by git commits in the project. Optional ISO-8601 `since` filter narrows to a time window; default `top_k=20` returns the freshest changes. Useful when the agent needs to orient on what just changed before answering a question, debugging a regression, or summarizing the day's work. This is a current-index plus git-history view, not a temporal KG; v0 does not retain historical node/edge snapshots. Reads from the SQLite `symbols.updated_at_commit` index — no shell-out to git on the request path.
 
 **Input:**
 

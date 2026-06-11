@@ -51,7 +51,8 @@ curl -sSfL https://lodestone.cmndi.ai/install | bash
 ```
 
 The default install uses the `lite` profile. It is the smallest download and
-the normal choice for first-time use.
+the normal choice for first-time use. The installer does not ask which profile
+to use; choose the command before running it.
 
 For the larger model profile:
 

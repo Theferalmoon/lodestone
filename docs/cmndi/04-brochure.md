@@ -70,7 +70,7 @@ Lodestone v0 is the first ship. We are not pretending it is the last word.
 
 - **Best results after the index has watched the repo for ≥7 days.** Skill cards mature from `seed` → `emerging` → `mature` based on cluster stability and confirmation signals. Fresh installs get useful seed skills (deterministic patterns extracted at init time) but the emitted cards genuinely get better with time.
 - **Five languages in v0.** TypeScript / JavaScript / Python / Go / Rust. Adding a language is one new tree-sitter grammar plus a small extractor; we are doing the next batch on customer demand.
-- **Friend mode only.** Multi-repo "Pro mode" is wired but exits with a clean "v0.5+ work" message. The companion product (Lodestone Forge — multi-KG, Docker-Compose-orchestrated) is the v1+ work.
+- **Friend mode only.** Multi-repo "Pro mode" is wired but exits with a clean "v0.5+ work" message. Temporal KG history is Pro-only; friend mode is a current-state local KG with git-aware recent changes. The companion product (Lodestone Forge — multi-KG, Docker-Compose-orchestrated) is the v1+ work.
 - **No GPU acceleration.** Apple Silicon CoreML EP is the closest thing today; install `onnxruntime-node@latest` to pick it up. GPU support is tracked separately, not in v0 scope.
 - **Production audit clean at v0.1.7 prep.** `pnpm audit --prod` is clean as of 2026-06-09 after patched transitive overrides. Registry advisories can change, so strict environments should rerun the audit during intake.
 

@@ -52,7 +52,9 @@ See [`MCP-TOOLS.md`](./MCP-TOOLS.md) for per-tool contracts.
 
 ### Friend mode vs Pro mode
 
-v0 ships **friend mode**: one repository, one local index, one MCP server. Pro mode (multiple repositories sharing a Docker-Compose-orchestrated index, multi-user feedback aggregation, periodic re-clustering jobs) is deferred to v0.5+. The `lodestone init --pro` flag is wired to print a clear "Pro mode is v0.5+ work" exit message and not crash, so forward-looking config files do not break.
+v0 ships **friend mode**: one repository, one local current-state index, one MCP server. Friend mode includes git-aware recent-change queries, but it does not retain historical node/edge snapshots or answer "as of commit/date" graph questions.
+
+Pro mode (multiple repositories sharing a Docker-Compose-orchestrated index, multi-user feedback aggregation, periodic re-clustering jobs, and a temporal KG) is deferred to v0.5+. The `lodestone init --pro` flag is wired to print a clear "Pro mode is v0.5+ work" exit message and not crash, so forward-looking config files do not break. The reserved `pro.temporal_kg_enabled` config key accepts only `false` in v0, making the friend distribution fail closed instead of silently pretending temporal graph history is active.
 
 ## Repo layout
 
@@ -111,6 +113,7 @@ lodestone/
 ## What's deferred to v0.5+
 
 - Pro mode (multi-repo, Docker-Compose, shared index)
+- Temporal KG for Pro: node/edge history, graph snapshots, "as of commit/date" queries, and changed-between graph diffs
 - Leiden clustering as an alternative to Louvain
 - A numbered-migrations runner (v0 treats `.lodestone/` as ephemeral; reindex from scratch on schema bumps — see [`UPGRADE.md`](./UPGRADE.md))
 - KuzuDB as a graph-engine alternative

@@ -219,6 +219,7 @@ The audit runs in two places, both as gates: locally inside `pnpm -r test`, and 
 ## 12. What is deferred to v0.5+
 
 - **Pro mode** — multi-repo, Docker-Compose orchestrated, shared index. The `--pro` flag is wired to a clean exit message in v0; the bundled stack ("Lodestone Forge") is the v1+ companion product, planned to start after Lodestone v0 has been dogfooded for ~1 week.
+- **Temporal KG** — Pro-only graph history: node/edge history, reconstructable snapshots, "as of commit/date" queries, changed-between graph diffs, and retention controls. v0 friend mode stays current-state only with git-aware recent changes.
 - **Leiden clustering** — wired but not exercised. Louvain is the v0 default because the Node implementation is mature.
 - **Numbered-migrations runner** — first migration that genuinely cannot be a from-scratch reindex is the embedder-dim swap, which is the v0.5 trigger.
 - **Code-aware embedder** — gated on a vetted, US/allied-jurisdiction maintainer. `LODESTONE_ALLOW_MODEL_DOWNLOAD=1` is reserved for it.

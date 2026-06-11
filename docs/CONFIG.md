@@ -48,6 +48,7 @@ max_response_kb = 256
 [pro]
 enabled = false
 docker_compose_path = "./pro/docker-compose.yml"
+temporal_kg_enabled = false
 ```
 
 ## `[project]`
@@ -131,12 +132,14 @@ expose = ["query", "context", "impact", "cluster", "skills_for", "recent_changes
 
 ## `[pro]`
 
-Pro-mode flags. v0 honors only `enabled`; the rest is plumbing for v0.5+.
+Pro-mode flags. v0 honors only `enabled`; the rest is fail-closed plumbing for
+v0.5+ so friend installs cannot accidentally opt into unfinished Pro features.
 
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `enabled` | bool | `false` | When true, `lodestone init --pro` enters the (deferred) Pro setup flow. In v0 this prints "Pro mode is v0.5+ work" and exits cleanly. |
 | `docker_compose_path` | string | `"./pro/docker-compose.yml"` | Reserved for v0.5+. Path to the Pro-mode Docker Compose file. Ignored in v0. |
+| `temporal_kg_enabled` | `false` only | `false` | Reserved for the Pro temporal KG. Current friend builds reject `true` instead of pretending historical graph storage is active. |
 
 ## Environment variable overrides
 

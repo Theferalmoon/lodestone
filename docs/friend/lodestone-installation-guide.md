@@ -7,7 +7,7 @@
 **Prepared by:** Cybersecurity Management & Network Defense, Inc.
 **Document type:** Installation guide
 **Version:** v0.1.7 friend-install documentation
-**Date:** June 8, 2026
+**Date:** June 9, 2026
 
 ## What You Are Installing
 
@@ -58,6 +58,9 @@ is strongly recommended.
 ## Option 1: Lite Install
 
 This is the recommended first install.
+
+The installer does not ask you to choose a profile while it runs. Pick one of
+the two commands below before you start. If you are not sure, use `lite`.
 
 Use this if:
 

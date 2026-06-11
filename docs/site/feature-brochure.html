@@ -197,6 +197,7 @@
 <div class="nav-group">Technical Reference</div>
 <a href="./architecture.html">Architecture</a>
 <a href="./config.html">Configuration</a>
+<a href="./roadmap.html">Roadmap</a>
 <a href="./mcp-tools.html">MCP Tools</a>
 <a href="./mcpb.html">Claude Desktop MCPB</a>
 <a href="./privacy.html">Privacy</a>
@@ -216,7 +217,7 @@ intelligence for AI coding agents</h2>
 <p><strong>Prepared by:</strong> Cybersecurity Management &amp; Network
 Defense, Inc. <strong>Document type:</strong> Feature brochure
 <strong>Version:</strong> v0.1.7 friend-install documentation
-<strong>Date:</strong> June 8, 2026</p>
+<strong>Date:</strong> June 9, 2026</p>
 <h2 id="executive-overview">Executive Overview</h2>
 <p>Lodestone gives an AI coding agent a local map of a software project
 before the agent starts making changes. It builds a project-local
@@ -279,7 +280,8 @@ traversal over the local graph.</p>
 <h3 id="recent-changes">Recent changes</h3>
 <p>The <code>recent_changes</code> tool lets the agent ask what changed
 recently without blindly scanning the repo or relying on a human to
-summarize the branch.</p>
+summarize the branch. This is git-aware current-index context, not a
+historical temporal graph.</p>
 <h3 id="architectural-clustering">Architectural clustering</h3>
 <p>The <code>cluster</code> tool groups related code into emergent
 subsystems. This helps new users and new agents quickly understand the
@@ -399,8 +401,8 @@ read-only SQL, inspect the SQLite database, and operate Lodestone from
 the CLI.</p>
 <h3 id="honest-about-limits">Honest about limits</h3>
 <p>Lodestone v0.1.x is a one-repository friend install. Pro mode,
-multi-repo operation, migration automation, and heavier enterprise
-orchestration are v0.5+ or later work.</p>
+multi-repo operation, temporal KG history, migration automation, and
+heavier enterprise orchestration are v0.5+ or later work.</p>
 <h2 id="who-should-use-it">Who Should Use It</h2>
 <p>Lodestone is a strong fit for:</p>
 <ul>
@@ -426,7 +428,7 @@ branch.</p>
 understanding of the repository before it starts editing.</p>
 
       </article>
-      <footer>Generated 2026-06-09 14:20 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-09 14:31 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>
