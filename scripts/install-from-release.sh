@@ -79,6 +79,14 @@ trap 'rm -rf "$WORK_DIR"' EXIT
 log() { printf '[lodestone-install] %s\n' "$*" >&2; }
 fail() { printf '[lodestone-install] ERROR: %s\n' "$*" >&2; exit 1; }
 
+validate_positive_int() {
+  local name="$1"
+  local value="$2"
+  if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
+    fail "$name must be a positive integer, got '$value'"
+  fi
+}
+
 sha256_file() {
   local path="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -123,7 +131,7 @@ expected_sha256() {
   esac
 }
 
-verify_download() {
+check_download() {
   local path="$1"
   local file="$2"
   local tag="$3"
@@ -135,9 +143,54 @@ verify_download() {
 
   actual="$(sha256_file "$path")"
   if [[ "$actual" != "$expected" ]]; then
-    fail "checksum mismatch for $file: expected $expected, got $actual"
+    log "  checksum mismatch for $file: expected $expected, got $actual"
+    return 1
   fi
   log "  verified $file sha256=$actual"
+}
+
+verify_download() {
+  local path="$1"
+  local file="$2"
+  local tag="$3"
+
+  check_download "$path" "$file" "$tag" || fail "checksum verification failed for $file"
+}
+
+download_public_asset() {
+  local url="$1"
+  local out="$2"
+  local label="$3"
+  local tag="$4"
+  local retries="${LODESTONE_DOWNLOAD_RETRIES:-4}"
+  local retry_delay="${LODESTONE_DOWNLOAD_RETRY_DELAY:-3}"
+  local max_time="${LODESTONE_DOWNLOAD_MAX_TIME:-900}"
+  local attempt
+  local failure="download failed"
+
+  validate_positive_int "LODESTONE_DOWNLOAD_RETRIES" "$retries"
+  validate_positive_int "LODESTONE_DOWNLOAD_RETRY_DELAY" "$retry_delay"
+  validate_positive_int "LODESTONE_DOWNLOAD_MAX_TIME" "$max_time"
+
+  for ((attempt = 1; attempt <= retries; attempt++)); do
+    rm -f "$out"
+    if curl -sSfL --connect-timeout 30 --max-time "$max_time" -o "$out" "$url"; then
+      if check_download "$out" "$label" "$tag"; then
+        return 0
+      fi
+      failure="checksum verification failed"
+    else
+      failure="download failed"
+    fi
+    if [[ "$attempt" -lt "$retries" ]]; then
+      log "  $failure for $label (attempt $attempt/$retries); retrying in ${retry_delay}s"
+      sleep "$retry_delay"
+    else
+      log "  $failure for $label (attempt $attempt/$retries); giving up"
+    fi
+  done
+
+  return 1
 }
 
 # ── Profile validation ──
@@ -219,8 +272,9 @@ for tgz in "${TARBALLS[@]}"; do
       fail "authenticated private-release downloads require the gh CLI; install gh or unset GH_TOKEN for public anonymous downloads"
     fi
   else
-    curl -sSfL -o "$WORK_DIR/$tgz" "$URL" \
+    download_public_asset "$URL" "$WORK_DIR/$tgz" "$tgz" "$TAG" \
       || fail "anonymous download failed (private repo? set GH_TOKEN or run 'gh auth login'): $URL"
+    continue
   fi
   verify_download "$WORK_DIR/$tgz" "$tgz" "$TAG"
 done
