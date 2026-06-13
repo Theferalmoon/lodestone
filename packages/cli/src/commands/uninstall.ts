@@ -21,6 +21,8 @@ import { removeClaudeMdBlock } from "../uninstall/claude-md-uninstall.js";
 import { removeGitignoreLine } from "../uninstall/gitignore-uninstall.js";
 import { removeCodexConfigEntry } from "../uninstall/codex-config-uninstall.js";
 import { removeLodestoneTree } from "../uninstall/index-removal.js";
+import { removeLodestoneNpmPackages } from "../uninstall/npm-package-uninstall.js";
+import { removePackageJsonOverrides } from "../uninstall/package-json-overrides-uninstall.js";
 import type { InstallManifest } from "./init.js";
 
 // The absolute path the install side wrote into `.mcp.json` as the
@@ -136,6 +138,7 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
   // in this file as the "missing manifest" contract.
   const mcpRes = removeMcpEntry(cwd, {
     dryRun: opts.dryRun,
+    removeFileIfEmpty: manifest?.mcp_json.action === "created",
     ...(manifest !== null
       ? { expectedRuntimeCommand: expectedRuntimeCommandFor(cwd) }
       : {}),
@@ -153,6 +156,26 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
     // `.lodestone/` (and the manifest inside it) so a friend can fix
     // the JSON and re-run `lodestone uninstall` to finish the job.
     exitCode = 1;
+  }
+
+  let packageJsonRes: ReturnType<typeof removePackageJsonOverrides>;
+  if (exitCode !== 0) {
+    packageJsonRes = {
+      action: "noop",
+      path: path.join(cwd, "package.json"),
+      detail: "prior surface failed",
+    };
+    output.warn(
+      "  package.json:     preserved (prior surface failed; re-run uninstall after fixing the error above)"
+    );
+  } else {
+    packageJsonRes = removePackageJsonOverrides(cwd, {
+      dryRun: opts.dryRun,
+    });
+    reportPackageJson(packageJsonRes, opts.dryRun);
+    if (packageJsonRes.action === "unparseable") {
+      exitCode = 1;
+    }
   }
 
   // Codex §19 RED: only delete `.lodestone/` (and the manifest inside it)
@@ -179,6 +202,23 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
     if (treeRes.action === "failed") exitCode = 1;
   }
 
+  let npmRes: ReturnType<typeof removeLodestoneNpmPackages>;
+  if (exitCode !== 0) {
+    npmRes = {
+      action: "noop",
+      path: path.join(cwd, "node_modules"),
+      packages: [],
+      bytesFreed: 0,
+    };
+    output.warn(
+      "  node_modules:     preserved (prior surface failed; re-run uninstall after fixing the error above)"
+    );
+  } else {
+    npmRes = removeLodestoneNpmPackages(cwd, { dryRun: opts.dryRun });
+    reportNpmPackages(npmRes, opts.dryRun);
+    if (npmRes.action === "failed") exitCode = 1;
+  }
+
   // 3. Summary line — friend reads this and knows whether to re-run.
   const noopFully =
     claudeRes.action !== "removed-block" &&
@@ -188,7 +228,11 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
     codexRes.action !== "removed" &&
     codexRes.action !== "removed-file" &&
     mcpRes.action !== "removed" &&
-    treeRes.action !== "removed";
+    mcpRes.action !== "removed-file" &&
+    packageJsonRes.action !== "restored" &&
+    packageJsonRes.action !== "removed-file" &&
+    treeRes.action !== "removed" &&
+    npmRes.action !== "removed";
 
   if (noopFully && exitCode === 0) {
     output.info("");
@@ -200,10 +244,14 @@ export async function uninstall(argv: readonly string[]): Promise<number> {
   if (opts.dryRun) {
     output.info("Dry-run complete. Re-run without --dry-run to apply.");
   } else if (exitCode === 0) {
+    const bytesFreed =
+      treeRes.action === "removed" || npmRes.action === "removed"
+        ? treeRes.bytesFreed + npmRes.bytesFreed
+        : 0;
     output.success(
       `Lodestone uninstalled${
-        treeRes.action === "removed" && treeRes.bytesFreed > 0
-          ? ` (${formatBytes(treeRes.bytesFreed)} freed)`
+        bytesFreed > 0
+          ? ` (${formatBytes(bytesFreed)} freed)`
           : ""
       }.`
     );
@@ -313,6 +361,9 @@ function reportMcp(
     case "removed":
       output.info(`  .mcp.json:        ${verb}remove lodestone-mcp entry (${res.path})`);
       break;
+    case "removed-file":
+      output.info(`  .mcp.json:        ${verb}delete file (${res.path})`);
+      break;
     case "noop":
       output.info(`  .mcp.json:        nothing to do`);
       break;
@@ -328,6 +379,54 @@ function reportMcp(
       output.info(
         `  .mcp.json:        skipped (lodestone-mcp entry belongs to a different install — ${res.detail ?? ""})`
       );
+      break;
+  }
+}
+
+function reportPackageJson(
+  res: ReturnType<typeof removePackageJsonOverrides>,
+  dryRun: boolean
+): void {
+  const verb = dryRun ? "would " : "";
+  switch (res.action) {
+    case "restored":
+      output.info(
+        `  package.json:     ${verb}restore Lodestone npm overrides (${res.detail ?? res.path})`
+      );
+      break;
+    case "removed-file":
+      output.info(`  package.json:     ${verb}delete file (${res.path})`);
+      break;
+    case "missing-provenance":
+      output.info(
+        "  package.json:     skipped (no Lodestone npm override provenance)"
+      );
+      break;
+    case "noop":
+      output.info(`  package.json:     nothing to do${res.detail ? ` (${res.detail})` : ""}`);
+      break;
+    case "unparseable":
+      output.error(`  package.json:     unparseable — ${res.detail}`);
+      break;
+  }
+}
+
+function reportNpmPackages(
+  res: ReturnType<typeof removeLodestoneNpmPackages>,
+  dryRun: boolean
+): void {
+  const verb = dryRun ? "would " : "";
+  switch (res.action) {
+    case "removed":
+      output.info(
+        `  node_modules:     ${verb}remove Lodestone npm packages (${res.packages.join(", ")}, ~${formatBytes(res.bytesFreed)})`
+      );
+      break;
+    case "noop":
+      output.info("  node_modules:     no Lodestone npm packages detected");
+      break;
+    case "failed":
+      output.error(`  node_modules:     npm cleanup failed — ${res.detail ?? ""}`);
       break;
   }
 }

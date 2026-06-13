@@ -1,7 +1,7 @@
 {
   "name": "lodestone-monorepo",
   "private": true,
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Lodestone — a project-local code-aware Knowledge Graph for coding agents.",
   "license": "Apache-2.0",
   "type": "module",
@@ -32,6 +32,7 @@
     ],
     "overrides": {
       "fast-uri": "3.1.2",
+      "esbuild": "0.28.1",
       "hono": "4.12.21",
       "ip-address": "10.1.1",
       "protobufjs": "7.5.8",

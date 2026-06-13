@@ -217,7 +217,7 @@ workaround notes. Anything genuinely blocking would hold the
 release.</p>
 <h2 id="production-dependency-audit-status">Production dependency audit
 status</h2>
-<p>As of the v0.1.9 friend-install release prep on 2026-06-11,
+<p>As of the v0.1.10 friend-install release prep on 2026-06-13,
 <code>pnpm audit --prod</code> is clean after root-level package
 overrides for patched transitive releases of <code>fast-uri</code>,
 <code>hono</code>, <code>ip-address</code>, <code>protobufjs</code>, and
@@ -231,7 +231,9 @@ default because root overrides for common packages can affect the host
 project's own dependency tree.</p>
 <p>Because registry advisories can change after a release, treat
 <code>pnpm audit --prod</code> as a live verification command rather
-than a permanent guarantee.</p>
+than a permanent guarantee. The stricter all-dependency audit gate also
+pins dev/test <code>esbuild@0.28.1</code> after the 2026-06-12 advisory
+for older Vite-transitive esbuild builds.</p>
 <h2 id="cosmetic-items-from-the-20-e2e-pass">Cosmetic items from the §20
 e2e pass</h2>
 <p>The end-to-end test pass surfaced a small handful of cross-section
@@ -257,7 +259,7 @@ the public v0.1.x build exits before any network call until real release
 hashes are published.</p>
 
       </article>
-      <footer>Generated 2026-06-11 22:39 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-13 00:00 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

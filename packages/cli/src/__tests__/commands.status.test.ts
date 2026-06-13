@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
+import { devNull, tmpdir } from "node:os";
 import path from "node:path";
 import { main } from "../main.js";
 
@@ -49,12 +50,21 @@ function canonicalInstallManifest(over: Record<string, unknown> = {}): Record<st
   };
 }
 
+function git(cwd: string, args: readonly string[]): string {
+  return execFileSync("git", [...args], {
+    cwd,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: devNull, GIT_CONFIG_NOSYSTEM: "1" },
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  }).trim();
+}
+
 describe("`lodestone status`", () => {
   let tmp: string;
   let originalCwd: string;
 
   beforeEach(() => {
-    tmp = mkdtempSync(path.join(tmpdir(), "lodestone-status-"));
+    tmp = realpathSync(mkdtempSync(path.join(tmpdir(), "lodestone-status-")));
     originalCwd = process.cwd();
     process.chdir(tmp);
   });
@@ -122,8 +132,88 @@ describe("`lodestone status`", () => {
     expect(parsed.indexed_at).toBeDefined();
     expect(parsed.index_epoch).toBe(1);
     expect(parsed.install_manifest.reindex_state).toBe("skipped");
+    expect(parsed.repo_identity.cwd).toBe(tmp);
+    expect(parsed.repo_identity.is_git_repo).toBe(false);
+    expect(parsed.repo_identity.git_root).toBeNull();
+    expect(parsed.repo_identity.mcp_json_path).toBe(path.join(tmp, ".mcp.json"));
+    expect(parsed.index_consistency.indexed_commit).toBe("abc1234");
+    expect(parsed.index_consistency.head_commit).toBeNull();
+    expect(parsed.index_consistency.git_head_matches_index).toBeNull();
     expect(parsed.clock_skew_detected).toBe(false);
     log.mockRestore();
+  });
+
+  it("`status --json` reports repo identity and index mismatch in a git repo", async () => {
+    git(tmp, ["init", "-q"]);
+    writeFileSync(path.join(tmp, "tracked.txt"), "hello\n");
+    git(tmp, ["add", "tracked.txt"]);
+    git(tmp, [
+      "-c",
+      "user.name=Lodestone Test",
+      "-c",
+      "user.email=lodestone-test@example.invalid",
+      "-c",
+      "commit.gpgsign=false",
+      "-c",
+      `core.hooksPath=${devNull}`,
+      "commit",
+      "-q",
+      "-m",
+      "init",
+    ]);
+    const head = git(tmp, ["rev-parse", "--short", "HEAD"]);
+    mkdirSync(path.join(tmp, ".lodestone"));
+    writeFileSync(
+      path.join(tmp, ".lodestone", "ready.json"),
+      JSON.stringify(canonicalReadyJson({ commit_at_index: "deadbee" }))
+    );
+
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const code = await main(["status", "--json"]);
+    expect(code).toBe(0);
+    const parsed = JSON.parse(log.mock.calls[0]?.[0] as string);
+    expect(parsed.repo_identity.is_git_repo).toBe(true);
+    expect(parsed.repo_identity.git_root).toBe(tmp);
+    expect(parsed.repo_identity.head_commit).toBe(head);
+    expect(parsed.index_consistency.git_head_matches_index).toBe(false);
+    expect(parsed.index_consistency.warnings.join("\n")).toContain("deadbee");
+    expect(parsed.index_consistency.warnings.join("\n")).toContain(head);
+    log.mockRestore();
+  });
+
+  it("`status --json` reports unborn git repo identity without a HEAD commit", async () => {
+    git(tmp, ["init", "-q"]);
+    mkdirSync(path.join(tmp, ".lodestone"));
+    writeFileSync(
+      path.join(tmp, ".lodestone", "ready.json"),
+      JSON.stringify(canonicalReadyJson({ commit_at_index: "abc1234" }))
+    );
+
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const code = await main(["status", "--json"]);
+    expect(code).toBe(0);
+    const parsed = JSON.parse(log.mock.calls[0]?.[0] as string);
+    expect(parsed.repo_identity.is_git_repo).toBe(true);
+    expect(parsed.repo_identity.git_root).toBe(tmp);
+    expect(parsed.repo_identity.head_commit).toBeNull();
+    expect(parsed.index_consistency.git_head_matches_index).toBeNull();
+    log.mockRestore();
+  });
+
+  it("run from a subdirectory: points at the Git root Lodestone index", async () => {
+    git(tmp, ["init", "-q"]);
+    mkdirSync(path.join(tmp, ".lodestone"));
+    mkdirSync(path.join(tmp, "src"));
+    process.chdir(path.join(tmp, "src"));
+
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const code = await main(["status"]);
+    expect(code).toBe(1);
+    const printed = err.mock.calls.flat().join("\n");
+    expect(printed).toContain("A Lodestone index exists at Git root");
+    expect(printed).toContain(tmp);
+    expect(printed).toContain("intentional subproject");
+    err.mockRestore();
   });
 
   it("missing ready.json surfaces failed reindex_state from install manifest", async () => {

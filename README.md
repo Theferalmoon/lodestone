@@ -45,10 +45,10 @@ session if Codex was already open. To verify the adapter later:
 
 **Disk footprint.** The numbers above are what you actually download from the GitHub release. After `npm install`, the full `./node_modules` tree — Lodestone plus its transitive npm dependencies (tree-sitter parsers, `better-sqlite3`, `onnxruntime-node`, ~240 others) — is **~1 GB** in either profile. The bulk on disk is the npm dep tree, not Lodestone itself. Plan accordingly on metered/slow connections.
 
-**Pinning.** The friend installer defaults to the approved `v0.1.9` package set. To make that explicit:
+**Pinning.** The friend installer defaults to the approved `v0.1.10` package set. To make that explicit:
 
 ```bash
-curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.9 bash
+curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.10 bash
 ```
 
 **Access.** The `Theferalmoon/lodestone` repo is currently public, so no GitHub auth is required to fetch this installer or the release tarballs. The `lodestone.cmndi.ai/install` URL is a brand URL for the installer and should point at an immutable installer ref, not a mutable development branch.

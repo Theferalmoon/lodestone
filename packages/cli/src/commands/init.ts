@@ -21,6 +21,7 @@
 //   well-formed manifest even when the post-install ingest pipeline fails:
 //   install side effects are intact, friend re-runs `lodestone reindex`.
 import path from "node:path";
+import { existsSync, readFileSync } from "node:fs";
 import { lodestoneSubpath, canonicalLodestoneDir } from "@lodestone/shared";
 import { writeFileAtomic } from "../install/atomic.js";
 import { augmentClaudeMd, type AugmentClaudeMdResult } from "../install/claude-md.js";
@@ -182,13 +183,21 @@ function printInitHelp(): void {
  */
 export function runInstallSteps(
   repoRoot: string,
-  opts: { writeClaudeMd: boolean; clients?: readonly ClientTarget[] }
+  opts: {
+    writeClaudeMd: boolean;
+    clients?: readonly ClientTarget[];
+    priorManifest?: InstallManifest | null;
+  }
 ): InstallManifest {
   // Manifest lives inside .lodestone/ — make sure the dir exists before writing.
   // canonicalLodestoneDir creates the parent (cwd) but not .lodestone itself;
   // writeFileAtomic mkdir -p's the immediate parent, so this is safe.
   canonicalLodestoneDir(repoRoot);
   const manifestPath = lodestoneSubpath(repoRoot, "installManifest");
+  const priorManifest =
+    opts.priorManifest !== undefined
+      ? opts.priorManifest
+      : readPriorCompleteManifest(manifestPath);
 
   // Stage a pending manifest BEFORE any side effect. Each surface field
   // gets a placeholder action that uninstall reads as "not applied" so a
@@ -213,7 +222,9 @@ export function runInstallSteps(
     gitignore: stagingGitignore,
     ...(clients.includes("codex")
       ? { codex_config: { action: "merged", path: codexConfigPath(repoRoot) } }
-      : {}),
+      : priorManifest?.codex_config !== undefined
+        ? { codex_config: priorManifest.codex_config }
+        : {}),
   };
   const writeManifest = (): void => {
     writeFileAtomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -231,23 +242,35 @@ export function runInstallSteps(
   // exists by the time the editor reads .mcp.json. v0.1.4 fix — prior
   // builds wrote .mcp.json with a command path that was never created.
   installRuntime(repoRoot);
-  manifest.mcp_json = writeMcpJson(repoRoot);
+  manifest.mcp_json = preserveMcpProvenance(
+    writeMcpJson(repoRoot),
+    priorManifest?.mcp_json
+  );
   writeManifest();
 
   if (clients.includes("codex")) {
-    manifest.codex_config = writeCodexConfig(repoRoot);
+    manifest.codex_config = preserveCodexProvenance(
+      writeCodexConfig(repoRoot),
+      priorManifest?.codex_config
+    );
     writeManifest();
   }
 
-  manifest.claude_md = opts.writeClaudeMd
+  manifest.claude_md = preserveClaudeMdProvenance(
+    opts.writeClaudeMd
     ? augmentClaudeMd({ write: true, repoRoot })
     : (() => {
         printClaudeMdSnippet();
         return augmentClaudeMd({ write: false, repoRoot });
-      })();
+      })(),
+    priorManifest?.claude_md
+  );
   writeManifest();
 
-  manifest.gitignore = updateGitignore(repoRoot);
+  manifest.gitignore = preserveGitignoreProvenance(
+    updateGitignore(repoRoot),
+    priorManifest?.gitignore
+  );
   writeManifest();
 
   // All surfaces applied — promote to `complete`.
@@ -255,6 +278,72 @@ export function runInstallSteps(
   writeManifest();
 
   return manifest;
+}
+
+function readPriorCompleteManifest(manifestPath: string): InstallManifest | null {
+  if (!existsSync(manifestPath)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync(manifestPath, "utf8")) as Partial<InstallManifest>;
+    if (parsed.schema_version !== 2 || parsed.install_state !== "complete") {
+      return null;
+    }
+    if (
+      parsed.mcp_json === undefined ||
+      parsed.claude_md === undefined ||
+      parsed.gitignore === undefined
+    ) {
+      return null;
+    }
+    return parsed as InstallManifest;
+  } catch {
+    return null;
+  }
+}
+
+function preserveMcpProvenance(
+  current: McpConfigResult,
+  prior: McpConfigResult | undefined
+): McpConfigResult {
+  if (prior?.action === "created" && current.action !== "created") {
+    return { ...current, action: "created" };
+  }
+  return current;
+}
+
+function preserveCodexProvenance(
+  current: CodexConfigResult,
+  prior: CodexConfigResult | undefined
+): CodexConfigResult {
+  if (prior?.action === "created" && current.action !== "created") {
+    return { ...current, action: "created" };
+  }
+  return current;
+}
+
+function preserveClaudeMdProvenance(
+  current: AugmentClaudeMdResult,
+  prior: AugmentClaudeMdResult | undefined
+): AugmentClaudeMdResult {
+  if (
+    (prior?.action === "created" || prior?.action === "appended") &&
+    current.action === "already_present"
+  ) {
+    return { ...current, action: prior.action };
+  }
+  return current;
+}
+
+function preserveGitignoreProvenance(
+  current: UpdateGitignoreResult,
+  prior: UpdateGitignoreResult | undefined
+): UpdateGitignoreResult {
+  if (
+    (prior?.action === "created" || prior?.action === "appended") &&
+    current.action === "noop"
+  ) {
+    return { ...current, action: prior.action };
+  }
+  return current;
 }
 
 export async function init(argv: readonly string[]): Promise<number> {
@@ -294,11 +383,15 @@ export async function init(argv: readonly string[]): Promise<number> {
     return 0;
   }
 
+  const priorManifest = readPriorCompleteManifest(
+    lodestoneSubpath(cwd, "installManifest")
+  );
   let manifest: InstallManifest;
   try {
     manifest = runInstallSteps(cwd, {
       writeClaudeMd: opts.writeClaudeMd,
       clients: opts.clients,
+      priorManifest,
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
@@ -317,8 +410,16 @@ export async function init(argv: readonly string[]): Promise<number> {
       "  note: Codex loads project .codex/config.toml only after this repo is trusted."
     );
   }
+  const preservedClaudeMdProvenance =
+    opts.writeClaudeMd &&
+    (priorManifest?.claude_md.action === "created" ||
+      priorManifest?.claude_md.action === "appended") &&
+    manifest.claude_md.action === priorManifest.claude_md.action;
+  const claudeMdDisplayAction = preservedClaudeMdProvenance
+    ? `${manifest.claude_md.action} (already_present this run; preserved uninstall provenance)`
+    : manifest.claude_md.action;
   output.info(
-    `  CLAUDE.md:        ${manifest.claude_md.action}${
+    `  CLAUDE.md:        ${claudeMdDisplayAction}${
       manifest.claude_md.path ? ` (${manifest.claude_md.path})` : ""
     }`
   );
@@ -327,7 +428,10 @@ export async function init(argv: readonly string[]): Promise<number> {
   // install, we never rewrite it (so their hand-edits survive). The cost is
   // that future Lodestone snippet updates won't reach them automatically.
   // Tell them how to refresh — without this, a stale snippet is invisible.
-  if (manifest.claude_md.action === "already_present") {
+  if (
+    manifest.claude_md.action === "already_present" ||
+    preservedClaudeMdProvenance
+  ) {
     output.info("");
     output.info(
       "  note: CLAUDE.md markers found — your edits are preserved. To refresh"

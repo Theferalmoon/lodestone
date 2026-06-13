@@ -71,6 +71,41 @@ describe("removeMcpEntry", () => {
     expect(after).toEqual({ mcpServers: {} });
   });
 
+  it("removeFileIfEmpty: deletes a Lodestone-authored single-entry file", () => {
+    writeMcp({
+      mcpServers: { "lodestone-mcp": { command: "x", args: [], env: {} } },
+    });
+    const r = removeMcpEntry(tmp, { removeFileIfEmpty: true });
+    expect(r.action).toBe("removed-file");
+    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
+  });
+
+  it("removeFileIfEmpty: preserves top-level host metadata", () => {
+    writeMcp({
+      $schema: "https://example/mcp.json",
+      mcpServers: { "lodestone-mcp": { command: "x", args: [], env: {} } },
+    });
+    const r = removeMcpEntry(tmp, { removeFileIfEmpty: true });
+    expect(r.action).toBe("removed");
+    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(true);
+    const after = JSON.parse(readFileSync(path.join(tmp, ".mcp.json"), "utf8"));
+    expect(after).toEqual({
+      $schema: "https://example/mcp.json",
+      mcpServers: {},
+    });
+  });
+
+  it("dryRun + removeFileIfEmpty: preserves top-level host metadata", () => {
+    writeMcp({
+      $schema: "https://example/mcp.json",
+      mcpServers: { "lodestone-mcp": { command: "x", args: [], env: {} } },
+    });
+    const before = readFileSync(path.join(tmp, ".mcp.json"));
+    const r = removeMcpEntry(tmp, { dryRun: true, removeFileIfEmpty: true });
+    expect(r.action).toBe("removed");
+    expect(Buffer.compare(before, readFileSync(path.join(tmp, ".mcp.json")))).toBe(0);
+  });
+
   it("idempotent — second call returns noop, file byte-identical", () => {
     writeMcp({
       mcpServers: {
@@ -130,6 +165,16 @@ describe("removeMcpEntry", () => {
     expect(Buffer.compare(before, readFileSync(path.join(tmp, ".mcp.json")))).toBe(0);
   });
 
+  it("dryRun + removeFileIfEmpty: plans file deletion but does not touch disk", () => {
+    writeMcp({
+      mcpServers: { "lodestone-mcp": { command: "x", args: [], env: {} } },
+    });
+    const before = readFileSync(path.join(tmp, ".mcp.json"));
+    const r = removeMcpEntry(tmp, { dryRun: true, removeFileIfEmpty: true });
+    expect(r.action).toBe("removed-file");
+    expect(Buffer.compare(before, readFileSync(path.join(tmp, ".mcp.json")))).toBe(0);
+  });
+
   // Codex r2 §19 YELLOW — manifest-scoped removal. When the caller knows
   // what command the current install would have written, removal is
   // restricted to entries that match that command. This protects a
@@ -148,6 +193,21 @@ describe("removeMcpEntry", () => {
       expect(r.action).toBe("removed");
       const after = JSON.parse(readFileSync(path.join(tmp, ".mcp.json"), "utf8"));
       expect(after).toEqual({ mcpServers: {} });
+    });
+
+    it("removeFileIfEmpty deletes the file when command matches expectedRuntimeCommand", () => {
+      const ours = `${tmp}/.lodestone/runtime/lodestone-mcp`;
+      writeMcp({
+        mcpServers: {
+          "lodestone-mcp": { command: ours, args: [], env: {} },
+        },
+      });
+      const r = removeMcpEntry(tmp, {
+        expectedRuntimeCommand: ours,
+        removeFileIfEmpty: true,
+      });
+      expect(r.action).toBe("removed-file");
+      expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
     });
 
     it("preserves a pre-existing entry whose command does NOT match expectedRuntimeCommand", () => {
