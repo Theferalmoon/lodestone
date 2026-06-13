@@ -17,7 +17,7 @@ interface LodestoneToolResponse<T> {
 }
 ```
 
-`Provenance` carries the head commit, the indexed commit, dirty-tree flags, upstream-branch state, the staleness in seconds, and a `source` field set to `"live"`, `"stale"`, or `"not_ready"`. When `source === "not_ready"` the index has not finished its first ingest pass — the agent should treat the response as preliminary. The full schema (with sentinel values for never-indexed and non-git directories) is in `packages/shared/src/types/envelope.ts`.
+`Provenance` carries the head commit, the indexed commit, dirty-tree flags, upstream-branch state, the staleness in seconds, and a `source` field set to `"live"`, `"stale"`, or `"not_ready"`. A successful `lodestone reindex` stamps `ready.json` with `commit_at_index` and `dirty_at_index`; MCP responses use those values to tell the agent whether the index matches the current Git state. When `source === "not_ready"` the index has not finished its first ingest pass — the agent should treat the response as preliminary. The full schema (with sentinel values for never-indexed and non-git directories) is in `packages/shared/src/types/envelope.ts`.
 
 `Diagnostics` carries `coverage` (0..1, files-indexed-vs-non-ignored), an optional `warnings` array, an optional `truncated` flag (set when the response was clipped to fit `[mcp].max_response_kb`), and an optional `clamped` flag (set when an input parameter like `top_k` was silently capped).
 

@@ -21,3 +21,12 @@ By design, not a bug — see [`UPGRADE.md`](./UPGRADE.md). Schema bumps within v
 ## `setup-models` is fail-closed in the public v0.1.x build
 
 The public `lite` and `full` friend profiles bundle their model weights, so normal friend runtime does not need a model download. The `lodestone setup-models` command remains the reserved future path for pinned, consent-gated model downloads, but the public v0.1.x build exits before any network call until real release hashes are published.
+
+## Codex project-local config may need explicit smoke commands
+
+The Codex adapter writes project-local `.codex/config.toml`, but Codex still
+controls project trust and may not load that config in every noninteractive
+session. `lodestone doctor --client codex` validates the generated file. If a
+trusted Codex session still does not list Lodestone tools, run
+`lodestone client-smoke --client codex` and use the emitted inline Codex
+commands for a reproducible support smoke.

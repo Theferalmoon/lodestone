@@ -43,6 +43,14 @@ session if Codex was already open. To verify the adapter later:
 ./node_modules/.bin/lodestone doctor --client codex
 ```
 
+For a support smoke, use the helper that validates the Codex config plus the
+local Lodestone MCP launcher and prints exact `codex mcp list` / `codex exec`
+commands:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client codex
+```
+
 **Disk footprint.** The numbers above are what you actually download from the GitHub release. After `npm install`, the full `./node_modules` tree — Lodestone plus its transitive npm dependencies (tree-sitter parsers, `better-sqlite3`, `onnxruntime-node`, ~240 others) — is **~1 GB** in either profile. The bulk on disk is the npm dep tree, not Lodestone itself. Plan accordingly on metered/slow connections.
 
 **Pinning.** The friend installer defaults to the approved `v0.1.11` package set. To make that explicit:

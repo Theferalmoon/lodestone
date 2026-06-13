@@ -13,6 +13,7 @@ const EXPECTED_NAMES = [
   "seed-skills",
   "upgrade",
   "uninstall",
+  "client-smoke",
   "setup-models",
 ] as const;
 

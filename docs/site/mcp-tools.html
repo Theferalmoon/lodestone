@@ -229,11 +229,14 @@ class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb1-
 <p><code>Provenance</code> carries the head commit, the indexed commit,
 dirty-tree flags, upstream-branch state, the staleness in seconds, and a
 <code>source</code> field set to <code>"live"</code>,
-<code>"stale"</code>, or <code>"not_ready"</code>. When
-<code>source === "not_ready"</code> the index has not finished its first
-ingest pass — the agent should treat the response as preliminary. The
-full schema (with sentinel values for never-indexed and non-git
-directories) is in
+<code>"stale"</code>, or <code>"not_ready"</code>. A successful
+<code>lodestone reindex</code> stamps <code>ready.json</code> with
+<code>commit_at_index</code> and <code>dirty_at_index</code>; MCP
+responses use those values to tell the agent whether the index matches
+the current Git state. When <code>source === "not_ready"</code> the
+index has not finished its first ingest pass — the agent should treat
+the response as preliminary. The full schema (with sentinel values for
+never-indexed and non-git directories) is in
 <code>packages/shared/src/types/envelope.ts</code>.</p>
 <p><code>Diagnostics</code> carries <code>coverage</code> (0..1,
 files-indexed-vs-non-ignored), an optional <code>warnings</code> array,

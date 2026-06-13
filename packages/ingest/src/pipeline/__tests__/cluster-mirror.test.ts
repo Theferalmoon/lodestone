@@ -14,8 +14,9 @@
 // A.12.1.2; FedRAMP Mod SI-7; CIS v8 Control 4.
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { devNull, tmpdir } from "node:os";
 import path from "node:path";
 
 import { runPipeline } from "../index.js";
@@ -52,6 +53,15 @@ function mkEmbedder(): EmbedderHandle {
       /* no-op */
     },
   };
+}
+
+function git(cwd: string, args: readonly string[]): string {
+  return execFileSync("git", [...args], {
+    cwd,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: devNull, GIT_CONFIG_NOSYSTEM: "1" },
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  }).trim();
 }
 
 describe("§15 RED #3 — pipeline mirrors cluster_members onto symbols.cluster_id", () => {
@@ -166,6 +176,122 @@ describe("§15 RED #3 — pipeline mirrors cluster_members onto symbols.cluster_
       expect(orphaned).toEqual([]);
     } finally {
       closeDb(reader);
+    }
+  });
+
+  it("writes current git commit and dirty state into ready.json", async () => {
+    seedRepo();
+    writeFileSync(path.join(repoRoot, ".gitignore"), ".lodestone/\n");
+    git(repoRoot, ["init", "-q"]);
+    git(repoRoot, ["add", ".gitignore", "src/a.ts", "src/b.ts", "src/c.ts"]);
+    git(repoRoot, [
+      "-c",
+      "user.name=Lodestone Test",
+      "-c",
+      "user.email=lodestone-test@example.invalid",
+      "-c",
+      "commit.gpgsign=false",
+      "-c",
+      `core.hooksPath=${devNull}`,
+      "commit",
+      "-q",
+      "-m",
+      "init",
+    ]);
+    const head = git(repoRoot, ["rev-parse", "--short", "HEAD"]);
+
+    const embedder = mkEmbedder();
+    try {
+      await runPipeline({
+        repoRoot,
+        embedder,
+        embedderIdentity: { id: "nomic-text-v1.5", dim: VECTOR_DIM, quant: "fp32" },
+        indexEpoch: 1,
+      });
+      const cleanReady = JSON.parse(
+        readFileSync(path.join(repoRoot, ".lodestone", "ready.json"), "utf8"),
+      ) as { commit_at_index?: string | null; dirty_at_index?: boolean };
+      expect(cleanReady.commit_at_index).toBe(head);
+      expect(cleanReady.dirty_at_index).toBe(false);
+
+      writeFileSync(path.join(repoRoot, "src", "a.ts"), "export const changed = true;\n");
+      await runPipeline({
+        repoRoot,
+        embedder,
+        embedderIdentity: { id: "nomic-text-v1.5", dim: VECTOR_DIM, quant: "fp32" },
+        indexEpoch: 2,
+      });
+      const dirtyReady = JSON.parse(
+        readFileSync(path.join(repoRoot, ".lodestone", "ready.json"), "utf8"),
+      ) as { commit_at_index?: string | null; dirty_at_index?: boolean };
+      expect(dirtyReady.commit_at_index).toBe(head);
+      expect(dirtyReady.dirty_at_index).toBe(true);
+    } finally {
+      await embedder.dispose();
+    }
+  });
+
+  it("scopes dirty_at_index to the indexed project inside a larger git repo", async () => {
+    const gitRoot = repoRoot;
+    const projectRoot = path.join(gitRoot, "packages", "app");
+    mkdirSync(path.join(projectRoot, ".lodestone"), { recursive: true });
+    mkdirSync(path.join(projectRoot, "src"), { recursive: true });
+    writeFileSync(path.join(gitRoot, ".gitignore"), "**/.lodestone/\n");
+    writeFileSync(
+      path.join(projectRoot, "src", "a.ts"),
+      `import { fb } from "./b";\nexport function fa(): number { return fb() + 1; }\n`,
+    );
+    writeFileSync(
+      path.join(projectRoot, "src", "b.ts"),
+      `export function fb(): number { return 2; }\n`,
+    );
+    git(gitRoot, ["init", "-q"]);
+    git(gitRoot, ["add", ".gitignore", "packages/app/src/a.ts", "packages/app/src/b.ts"]);
+    git(gitRoot, [
+      "-c",
+      "user.name=Lodestone Test",
+      "-c",
+      "user.email=lodestone-test@example.invalid",
+      "-c",
+      "commit.gpgsign=false",
+      "-c",
+      `core.hooksPath=${devNull}`,
+      "commit",
+      "-q",
+      "-m",
+      "init",
+    ]);
+    const head = git(gitRoot, ["rev-parse", "--short", "HEAD"]);
+    writeFileSync(path.join(gitRoot, "outside.ts"), "export const outside = true;\n");
+
+    const embedder = mkEmbedder();
+    try {
+      await runPipeline({
+        repoRoot: projectRoot,
+        embedder,
+        embedderIdentity: { id: "nomic-text-v1.5", dim: VECTOR_DIM, quant: "fp32" },
+        indexEpoch: 1,
+      });
+      const outsideDirtyReady = JSON.parse(
+        readFileSync(path.join(projectRoot, ".lodestone", "ready.json"), "utf8"),
+      ) as { commit_at_index?: string | null; dirty_at_index?: boolean };
+      expect(outsideDirtyReady.commit_at_index).toBe(head);
+      expect(outsideDirtyReady.dirty_at_index).toBe(false);
+
+      writeFileSync(path.join(projectRoot, "src", "a.ts"), "export const changed = true;\n");
+      await runPipeline({
+        repoRoot: projectRoot,
+        embedder,
+        embedderIdentity: { id: "nomic-text-v1.5", dim: VECTOR_DIM, quant: "fp32" },
+        indexEpoch: 2,
+      });
+      const projectDirtyReady = JSON.parse(
+        readFileSync(path.join(projectRoot, ".lodestone", "ready.json"), "utf8"),
+      ) as { commit_at_index?: string | null; dirty_at_index?: boolean };
+      expect(projectDirtyReady.commit_at_index).toBe(head);
+      expect(projectDirtyReady.dirty_at_index).toBe(true);
+    } finally {
+      await embedder.dispose();
     }
   });
 });

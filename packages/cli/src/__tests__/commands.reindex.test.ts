@@ -4,8 +4,9 @@
 // nomic/snowflake weights, then verify the pipeline produces a queryable
 // SQLite + ready.json marker against a tiny synthetic source tree.
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { devNull, tmpdir } from "node:os";
 import path from "node:path";
 
 import {
@@ -17,6 +18,15 @@ import {
 } from "../commands/reindex.js";
 
 import type { EmbedderHandle } from "@lodestone/ingest/embed";
+
+function git(cwd: string, args: readonly string[]): string {
+  return execFileSync("git", [...args], {
+    cwd,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: devNull, GIT_CONFIG_NOSYSTEM: "1" },
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  }).trim();
+}
 
 /** Deterministic unit vector keyed by symbol id. */
 function makeDeterministicEmbedder(opts: {
@@ -202,5 +212,42 @@ describe("reindex command (POST-§20 Issue C)", () => {
       id: "snowflake-arctic-embed-s",
       dim: 384,
     });
+  });
+
+  it("stamps current git commit and dirty state into ready.json", async () => {
+    git(tmp, ["init", "-q"]);
+    git(tmp, ["add", "src/auth.ts", "src/util.ts"]);
+    git(tmp, [
+      "-c",
+      "user.name=Lodestone Test",
+      "-c",
+      "user.email=lodestone-test@example.invalid",
+      "-c",
+      "commit.gpgsign=false",
+      "-c",
+      `core.hooksPath=${devNull}`,
+      "commit",
+      "-q",
+      "-m",
+      "init",
+    ]);
+    const head = git(tmp, ["rev-parse", "--short", "HEAD"]);
+
+    await runReindex(tmp);
+
+    const cleanReady = JSON.parse(
+      readFileSync(path.join(tmp, ".lodestone", "ready.json"), "utf8")
+    ) as { commit_at_index?: string | null; dirty_at_index?: boolean };
+    expect(cleanReady.commit_at_index).toBe(head);
+    expect(cleanReady.dirty_at_index).toBe(false);
+
+    writeFileSync(path.join(tmp, "src", "auth.ts"), "export const changed = true;\n");
+    await runReindex(tmp);
+
+    const dirtyReady = JSON.parse(
+      readFileSync(path.join(tmp, ".lodestone", "ready.json"), "utf8")
+    ) as { commit_at_index?: string | null; dirty_at_index?: boolean };
+    expect(dirtyReady.commit_at_index).toBe(head);
+    expect(dirtyReady.dirty_at_index).toBe(true);
   });
 });
