@@ -128,6 +128,15 @@ Verify the shared client surface with:
 `--client claude-code`, `--client cursor`, `--client cline`, and
 `--client cmndclaw` are friendly aliases for the same `.mcp.json` check.
 
+Claude Code also has a support smoke helper:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client claude-code
+```
+
+It validates `.mcp.json`, verifies the local MCP launcher, and prints exact
+`claude --mcp-config ... --strict-mcp-config` commands for a trusted smoke repo.
+
 ## Optional Claude Desktop MCPB Bundle
 
 The repository includes a private MCPB packer for Claude Desktop:
@@ -363,3 +372,5 @@ When troubleshooting a friend install, collect:
   setup was used.
 - Output from `./node_modules/.bin/lodestone client-smoke --client codex`, if
   Codex still does not show Lodestone tools after trust/restart.
+- Output from `./node_modules/.bin/lodestone client-smoke --client claude-code`,
+  if Claude Code does not show Lodestone tools.

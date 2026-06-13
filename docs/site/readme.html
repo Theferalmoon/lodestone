@@ -254,6 +254,13 @@ plus the local Lodestone MCP launcher and prints exact
 <code>codex mcp list</code> / <code>codex exec</code> commands:</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> client-smoke <span class="at">--client</span> codex</span></code></pre></div>
+<p>Claude Code users can collect the equivalent <code>.mcp.json</code>
+support smoke:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> client-smoke <span class="at">--client</span> claude-code</span></code></pre></div>
+<p>That validates the shared MCP config and prints exact
+<code>claude --mcp-config ... --strict-mcp-config</code> smoke commands
+for a trusted disposable repo.</p>
 <p><strong>Disk footprint.</strong> The numbers above are what you
 actually download from the GitHub release. After
 <code>npm install</code>, the full <code>./node_modules</code> tree —
@@ -263,8 +270,8 @@ Lodestone plus its transitive npm dependencies (tree-sitter parsers,
 not Lodestone itself. Plan accordingly on metered/slow connections.</p>
 <p><strong>Pinning.</strong> The friend installer defaults to the
 approved <code>v0.1.12</code> package set. To make that explicit:</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_VERSION</span><span class="op">=</span>v0.1.12 <span class="fu">bash</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_VERSION</span><span class="op">=</span>v0.1.12 <span class="fu">bash</span></span></code></pre></div>
 <p><strong>Access.</strong> The <code>Theferalmoon/lodestone</code> repo
 is currently public, so no GitHub auth is required to fetch this
 installer or the release tarballs. The
@@ -290,14 +297,14 @@ read the docs from their own project after installation.</p>
 machine)</h2>
 <p>Requires Node 20+ and a network connection for
 <code>pnpm install</code>. From a clean checkout:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable corepack + activate the pinned pnpm version</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">corepack</span> enable</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">corepack</span> prepare pnpm@10.33.0 <span class="at">--activate</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install workspace deps + run tests</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> install</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> test</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable corepack + activate the pinned pnpm version</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">corepack</span> enable</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">corepack</span> prepare pnpm@10.33.0 <span class="at">--activate</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install workspace deps + run tests</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> install</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> test</span></code></pre></div>
 <p><code>pnpm test</code> is currently network-dependent (it runs
 <code>pnpm audit</code> against the npm registry). Once package code
 lands in §02+, <code>pnpm -r test</code> runs the per-package suites
@@ -321,13 +328,13 @@ the workspace (gitignored, ~185 MB combined). They are copied into
 <code>packages/ingest/dist/models/</code> at build time, then split
 per-profile at pack time. Maintainers populate them once before
 publishing:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Download both bundled embedders from Hugging Face into packages/ingest/models/</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    Idempotent — skips files whose sha256 matches packages/ingest/models-manifest.json.</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">--filter</span> @lodestone/ingest bundle-models</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Build everything. The ingest build step copies models/ -&gt; dist/models/.</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">-r</span> build</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Download both bundled embedders from Hugging Face into packages/ingest/models/</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    Idempotent — skips files whose sha256 matches packages/ingest/models-manifest.json.</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">--filter</span> @lodestone/ingest bundle-models</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Build everything. The ingest build step copies models/ -&gt; dist/models/.</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">-r</span> build</span></code></pre></div>
 <p>Friends never run <code>bundle-models</code>. The script
 intentionally bypasses the runtime offline guard
 (<code>assertNetworkAllowed()</code> in
@@ -337,22 +344,22 @@ in the friend's installed copy. See the header comment in
 <code>packages/ingest/scripts/bundle-models.mjs</code> for the
 build-time-network-exception rationale.</p>
 <p>To rebuild the friend documentation pack:</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> docs:friend</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> docs:friend</span></code></pre></div>
 <p>That command generates Word documents, HTML docs, and package-local
 docs from the same source Markdown.</p>
 <p>To bump a pinned model revision:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit MODELS[].hfRevision in packages/ingest/scripts/bundle-models.mjs, then:</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">--filter</span> @lodestone/ingest bundle-models <span class="at">--</span> <span class="at">--update-manifest</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Review the updated models-manifest.json diff before committing.</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit MODELS[].hfRevision in packages/ingest/scripts/bundle-models.mjs, then:</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pnpm</span> <span class="at">--filter</span> @lodestone/ingest bundle-models <span class="at">--</span> <span class="at">--update-manifest</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Review the updated models-manifest.json diff before committing.</span></span></code></pre></div>
 <h2 id="license">License</h2>
 <p>Apache-2.0. See <a href="./LICENSE"><code>LICENSE</code></a>, <a
 href="./NOTICE"><code>NOTICE</code></a>, and <a
 href="./LICENSE-AUTHORIZATION.md"><code>LICENSE-AUTHORIZATION.md</code></a>.</p>
 
       </article>
-      <footer>Generated 2026-06-13 05:52 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-13 07:30 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

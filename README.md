@@ -51,6 +51,16 @@ commands:
 ./node_modules/.bin/lodestone client-smoke --client codex
 ```
 
+Claude Code users can collect the equivalent `.mcp.json` support smoke:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client claude-code
+```
+
+That validates the shared MCP config and prints exact
+`claude --mcp-config ... --strict-mcp-config` smoke commands for a trusted
+disposable repo.
+
 **Disk footprint.** The numbers above are what you actually download from the GitHub release. After `npm install`, the full `./node_modules` tree — Lodestone plus its transitive npm dependencies (tree-sitter parsers, `better-sqlite3`, `onnxruntime-node`, ~240 others) — is **~1 GB** in either profile. The bulk on disk is the npm dep tree, not Lodestone itself. Plan accordingly on metered/slow connections.
 
 **Pinning.** The friend installer defaults to the approved `v0.1.12` package set. To make that explicit:
