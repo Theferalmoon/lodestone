@@ -6,7 +6,7 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 
 **Your code never leaves your machine.** Embeddings, the call graph, cluster names, skill cards, feedback events — everything is written to `.lodestone/` inside your project, locally. There is no telemetry, no upload step, and no remote service to call. See [`PRIVACY.md`](./PRIVACY.md) for the implementation details and the build-time grep audit that enforces it.
 
-> **Note (v0.1.14).** The `npx lodestone init` flow described below is the
+> **Note (v0.1.15).** The `npx lodestone init` flow described below is the
 > v0.5+ npm-publish path and is **not yet wired** — `@lodestone/cli` is not
 > on the npm registry. Today's working install is the curl-bash one-liner
 > from the [top-level README](../README.md#install-one-liner):
@@ -87,7 +87,7 @@ Full reference (request shapes, response shapes, examples): [`MCP-TOOLS.md`](./M
 $ cd ~/code/your-project
 $ curl -sSfL https://lodestone.cmndi.ai/install | bash
 [lodestone-install] profile = lite
-[lodestone-install] latest = v0.1.14
+[lodestone-install] latest = v0.1.15
 [lodestone-install] downloading tarballs ... (4 files, ~16 MB)
 [lodestone-install] installing into ./node_modules ...
 [lodestone-install] running 'lodestone init' ...

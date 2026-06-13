@@ -211,7 +211,7 @@ describe("client-smoke command", () => {
       ok: true,
       protocolVersion: "2024-11-05",
       serverName: "lodestone",
-      serverVersion: "0.1.14",
+      serverVersion: "0.1.15",
       toolNames: ["query", "context", "impact"],
     }));
 
@@ -223,7 +223,7 @@ describe("client-smoke command", () => {
       handshake_ok: true,
       protocol_version: "2024-11-05",
       server_name: "lodestone",
-      server_version: "0.1.14",
+      server_version: "0.1.15",
       ready_to_smoke: true,
       tool_count: 3,
       tool_names: ["query", "context", "impact"],
