@@ -6,7 +6,7 @@
 
 **Prepared by:** Cybersecurity Management & Network Defense, Inc.
 **Document type:** Installation guide
-**Version:** v0.1.13 friend-install documentation
+**Version:** v0.1.14 friend-install documentation
 **Date:** June 13, 2026
 
 ## What You Are Installing
@@ -77,7 +77,7 @@ curl -sSfL https://lodestone.cmndi.ai/install | bash
 
 What this downloads:
 
-- The approved Lodestone v0.1.13 package set.
+- The approved Lodestone v0.1.14 package set.
 - The `lite` ingest package with the Snowflake 384-dimensional embedder.
 - About 16 MB of Lodestone release tarballs.
 
@@ -104,7 +104,7 @@ curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_PROFILE=full bash
 
 What this downloads:
 
-- The approved Lodestone v0.1.13 package set.
+- The approved Lodestone v0.1.14 package set.
 - The `full` ingest package with the Nomic 768-dimensional embedder.
 - About 89 MB of Lodestone release tarballs.
 
@@ -184,10 +184,13 @@ You can also use the matching client name, such as:
 
 ### Claude Desktop MCPB Option
 
-Claude Desktop users who prefer a one-click extension can use a private
-current-platform MCPB bundle after Lodestone has already been installed and
-indexed in the target project. See `docs/MCPB.md` or the online docs page for
-the bundle build and install steps.
+Claude Desktop MCPB is an operator-preview path, not the default friend install
+route. The packer and manifest-only structural smoke exist, but a real Claude
+Desktop install/use smoke has not yet been captured on this maintainer host.
+
+Use the public Lite or Full installer as the supported friend path. Only use
+MCPB after a maintainer has built and validated a bundle for your platform. See
+`docs/MCPB.md` or the online docs page for the preview bundle steps.
 
 ## What the Installer Does
 

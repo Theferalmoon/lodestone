@@ -217,7 +217,7 @@ id="standard-technical-documentation-for-the-friend-install">Standard
 technical documentation for the friend install</h2>
 <p><strong>Prepared by:</strong> Cybersecurity Management &amp; Network
 Defense, Inc. <strong>Document type:</strong> Technical guide
-<strong>Version:</strong> v0.1.13 friend-install documentation
+<strong>Version:</strong> v0.1.14 friend-install documentation
 <strong>Date:</strong> June 13, 2026</p>
 <h2 id="system-summary">System Summary</h2>
 <p>Lodestone is a project-local code intelligence sidecar for AI coding
@@ -347,13 +347,18 @@ and prints exact
 trusted smoke repo.</p>
 <h2 id="optional-claude-desktop-mcpb-bundle">Optional Claude Desktop
 MCPB Bundle</h2>
-<p>The repository includes a private MCPB packer for Claude Desktop:</p>
+<p>The repository includes an operator-preview MCPB packer for Claude
+Desktop:</p>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/mcpb/build-claude-desktop-bundle.mjs</span> <span class="at">--profile</span> lite</span></code></pre></div>
-<p>The bundle is for users who already installed and indexed Lodestone
-in the target project. Claude Desktop asks for a
+<p>The bundle is for validation by operators who already installed and
+indexed Lodestone in the target project. Claude Desktop asks for a
 <code>Project folder</code>, and the bundle launches the bundled
 Lodestone MCP server with that folder as its working directory.</p>
+<p>Current support status: the packer and manifest-only structural smoke
+exist, but a real Claude Desktop install/use smoke has not yet been
+captured on this maintainer host. Keep the public Lite or Full installer
+as the supported friend path until that Desktop proof exists.</p>
 <p>MCPB artifacts are current-platform because Lodestone includes native
 Node dependencies. Build separate artifacts on each target operating
 system family.</p>
@@ -581,7 +586,7 @@ if Claude Code does not show Lodestone tools.</li>
 </ul>
 
       </article>
-      <footer>Generated 2026-06-13 07:45 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-13 08:20 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

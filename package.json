@@ -1,7 +1,7 @@
 {
   "name": "lodestone-monorepo",
   "private": true,
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Lodestone — a project-local code-aware Knowledge Graph for coding agents.",
   "license": "Apache-2.0",
   "type": "module",

@@ -6,7 +6,7 @@ A project-local, code-aware Knowledge Graph for coding agents. Lodestone watches
 
 **Your code never leaves your machine.** Embeddings, the call graph, cluster names, skill cards, feedback events — everything is written to `.lodestone/` inside your project, locally. There is no telemetry, no upload step, and no remote service to call. See [`PRIVACY.md`](./PRIVACY.md) for the implementation details and the build-time grep audit that enforces it.
 
-> **Note (v0.1.13).** The `npx lodestone init` flow described below is the
+> **Note (v0.1.14).** The `npx lodestone init` flow described below is the
 > v0.5+ npm-publish path and is **not yet wired** — `@lodestone/cli` is not
 > on the npm registry. Today's working install is the curl-bash one-liner
 > from the [top-level README](../README.md#install-one-liner):
@@ -82,7 +82,7 @@ Full reference (request shapes, response shapes, examples): [`MCP-TOOLS.md`](./M
 $ cd ~/code/your-project
 $ curl -sSfL https://lodestone.cmndi.ai/install | bash
 [lodestone-install] profile = lite
-[lodestone-install] latest = v0.1.13
+[lodestone-install] latest = v0.1.14
 [lodestone-install] downloading tarballs ... (4 files, ~16 MB)
 [lodestone-install] installing into ./node_modules ...
 [lodestone-install] running 'lodestone init' ...
@@ -110,7 +110,7 @@ Open Claude Code (or any MCP client) in the same directory. Ask: *what are the m
 | [`CONFIG.md`](./CONFIG.md) | Every key in `lodestone.toml` with its type, default, allowed values, and one-line explanation. Plus environment variable overrides. |
 | [`ROADMAP.md`](./ROADMAP.md) | Friend-distribution boundaries and Pro-only temporal KG direction. |
 | [`MCP-TOOLS.md`](./MCP-TOOLS.md) | The 8 MCP tools — request shapes, response shapes, JSON examples, when to use each. |
-| [`MCPB.md`](./MCPB.md) | Private Claude Desktop MCPB bundle build and install path. |
+| [`MCPB.md`](./MCPB.md) | Operator-preview Claude Desktop MCPB bundle build and install path. |
 | [`PRIVACY.md`](./PRIVACY.md) | The "never leaves your machine" claim, what it actually means, and the build-time enforcement. |
 | [`SUPPLY-CHAIN.md`](./SUPPLY-CHAIN.md) | Why these specific models and libraries — license, origin, audit posture. |
 | [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) | WSL2 paths, corp proxies, Apple Silicon, missing prebuilds, parse failures, big repos. |

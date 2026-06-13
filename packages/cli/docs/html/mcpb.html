@@ -214,8 +214,17 @@
 <h1 id="claude-desktop-mcpb-packaging">Claude Desktop MCPB
 Packaging</h1>
 <p>Lodestone can be packaged as a private Claude Desktop MCPB bundle for
-users who prefer a one-click desktop install over editing MCP JSON by
-hand.</p>
+operators testing Claude Desktop extension delivery.</p>
+<p>Current support status:</p>
+<ul>
+<li>the packer and manifest-only structural smoke are implemented;</li>
+<li>a real Claude Desktop install/use smoke has not yet been captured on
+this maintainer host because Claude Desktop is not installed here;</li>
+<li>the friend-supported path remains the public Lite or Full installer
+plus the project <code>.mcp.json</code> config.</li>
+</ul>
+<p>Treat MCPB as an operator-preview path until a real Desktop user
+smoke is recorded for the target platform.</p>
 <p>Use this path when:</p>
 <ul>
 <li>the user already has Claude Desktop;</li>
@@ -227,7 +236,7 @@ telemetry;</li>
 it will be installed.</li>
 </ul>
 <p>Do not use this path as a replacement for the friend installer. The
-public installer remains the simplest way to install Lodestone into a
+public installer remains the supported way to install Lodestone into a
 repo and build the local index.</p>
 <h2 id="build">Build</h2>
 <p>Build a private bundle for the current platform:</p>
@@ -248,7 +257,10 @@ binaries and obvious GPU provider libraries from the bundled
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/mcpb/build-claude-desktop-bundle.mjs</span> <span class="at">--manifest-only</span> <span class="at">--out-dir</span> /tmp/lodestone-mcpb-smoke</span></code></pre></div>
 <p>Manifest-only artifacts are not distribution-ready.</p>
-<h2 id="install-in-claude-desktop">Install In Claude Desktop</h2>
+<h2 id="preview-install-in-claude-desktop">Preview Install In Claude
+Desktop</h2>
+<p>Use this only for operator validation until the real Desktop smoke is
+recorded.</p>
 <ol type="1">
 <li>Open Claude Desktop.</li>
 <li>Go to Settings, then Extensions.</li>
@@ -293,7 +305,7 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="
 repository.</p>
 
       </article>
-      <footer>Generated 2026-06-13 07:45 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-13 08:20 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

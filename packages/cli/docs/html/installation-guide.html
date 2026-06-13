@@ -216,7 +216,7 @@
 install instructions</h2>
 <p><strong>Prepared by:</strong> Cybersecurity Management &amp; Network
 Defense, Inc. <strong>Document type:</strong> Installation guide
-<strong>Version:</strong> v0.1.13 friend-install documentation
+<strong>Version:</strong> v0.1.14 friend-install documentation
 <strong>Date:</strong> June 13, 2026</p>
 <h2 id="what-you-are-installing">What You Are Installing</h2>
 <p>Lodestone is a local helper for AI coding agents. It reads your
@@ -272,7 +272,7 @@ sure, use <code>lite</code>.</p>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
 <p>What this downloads:</p>
 <ul>
-<li>The approved Lodestone v0.1.13 package set.</li>
+<li>The approved Lodestone v0.1.14 package set.</li>
 <li>The <code>lite</code> ingest package with the Snowflake
 384-dimensional embedder.</li>
 <li>About 16 MB of Lodestone release tarballs.</li>
@@ -295,7 +295,7 @@ itself.</p>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
 <p>What this downloads:</p>
 <ul>
-<li>The approved Lodestone v0.1.13 package set.</li>
+<li>The approved Lodestone v0.1.14 package set.</li>
 <li>The <code>full</code> ingest package with the Nomic 768-dimensional
 embedder.</li>
 <li>About 89 MB of Lodestone release tarballs.</li>
@@ -349,11 +349,14 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href=
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> cursor</span></code></pre></div>
 <h3 id="claude-desktop-mcpb-option">Claude Desktop MCPB Option</h3>
-<p>Claude Desktop users who prefer a one-click extension can use a
-private current-platform MCPB bundle after Lodestone has already been
-installed and indexed in the target project. See
-<code>docs/MCPB.md</code> or the online docs page for the bundle build
-and install steps.</p>
+<p>Claude Desktop MCPB is an operator-preview path, not the default
+friend install route. The packer and manifest-only structural smoke
+exist, but a real Claude Desktop install/use smoke has not yet been
+captured on this maintainer host.</p>
+<p>Use the public Lite or Full installer as the supported friend path.
+Only use MCPB after a maintainer has built and validated a bundle for
+your platform. See <code>docs/MCPB.md</code> or the online docs page for
+the preview bundle steps.</p>
 <h2 id="what-the-installer-does">What the Installer Does</h2>
 <p>The installer:</p>
 <ol type="1">
@@ -508,7 +511,7 @@ relationships.</li>
 </ol>
 
       </article>
-      <footer>Generated 2026-06-13 07:45 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-13 08:20 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>
