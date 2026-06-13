@@ -6,7 +6,7 @@ Open issues carried for the v0.1.x line, with impact assessment and workaround n
 
 ## Production dependency audit status
 
-As of the v0.1.10 friend-install release prep on 2026-06-13, `pnpm audit --prod` is clean after root-level package overrides for patched transitive releases of `fast-uri`, `hono`, `ip-address`, `protobufjs`, and `qs`. The public friend installer also adds a root npm override for `protobufjs@7.5.8` before installation because npm consumers do not inherit this monorepo's pnpm overrides. Existing projects with old lockfiles can opt into `LODESTONE_STRICT_NPM_OVERRIDES=1` to add the broader release-workspace override set, but that mode is intentionally not the default because root overrides for common packages can affect the host project's own dependency tree.
+As of the v0.1.11 friend-install release prep on 2026-06-13, `pnpm audit --prod` is clean after root-level package overrides for patched transitive releases of `fast-uri`, `hono`, `ip-address`, `protobufjs`, and `qs`. The public friend installer also adds a root npm override for `protobufjs@7.5.8` before installation because npm consumers do not inherit this monorepo's pnpm overrides. Existing projects with old lockfiles can opt into `LODESTONE_STRICT_NPM_OVERRIDES=1` to add the broader release-workspace override set, but that mode is intentionally not the default because root overrides for common packages can affect the host project's own dependency tree.
 
 Because registry advisories can change after a release, treat `pnpm audit --prod` as a live verification command rather than a permanent guarantee. The stricter all-dependency audit gate also pins dev/test `esbuild@0.28.1` after the 2026-06-12 advisory for older Vite-transitive esbuild builds.
 

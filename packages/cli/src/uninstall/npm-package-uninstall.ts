@@ -150,18 +150,28 @@ function computePackageBytes(
 
 function pruneNodeModulesScaffolding(nodeModulesPath: string): void {
   if (!existsSync(nodeModulesPath)) return;
-  pruneEmptyDirectories(path.join(nodeModulesPath, "@lodestone"));
+  pruneEmptyDirectories(nodeModulesPath);
 
-  let entries: string[];
-  try {
-    entries = readdirSync(nodeModulesPath);
-  } catch {
-    return;
-  }
+  removeNpmMetadataOnlyTree(nodeModulesPath);
+
+  pruneEmptyDirectories(nodeModulesPath);
+}
+
+function removeNpmMetadataOnlyTree(nodeModulesPath: string): void {
+  const entries = readDirectoryEntries(nodeModulesPath);
+  if (entries === null) return;
+
   if (entries.length === 1 && entries[0] === ".package-lock.json") {
     rmSync(path.join(nodeModulesPath, ".package-lock.json"), { force: true });
   }
-  pruneEmptyDirectories(nodeModulesPath);
+}
+
+function readDirectoryEntries(dir: string): string[] | null {
+  try {
+    return readdirSync(dir);
+  } catch {
+    return null;
+  }
 }
 
 function pruneEmptyDirectories(dir: string): void {

@@ -68,6 +68,8 @@ describe("removeLodestoneNpmPackages", () => {
     }
     writeFixtureFile("node_modules/onnxruntime-node/bin/blob", "large");
     writeFixtureFile("node_modules/.package-lock.json", "{}\n");
+    mkdirSync(path.join(tmp, "node_modules", ".bin"), { recursive: true });
+    mkdirSync(path.join(tmp, "node_modules", "@npmcli"), { recursive: true });
 
     const runNpm = vi.fn((_file: string, _args: string[]) => {
       rmSync(path.join(tmp, "node_modules", "@lodestone", "cli"), {
