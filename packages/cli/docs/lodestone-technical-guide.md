@@ -137,6 +137,16 @@ Claude Code also has a support smoke helper:
 It validates `.mcp.json`, verifies the local MCP launcher, and prints exact
 `claude --mcp-config ... --strict-mcp-config` commands for a trusted smoke repo.
 
+The generic MCP smoke helper exercises the repo-local Lodestone server directly:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client mcp
+```
+
+It validates `.mcp.json`, verifies the local launcher, starts Lodestone over
+stdio, sends `initialize`, and calls `tools/list`. It does not prove a specific
+editor's config loading or trust flow.
+
 ## Optional Claude Desktop MCPB Bundle
 
 The repository includes an operator-preview MCPB packer for Claude Desktop:
@@ -379,3 +389,5 @@ When troubleshooting a friend install, collect:
   Codex still does not show Lodestone tools after trust/restart.
 - Output from `./node_modules/.bin/lodestone client-smoke --client claude-code`,
   if Claude Code does not show Lodestone tools.
+- Output from `./node_modules/.bin/lodestone client-smoke --client mcp`, if a
+  generic MCP `.mcp.json` client does not show Lodestone tools.

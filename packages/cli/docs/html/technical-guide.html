@@ -345,12 +345,20 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="
 and prints exact
 <code>claude --mcp-config ... --strict-mcp-config</code> commands for a
 trusted smoke repo.</p>
+<p>The generic MCP smoke helper exercises the repo-local Lodestone
+server directly:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> client-smoke <span class="at">--client</span> mcp</span></code></pre></div>
+<p>It validates <code>.mcp.json</code>, verifies the local launcher,
+starts Lodestone over stdio, sends <code>initialize</code>, and calls
+<code>tools/list</code>. It does not prove a specific editor's config
+loading or trust flow.</p>
 <h2 id="optional-claude-desktop-mcpb-bundle">Optional Claude Desktop
 MCPB Bundle</h2>
 <p>The repository includes an operator-preview MCPB packer for Claude
 Desktop:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/mcpb/build-claude-desktop-bundle.mjs</span> <span class="at">--profile</span> lite</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/mcpb/build-claude-desktop-bundle.mjs</span> <span class="at">--profile</span> lite</span></code></pre></div>
 <p>The bundle is for validation by operators who already installed and
 indexed Lodestone in the target project. Claude Desktop asks for a
 <code>Project folder</code>, and the bundle launches the bundled
@@ -397,8 +405,8 @@ downloads release artifacts.</p>
 packages to safe versions through normal npm resolution. Existing
 projects with old lockfiles may want a stricter posture. For that case,
 the installer supports:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_STRICT_NPM_OVERRIDES</span><span class="op">=</span>1 <span class="fu">bash</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_STRICT_NPM_OVERRIDES</span><span class="op">=</span>1 <span class="fu">bash</span></span></code></pre></div>
 <p>Strict mode adds root overrides for <code>fast-uri</code>,
 <code>hono</code>, <code>ip-address</code>, and <code>qs</code> in
 addition to the default <code>protobufjs</code> override. It is opt-in
@@ -509,23 +517,23 @@ Lodestone-managed network calls.</li>
 </ul>
 <h2 id="operational-commands">Operational Commands</h2>
 <p>Install lite:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
-<p>Install full:</p>
 <div class="sourceCode" id="cb11"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
-<p>Install lite with Codex project config:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<p>Install full:</p>
 <div class="sourceCode" id="cb12"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
-<p>Install full with Codex project config:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="fu">bash</span></span></code></pre></div>
+<p>Install lite with Codex project config:</p>
 <div class="sourceCode" id="cb13"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
-<p>Install with strict npm advisory overrides:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>Install full with Codex project config:</p>
 <div class="sourceCode" id="cb14"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_STRICT_NPM_OVERRIDES</span><span class="op">=</span>1 <span class="fu">bash</span></span></code></pre></div>
-<p>Status:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_PROFILE</span><span class="op">=</span>full <span class="va">LODESTONE_CLIENT</span><span class="op">=</span>codex <span class="fu">bash</span></span></code></pre></div>
+<p>Install with strict npm advisory overrides:</p>
 <div class="sourceCode" id="cb15"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> status</span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="va">LODESTONE_STRICT_NPM_OVERRIDES</span><span class="op">=</span>1 <span class="fu">bash</span></span></code></pre></div>
+<p>Status:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> status</span></code></pre></div>
 <p>For support, <code>status --json</code> includes repo identity and
 index consistency fields. <code>commit_at_index</code> records the Git
 commit seen by the last successful reindex, and
@@ -533,14 +541,14 @@ commit seen by the last successful reindex, and
 working tree. When those fields disagree with current <code>HEAD</code>,
 Lodestone can warn that the index should be refreshed.</p>
 <p>Doctor, including Codex adapter validation:</p>
-<div class="sourceCode" id="cb16"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
-<p>Rebuild the local index:</p>
 <div class="sourceCode" id="cb17"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> reindex</span></code></pre></div>
-<p>Uninstall:</p>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> doctor <span class="at">--client</span> codex</span></code></pre></div>
+<p>Rebuild the local index:</p>
 <div class="sourceCode" id="cb18"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> reindex</span></code></pre></div>
+<p>Uninstall:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
 <h2 id="upgrade-model">Upgrade Model</h2>
 <p>The public friend installer is pinned to an approved package set.
 Operators move the installer forward after building, testing,
@@ -583,10 +591,14 @@ if Codex still does not show Lodestone tools after trust/restart.</li>
 <li>Output from
 <code>./node_modules/.bin/lodestone client-smoke --client claude-code</code>,
 if Claude Code does not show Lodestone tools.</li>
+<li>Output from
+<code>./node_modules/.bin/lodestone client-smoke --client mcp</code>, if
+a generic MCP <code>.mcp.json</code> client does not show Lodestone
+tools.</li>
 </ul>
 
       </article>
-      <footer>Generated 2026-06-13 08:20 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-13 09:00 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

@@ -45,6 +45,11 @@ equivalent Claude Code support diagnostic. It validates `.mcp.json`, checks the
 local MCP launcher, and prints exact `claude --mcp-config ... --strict-mcp-config`
 smoke commands without changing global Claude settings.
 
+Use `./node_modules/.bin/lodestone client-smoke --client mcp` when support needs
+to prove the repo-local Lodestone MCP server starts and returns a `tools/list`
+response over stdio. This launches Lodestone directly; it does not prove that a
+specific editor has loaded `.mcp.json` or approved its trust prompts.
+
 Then open Claude Code, Codex, Cursor, or any other MCP-aware client in the same directory and ask:
 
 > *what are the main subsystems of this codebase?*

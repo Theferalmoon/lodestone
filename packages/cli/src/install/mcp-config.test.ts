@@ -176,6 +176,25 @@ describe("writeMcpJson", () => {
     expect(health.state === "invalid" ? health.detail : "").toContain("env");
   });
 
+  it("doctor health reports invalid when optional args/env contain non-string values", () => {
+    writeFileSync(
+      path.join(tmp, ".mcp.json"),
+      JSON.stringify({
+        mcpServers: {
+          "lodestone-mcp": {
+            command: path.join(tmp, ".lodestone", "runtime", "lodestone-mcp"),
+            args: ["--verbose", 1],
+            env: { LODESTONE_LOG_LEVEL: "debug", BAD: true },
+          },
+        },
+      })
+    );
+    const health = checkMcpJson(tmp);
+    expect(health.state).toBe("invalid");
+    expect(health.state === "invalid" ? health.detail : "").toContain("args");
+    expect(health.state === "invalid" ? health.detail : "").toContain("env");
+  });
+
   it("preserves user formatting choices when merging (parses JSON, so formatting is normalized to 2-space)", () => {
     // Document the explicit policy: the writer normalizes to 2-space indent + trailing newline.
     // Caller is told this in the docstring; test pins the policy.

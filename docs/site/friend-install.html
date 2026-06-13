@@ -290,6 +290,13 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="
 It validates <code>.mcp.json</code>, checks the local Lodestone MCP
 launcher, and prints exact Claude Code commands for a trusted smoke
 repo.</p>
+<p>To prove Lodestone itself can launch as an MCP server and list tools,
+collect the generic MCP smoke report:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> client-smoke <span class="at">--client</span> mcp</span></code></pre></div>
+<p>That command launches the repo-local Lodestone server over stdio and
+calls <code>tools/list</code>. It does not prove that a specific editor
+has loaded <code>.mcp.json</code> or approved its trust prompts.</p>
 <h2 id="files-created-locally">Files Created Locally</h2>
 <p>Lodestone creates project-local files such as:</p>
 <ul>
@@ -304,15 +311,15 @@ Do not commit it.</p>
 <h2 id="updating-later">Updating Later</h2>
 <p>The operator controls the approved installer and release. Use the
 same command again when told to upgrade:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sSfL</span> https://lodestone.cmndi.ai/install <span class="kw">|</span> <span class="fu">bash</span></span></code></pre></div>
 <h2 id="removing-lodestone">Removing Lodestone</h2>
 <p>From the same project directory:</p>
-<div class="sourceCode" id="cb11"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> uninstall</span></code></pre></div>
 
       </article>
-      <footer>Generated 2026-06-13 08:20 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-13 09:00 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

@@ -272,6 +272,12 @@ as the equivalent Claude Code support diagnostic. It validates
 <code>.mcp.json</code>, checks the local MCP launcher, and prints exact
 <code>claude --mcp-config ... --strict-mcp-config</code> smoke commands
 without changing global Claude settings.</p>
+<p>Use
+<code>./node_modules/.bin/lodestone client-smoke --client mcp</code>
+when support needs to prove the repo-local Lodestone MCP server starts
+and returns a <code>tools/list</code> response over stdio. This launches
+Lodestone directly; it does not prove that a specific editor has loaded
+<code>.mcp.json</code> or approved its trust prompts.</p>
 <p>Then open Claude Code, Codex, Cursor, or any other MCP-aware client
 in the same directory and ask:</p>
 <blockquote>
@@ -459,7 +465,7 @@ href="../NOTICE"><code>../NOTICE</code></a>, and <a
 href="../LICENSE-AUTHORIZATION.md"><code>../LICENSE-AUTHORIZATION.md</code></a>.</p>
 
       </article>
-      <footer>Generated 2026-06-13 08:20 UTC from repository Markdown sources.</footer>
+      <footer>Generated 2026-06-13 09:00 UTC from repository Markdown sources.</footer>
     </main>
   </div>
 </body>

@@ -168,6 +168,16 @@ This command does not run Claude Code and does not edit global Claude settings.
 It checks `.mcp.json`, checks that the local Lodestone MCP launcher exists and
 is executable, and prints exact Claude Code commands for a trusted smoke repo.
 
+To prove Lodestone itself can launch as an MCP server and list tools:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client mcp
+```
+
+This command launches the repo-local Lodestone MCP server over stdio and calls
+`tools/list`. It does not prove that a specific editor has loaded `.mcp.json`
+or approved its trust prompts.
+
 For Claude Code, Cursor, Cline, cmndclaw, and other clients that use the
 project `.mcp.json`, no extra installer option is required. Verify that shared
 MCP config with:

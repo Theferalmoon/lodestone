@@ -115,6 +115,17 @@ That command does not run Claude Code or edit global Claude settings. It
 validates `.mcp.json`, checks the local Lodestone MCP launcher, and prints exact
 Claude Code commands for a trusted smoke repo.
 
+To prove Lodestone itself can launch as an MCP server and list tools, collect
+the generic MCP smoke report:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client mcp
+```
+
+That command launches the repo-local Lodestone server over stdio and calls
+`tools/list`. It does not prove that a specific editor has loaded `.mcp.json`
+or approved its trust prompts.
+
 ## Files Created Locally
 
 Lodestone creates project-local files such as:

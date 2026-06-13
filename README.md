@@ -61,6 +61,16 @@ That validates the shared MCP config and prints exact
 `claude --mcp-config ... --strict-mcp-config` smoke commands for a trusted
 disposable repo.
 
+To prove the repo-local Lodestone MCP server itself starts and lists tools, run:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client mcp
+```
+
+That direct stdio smoke launches Lodestone and calls `tools/list`. It does not
+prove that a specific editor has loaded `.mcp.json` or approved its trust
+prompts.
+
 **Disk footprint.** The numbers above are what you actually download from the GitHub release. After `npm install`, the full `./node_modules` tree — Lodestone plus its transitive npm dependencies (tree-sitter parsers, `better-sqlite3`, `onnxruntime-node`, ~240 others) — is **~1 GB** in either profile. The bulk on disk is the npm dep tree, not Lodestone itself. Plan accordingly on metered/slow connections.
 
 **Pinning.** The friend installer defaults to the approved `v0.1.14` package set. To make that explicit:
