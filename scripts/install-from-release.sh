@@ -102,7 +102,7 @@ expected_sha256() {
   local tag="$1"
   local file="$2"
   case "$tag:$file" in
-    v0.1.10:lodestone-cli-0.1.10.tgz) printf '%s\n' "22c073cb800949ba9c49d9d4695e471325b218f00dfc26c972a43032c6bb2e51" ;;
+    v0.1.10:lodestone-cli-0.1.10.tgz) printf '%s\n' "b26874681115a6f8fd0905ee769f01617ce563ff92659d1b51dff00562c6f3aa" ;;
     v0.1.10:lodestone-shared-0.1.10.tgz) printf '%s\n' "329bc70d838ec255574c4ef0d62c45071ca17cb131dd7933d886aacf35d73d86" ;;
     v0.1.10:lodestone-mcp-server-0.1.10.tgz) printf '%s\n' "f836aad7cb81b2227674549f2266602ee94dd8ced101efa7af928ae897b6bc68" ;;
     v0.1.10:lodestone-ingest-0.1.10-lite.tgz) printf '%s\n' "56563370722116a830c0d1f428fb9e4031603b0fa01d00fd4672d7dece90cc98" ;;
