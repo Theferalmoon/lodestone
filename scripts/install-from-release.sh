@@ -17,7 +17,7 @@
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_CLIENT=codex bash
 #
 #   # Pin a specific version, if this installer carries checksums for it
-#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.11 LODESTONE_PROFILE=lite bash
+#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.12 LODESTONE_PROFILE=lite bash
 #
 #   # Strict npm advisory mode for existing projects with old/stale lockfiles
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_STRICT_NPM_OVERRIDES=1 bash
@@ -27,7 +27,7 @@
 # table below before publishing the installer ref.)
 #
 # What it does:
-#   1. Resolves the version (env LODESTONE_VERSION, default v0.1.11).
+#   1. Resolves the version (env LODESTONE_VERSION, default v0.1.12).
 #   2. Resolves the profile (env LODESTONE_PROFILE, default "lite").
 #   3. Downloads the tarballs from the GH release into a temp dir.
 #   4. Verifies each tarball's SHA-256 before installation.
@@ -40,7 +40,7 @@
 #      with `--client codex` when LODESTONE_CLIENT=codex is set.
 #   8. Points the friend at the installed docs path when the package carries it.
 #
-# Disk footprint (lite profile verified e2e 2026-06-13 against v0.1.11 on Node 22;
+# Disk footprint (lite profile verified e2e 2026-06-13 against v0.1.12 on Node 22;
 # full profile sizes from the published GitHub release assets):
 #   • Tarball download (what your bandwidth pays for):
 #         ~16 MB (lite)   /   ~89 MB (full)
@@ -69,7 +69,7 @@
 set -euo pipefail
 
 REPO="Theferalmoon/lodestone"
-LODESTONE_VERSION="${LODESTONE_VERSION:-v0.1.11}"
+LODESTONE_VERSION="${LODESTONE_VERSION:-v0.1.12}"
 LODESTONE_PROFILE="${LODESTONE_PROFILE:-lite}"
 LODESTONE_CLIENT="${LODESTONE_CLIENT:-}"
 LODESTONE_STRICT_NPM_OVERRIDES="${LODESTONE_STRICT_NPM_OVERRIDES:-0}"
@@ -102,6 +102,11 @@ expected_sha256() {
   local tag="$1"
   local file="$2"
   case "$tag:$file" in
+    v0.1.12:lodestone-cli-0.1.12.tgz) printf '%s\n' "80297f885df1a7278f0305e14c1168739ed071209f21dfe65f19e8a4e70d2a9c" ;;
+    v0.1.12:lodestone-shared-0.1.12.tgz) printf '%s\n' "d3a02d23c337f4a4a622366d06b418b8ace07c4b868f1949184d7a2a28bb6041" ;;
+    v0.1.12:lodestone-mcp-server-0.1.12.tgz) printf '%s\n' "855138ba847441a119f07c7b84a71dfd57f04b9137287e0a486fdb38fffc4f57" ;;
+    v0.1.12:lodestone-ingest-0.1.12-lite.tgz) printf '%s\n' "379ab8420f78f00ae2271980574fe87f9a8c23bd3a6f35935cb5f39b51929e24" ;;
+    v0.1.12:lodestone-ingest-0.1.12-full.tgz) printf '%s\n' "86c670ee723b441367f1c78388adfb4569e969ad90917751122bd420c1f45a16" ;;
     v0.1.11:lodestone-cli-0.1.11.tgz) printf '%s\n' "063ebdb929535ff6bdbf088095327ae64e2a174d8616bca539281e5a2f1f8900" ;;
     v0.1.11:lodestone-shared-0.1.11.tgz) printf '%s\n' "0f967c5ebd5cbcf95cc9161bd8155a88da66f467504e89fb7f2da577a44b095d" ;;
     v0.1.11:lodestone-mcp-server-0.1.11.tgz) printf '%s\n' "620b763a3caf3538843352f4ed16639dddd34ba593d6255cd7de43962e63ef34" ;;
@@ -249,7 +254,7 @@ fi
 
 # ── Resolve "latest" to an actual tag via the GitHub release API ──
 if [[ "$LODESTONE_VERSION" == "latest" ]]; then
-  fail "this pinned friend installer does not support LODESTONE_VERSION=latest; use LODESTONE_VERSION=v0.1.11 or fetch a newer installer"
+  fail "this pinned friend installer does not support LODESTONE_VERSION=latest; use LODESTONE_VERSION=v0.1.12 or fetch a newer installer"
 else
   TAG="$LODESTONE_VERSION"
 fi
