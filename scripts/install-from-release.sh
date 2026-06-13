@@ -102,11 +102,11 @@ expected_sha256() {
   local tag="$1"
   local file="$2"
   case "$tag:$file" in
-    v0.1.14:lodestone-cli-0.1.14.tgz) printf '%s\n' "a13820f36f2d397253e2c84a07ffc568c909a3295961c10e9adaa9b3802bbc4a" ;;
-    v0.1.14:lodestone-shared-0.1.14.tgz) printf '%s\n' "10143ad178f63e1b95e5d212f31e3f1eb029108ea0a324810fb78f8609a6346f" ;;
-    v0.1.14:lodestone-mcp-server-0.1.14.tgz) printf '%s\n' "93f19b92bfb303f2987edea86c55a361ab63379a75c6626f61730ad155cb3b44" ;;
-    v0.1.14:lodestone-ingest-0.1.14-lite.tgz) printf '%s\n' "de5efd9194bde3f498cb9237c0bb6788f329211200cd18a752987313a72d7ea6" ;;
-    v0.1.14:lodestone-ingest-0.1.14-full.tgz) printf '%s\n' "f706e8c7ed6790828be62c58c715ee191c4f1694eb69fb866618f6a98dcc4292" ;;
+    v0.1.14:lodestone-cli-0.1.14.tgz) printf '%s\n' "53e4854dcefc9b75da23f3b672504d675d4a824af7359ff2c4d0f2edb7238737" ;;
+    v0.1.14:lodestone-shared-0.1.14.tgz) printf '%s\n' "e6db39feeebffd85d5f5858fb4c7841b03446fd8ce423d0ed67e44b18dd183ec" ;;
+    v0.1.14:lodestone-mcp-server-0.1.14.tgz) printf '%s\n' "cc54b7aec8d86606e849e740e3c235ab38c32a43dec5f93d12b61727cdcebc21" ;;
+    v0.1.14:lodestone-ingest-0.1.14-lite.tgz) printf '%s\n' "e020eba80ce07f23db6afe51032677f1c808268f63576566b682f6a74da8d496" ;;
+    v0.1.14:lodestone-ingest-0.1.14-full.tgz) printf '%s\n' "73a5c7c7ca7fc02ff516ec6ab17026a0fedfcbe5622282032e755fddf799e1ec" ;;
     v0.1.12:lodestone-cli-0.1.12.tgz) printf '%s\n' "80297f885df1a7278f0305e14c1168739ed071209f21dfe65f19e8a4e70d2a9c" ;;
     v0.1.12:lodestone-shared-0.1.12.tgz) printf '%s\n' "d3a02d23c337f4a4a622366d06b418b8ace07c4b868f1949184d7a2a28bb6041" ;;
     v0.1.12:lodestone-mcp-server-0.1.12.tgz) printf '%s\n' "855138ba847441a119f07c7b84a71dfd57f04b9137287e0a486fdb38fffc4f57" ;;
