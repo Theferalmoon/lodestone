@@ -6,7 +6,7 @@
 
 **Prepared by:** Cybersecurity Management & Network Defense, Inc.
 **Document type:** Technical guide
-**Version:** v0.1.13 friend-install documentation
+**Version:** v0.1.14 friend-install documentation
 **Date:** June 13, 2026
 
 ## System Summary
@@ -139,16 +139,21 @@ It validates `.mcp.json`, verifies the local MCP launcher, and prints exact
 
 ## Optional Claude Desktop MCPB Bundle
 
-The repository includes a private MCPB packer for Claude Desktop:
+The repository includes an operator-preview MCPB packer for Claude Desktop:
 
 ```bash
 scripts/mcpb/build-claude-desktop-bundle.mjs --profile lite
 ```
 
-The bundle is for users who already installed and indexed Lodestone in the
-target project. Claude Desktop asks for a `Project folder`, and the bundle
-launches the bundled Lodestone MCP server with that folder as its working
-directory.
+The bundle is for validation by operators who already installed and indexed
+Lodestone in the target project. Claude Desktop asks for a `Project folder`, and
+the bundle launches the bundled Lodestone MCP server with that folder as its
+working directory.
+
+Current support status: the packer and manifest-only structural smoke exist, but
+a real Claude Desktop install/use smoke has not yet been captured on this
+maintainer host. Keep the public Lite or Full installer as the supported friend
+path until that Desktop proof exists.
 
 MCPB artifacts are current-platform because Lodestone includes native Node
 dependencies. Build separate artifacts on each target operating system family.

@@ -2,8 +2,19 @@
 
 # Claude Desktop MCPB Packaging
 
-Lodestone can be packaged as a private Claude Desktop MCPB bundle for users who
-prefer a one-click desktop install over editing MCP JSON by hand.
+Lodestone can be packaged as a private Claude Desktop MCPB bundle for operators
+testing Claude Desktop extension delivery.
+
+Current support status:
+
+- the packer and manifest-only structural smoke are implemented;
+- a real Claude Desktop install/use smoke has not yet been captured on this
+  maintainer host because Claude Desktop is not installed here;
+- the friend-supported path remains the public Lite or Full installer plus the
+  project `.mcp.json` config.
+
+Treat MCPB as an operator-preview path until a real Desktop user smoke is
+recorded for the target platform.
 
 Use this path when:
 
@@ -14,7 +25,7 @@ Use this path when:
   installed.
 
 Do not use this path as a replacement for the friend installer. The public
-installer remains the simplest way to install Lodestone into a repo and build
+installer remains the supported way to install Lodestone into a repo and build
 the local index.
 
 ## Build
@@ -50,7 +61,9 @@ scripts/mcpb/build-claude-desktop-bundle.mjs --manifest-only --out-dir /tmp/lode
 
 Manifest-only artifacts are not distribution-ready.
 
-## Install In Claude Desktop
+## Preview Install In Claude Desktop
+
+Use this only for operator validation until the real Desktop smoke is recorded.
 
 1. Open Claude Desktop.
 2. Go to Settings, then Extensions.

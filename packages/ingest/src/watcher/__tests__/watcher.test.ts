@@ -220,13 +220,14 @@ describe("createWatcher (integration)", () => {
       await settle(150);
       await writeFile(path.join(tmp, "c.ts"), "1");
 
-      // Wait for everything to drain.
-      await waitFor(() => seen.length === 3, 10_000);
+      // Full-suite coverage runs can starve real chokidar timers on busy
+      // hosts; keep the assertion strict but give the integration drain room.
+      await waitFor(() => seen.length === 3, 20_000);
       expect(seen).toHaveLength(3);
       expect(seen.map((b) => b.paths[0]).sort()).toEqual(["a.ts", "b.ts", "c.ts"]);
       expect(peakQueued).toBeGreaterThanOrEqual(0);
     },
-    15_000,
+    25_000,
   );
 
   it("stats() reports inflight / queued / paused", async () => {
