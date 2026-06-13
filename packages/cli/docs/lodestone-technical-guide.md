@@ -6,7 +6,7 @@
 
 **Prepared by:** Cybersecurity Management & Network Defense, Inc.
 **Document type:** Technical guide
-**Version:** v0.1.11 friend-install documentation
+**Version:** v0.1.12 friend-install documentation
 **Date:** June 13, 2026
 
 ## System Summary
