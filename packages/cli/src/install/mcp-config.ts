@@ -145,12 +145,18 @@ export function checkMcpJson(repoRoot: string): McpJsonHealth {
       detail: "mismatched command",
     };
   }
-  if (entry.args !== undefined && !Array.isArray(entry.args)) {
+  if (
+    entry.args !== undefined &&
+    (!Array.isArray(entry.args) || entry.args.some((arg) => typeof arg !== "string"))
+  ) {
     invalidFields.push("args");
   }
   if (
     entry.env !== undefined &&
-    (typeof entry.env !== "object" || entry.env === null || Array.isArray(entry.env))
+    (typeof entry.env !== "object" ||
+      entry.env === null ||
+      Array.isArray(entry.env) ||
+      Object.values(entry.env).some((value) => typeof value !== "string"))
   ) {
     invalidFields.push("env");
   }

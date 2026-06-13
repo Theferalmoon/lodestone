@@ -131,6 +131,9 @@ with `lodestone doctor --client codex`. Codex still decides whether the project
 is trusted before loading `.codex/config.toml`. If support needs a reproducible
 Codex check, `lodestone client-smoke --client codex` validates the generated
 config and local MCP launcher, then prints exact Codex smoke commands.
+For generic MCP support, `lodestone client-smoke --client mcp` launches the
+repo-local Lodestone server over stdio and verifies that it returns a tool list,
+without claiming any specific editor has loaded the config.
 
 ## Why Lodestone Is Better Than Common Alternatives
 

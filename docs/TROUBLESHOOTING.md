@@ -134,6 +134,17 @@ and is executable, and prints exact
 `claude --mcp-config ... --strict-mcp-config` commands a maintainer can run in a
 trusted smoke repo.
 
+To separate editor/trust issues from Lodestone server issues, run the generic
+MCP stdio smoke:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client mcp
+```
+
+That helper launches the repo-local Lodestone MCP server directly and calls
+`tools/list`. If it passes, Lodestone and `.mcp.json` are healthy; any remaining
+failure is likely in the specific editor's config loading or trust flow.
+
 ## `.lodestone/` is corrupt
 
 **Symptom:** MCP tools return errors mentioning schema versions, or `lodestone status` reports the index in an inconsistent state.
