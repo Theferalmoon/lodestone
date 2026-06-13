@@ -147,6 +147,17 @@ To verify Codex setup:
 ./node_modules/.bin/lodestone doctor --client codex
 ```
 
+If Codex still does not list Lodestone tools, collect the support smoke command:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client codex
+```
+
+This command does not run Codex and does not edit global Codex settings. It
+checks `.codex/config.toml`, checks that the local Lodestone MCP launcher
+exists and is executable, and prints exact Codex commands for a trusted smoke
+repo.
+
 For Claude Code, Cursor, Cline, cmndclaw, and other clients that use the
 project `.mcp.json`, no extra installer option is required. Verify that shared
 MCP config with:

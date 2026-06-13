@@ -104,6 +104,17 @@ Validation command:
 The doctor check exits non-zero when the Codex config file is missing, stale,
 malformed, or points at the wrong runtime command.
 
+Support smoke command:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client codex
+```
+
+The support smoke does not run Codex and does not edit global Codex settings.
+It validates the project-local Codex config, verifies that the local
+`.lodestone/runtime/lodestone-mcp` launcher exists and is executable, and prints
+exact `codex mcp list` and `codex exec` commands for a trusted smoke repo.
+
 Generic MCP-aware clients such as Claude Code, Cursor, Cline, and cmndclaw use
 the project `.mcp.json` that Lodestone writes on every install. `lodestone init
 --client mcp`, `--client cursor`, `--client cline`, `--client cmndclaw`, and
@@ -286,6 +297,12 @@ Status:
 ./node_modules/.bin/lodestone status
 ```
 
+For support, `status --json` includes repo identity and index consistency
+fields. `commit_at_index` records the Git commit seen by the last successful
+reindex, and `dirty_at_index` records whether that reindex used a dirty working
+tree. When those fields disagree with current `HEAD`, Lodestone can warn that
+the index should be refreshed.
+
 Doctor, including Codex adapter validation:
 
 ```bash
@@ -344,3 +361,5 @@ When troubleshooting a friend install, collect:
 - Output from `./node_modules/.bin/lodestone status`, if available.
 - Output from `./node_modules/.bin/lodestone doctor --client codex`, if Codex
   setup was used.
+- Output from `./node_modules/.bin/lodestone client-smoke --client codex`, if
+  Codex still does not show Lodestone tools after trust/restart.

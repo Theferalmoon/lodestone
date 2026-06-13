@@ -105,6 +105,20 @@ sure Codex has trusted the project. Approve the Codex trust prompt for this
 repo, then start a new Codex session if Codex was already open. Project-local
 `.codex/config.toml` is not loaded for untrusted projects.
 
+After that trust/restart step, collect a support smoke report if Codex still
+does not list Lodestone tools:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client codex
+```
+
+That helper does not run Codex or edit global Codex settings. It validates the
+project `.codex/config.toml`, checks that `.lodestone/runtime/lodestone-mcp`
+exists and is executable, and prints exact `codex mcp list` and `codex exec`
+commands a maintainer can run in a trusted smoke repo. This is useful because
+noninteractive Codex sessions may not load project-local `.codex/config.toml`
+the same way an already trusted interactive project does.
+
 If you do not need Codex, skip the Codex adapter. The default `.mcp.json`
 configuration still works for MCP-aware clients that read `.mcp.json`.
 

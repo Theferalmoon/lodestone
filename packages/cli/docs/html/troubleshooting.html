@@ -358,6 +358,18 @@ the server, make sure Codex has trusted the project. Approve the Codex
 trust prompt for this repo, then start a new Codex session if Codex was
 already open. Project-local <code>.codex/config.toml</code> is not
 loaded for untrusted projects.</p>
+<p>After that trust/restart step, collect a support smoke report if
+Codex still does not list Lodestone tools:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./node_modules/.bin/lodestone</span> client-smoke <span class="at">--client</span> codex</span></code></pre></div>
+<p>That helper does not run Codex or edit global Codex settings. It
+validates the project <code>.codex/config.toml</code>, checks that
+<code>.lodestone/runtime/lodestone-mcp</code> exists and is executable,
+and prints exact <code>codex mcp list</code> and <code>codex exec</code>
+commands a maintainer can run in a trusted smoke repo. This is useful
+because noninteractive Codex sessions may not load project-local
+<code>.codex/config.toml</code> the same way an already trusted
+interactive project does.</p>
 <p>If you do not need Codex, skip the Codex adapter. The default
 <code>.mcp.json</code> configuration still works for MCP-aware clients
 that read <code>.mcp.json</code>.</p>
@@ -366,8 +378,8 @@ that read <code>.mcp.json</code>.</p>
 versions, or <code>lodestone status</code> reports the index in an
 inconsistent state.</p>
 <p><strong>Fix:</strong></p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> reindex <span class="at">--from-scratch</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lodestone</span> reindex <span class="at">--from-scratch</span></span></code></pre></div>
 <p>That rebuilds <code>.lodestone/lodestone.sqlite</code> from scratch.
 v0 has no migration runner; that is v0.5+ work. Until then, treat
 <code>.lodestone/</code> as a regenerable cache: a from-scratch reindex

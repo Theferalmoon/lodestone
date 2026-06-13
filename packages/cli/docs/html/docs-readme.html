@@ -259,6 +259,13 @@ This writes a project-local <code>.codex/config.toml</code> MCP entry.
 Codex loads that file only after the project is trusted; approve the
 trust prompt, then start a new Codex session if Codex was already
 open.</p>
+<p>Use
+<code>./node_modules/.bin/lodestone client-smoke --client codex</code>
+as the support diagnostic if Codex still does not list Lodestone tools
+after the <code>doctor --client codex</code> check and the trust/restart
+step. It validates the generated config and local MCP launcher, then
+prints exact Codex smoke commands without changing global Codex
+settings.</p>
 <p>Then open Claude Code, Codex, Cursor, or any other MCP-aware client
 in the same directory and ask:</p>
 <blockquote>

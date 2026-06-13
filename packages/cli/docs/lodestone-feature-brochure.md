@@ -128,7 +128,9 @@ the ingest tarball.
 Lodestone can write project-local Codex MCP configuration during install. A
 Codex user adds `LODESTONE_CLIENT=codex` to the installer command, then verifies
 with `lodestone doctor --client codex`. Codex still decides whether the project
-is trusted before loading `.codex/config.toml`.
+is trusted before loading `.codex/config.toml`. If support needs a reproducible
+Codex check, `lodestone client-smoke --client codex` validates the generated
+config and local MCP launcher, then prints exact Codex smoke commands.
 
 ## Why Lodestone Is Better Than Common Alternatives
 

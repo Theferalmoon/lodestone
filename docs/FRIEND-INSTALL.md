@@ -95,6 +95,16 @@ For Codex, verify the project adapter first:
 ./node_modules/.bin/lodestone doctor --client codex
 ```
 
+If Codex still does not list Lodestone tools, collect a support smoke report:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client codex
+```
+
+That command does not run Codex or edit global Codex settings. It validates the
+project-local Codex config, checks the local Lodestone MCP launcher, and prints
+exact Codex commands a maintainer can run in a trusted smoke repo.
+
 ## Files Created Locally
 
 Lodestone creates project-local files such as:

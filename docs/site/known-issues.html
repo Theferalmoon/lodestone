@@ -257,6 +257,16 @@ model download. The <code>lodestone setup-models</code> command remains
 the reserved future path for pinned, consent-gated model downloads, but
 the public v0.1.x build exits before any network call until real release
 hashes are published.</p>
+<h2
+id="codex-project-local-config-may-need-explicit-smoke-commands">Codex
+project-local config may need explicit smoke commands</h2>
+<p>The Codex adapter writes project-local
+<code>.codex/config.toml</code>, but Codex still controls project trust
+and may not load that config in every noninteractive session.
+<code>lodestone doctor --client codex</code> validates the generated
+file. If a trusted Codex session still does not list Lodestone tools,
+run <code>lodestone client-smoke --client codex</code> and use the
+emitted inline Codex commands for a reproducible support smoke.</p>
 
       </article>
       <footer>Generated 2026-06-13 03:00 UTC from repository Markdown sources.</footer>

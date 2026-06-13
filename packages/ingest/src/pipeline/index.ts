@@ -14,6 +14,7 @@
 // in ready.json); CMMC L2 SI.L2-3.14.1; SOC 2 CC7.2; ISO 27001 A.12.1.2;
 // FedRAMP Mod SI-7; CIS v8 Control 4.
 
+import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
@@ -84,6 +85,16 @@ export interface PipelineSummary {
   droppedEdgeCount: number;
 }
 
+interface GitIndexState {
+  commit_at_index: string | null;
+  dirty_at_index: boolean;
+}
+
+interface GitCommandResult {
+  status: number | null;
+  stdout: string;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 
 /**
@@ -140,6 +151,7 @@ export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSum
   const { repoRoot, embedder, onProgress } = opts;
   const dbPath = lodestoneSubpath(repoRoot, "sqlite");
   const progress = onProgress ?? ((): void => {});
+  const gitState = readGitIndexState(repoRoot);
 
   // 1. Parse every supported file.
   progress("walk");
@@ -230,7 +242,10 @@ export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSum
       opts.indexEpoch !== undefined && opts.indexEpoch > allocatedEpoch
         ? opts.indexEpoch
         : allocatedEpoch;
-    writeSymbols(w, allSymbols, { index_epoch: indexEpoch, commit: null });
+    writeSymbols(w, allSymbols, {
+      index_epoch: indexEpoch,
+      commit: gitState.commit_at_index,
+    });
     writeEdges(w, graph);
     writePagerank(w, pr, graph);
     // class_inheritance triples: parsers now emit `class_id = qname` directly
@@ -380,8 +395,8 @@ export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSum
       embedder: identity,
       languages_indexed: Array.from(new Set(allSymbols.map((s) => s.language))).sort(),
       indexed_at: new Date().toISOString(),
-      commit_at_index: null,
-      dirty_at_index: false,
+      commit_at_index: gitState.commit_at_index,
+      dirty_at_index: gitState.dirty_at_index,
       index_epoch: indexEpoch,
       writer_pid: process.pid,
     });
@@ -401,6 +416,62 @@ export async function runPipeline(opts: RunPipelineOptions): Promise<PipelineSum
     closeDb(w);
   }
   return summary;
+}
+
+function readGitIndexState(repoRoot: string): GitIndexState {
+  const commit = runGitOutput(repoRoot, ["rev-parse", "--short", "HEAD"]);
+  if (commit === null) {
+    return { commit_at_index: null, dirty_at_index: false };
+  }
+  return {
+    commit_at_index: commit,
+    dirty_at_index: readGitDirtyState(repoRoot) ?? true,
+  };
+}
+
+function readGitDirtyState(repoRoot: string): boolean | null {
+  const trackedDirty = runGitQuietDirty(repoRoot, ["diff", "--quiet", "--no-ext-diff", "--", "."]);
+  const stagedDirty = runGitQuietDirty(repoRoot, [
+    "diff",
+    "--cached",
+    "--quiet",
+    "--no-ext-diff",
+    "--",
+    ".",
+  ]);
+  const untracked = runGitCommand(repoRoot, ["ls-files", "--others", "--exclude-standard", "--", "."]);
+
+  if (trackedDirty === true || stagedDirty === true) return true;
+  if (untracked?.status === 0 && untracked.stdout.length > 0) return true;
+  if (trackedDirty === null || stagedDirty === null || untracked === null || untracked.status !== 0) {
+    return null;
+  }
+  return false;
+}
+
+function runGitQuietDirty(cwd: string, args: readonly string[]): boolean | null {
+  const result = runGitCommand(cwd, args);
+  if (result === null) return null;
+  if (result.status === 0) return false;
+  if (result.status === 1) return true;
+  return null;
+}
+
+function runGitOutput(cwd: string, args: readonly string[]): string | null {
+  const result = runGitCommand(cwd, args);
+  return result?.status === 0 ? result.stdout.trim() : null;
+}
+
+function runGitCommand(cwd: string, args: readonly string[]): GitCommandResult | null {
+  const result = spawnSync("git", [...args], {
+    cwd,
+    encoding: "utf8",
+    env: { ...process.env, GIT_OPTIONAL_LOCKS: "0" },
+    maxBuffer: 10 * 1024 * 1024,
+    stdio: ["ignore", "pipe", "ignore"],
+  });
+  if (result.error) return null;
+  return { status: result.status, stdout: result.stdout };
 }
 
 export type { EmbedderHandle } from "../embed/runtime.js";

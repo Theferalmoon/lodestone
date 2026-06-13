@@ -19,6 +19,10 @@ export const SUBCOMMANDS: readonly SubcommandSummary[] = [
   { name: "upgrade", description: "Pull latest Lodestone and run any required schema migrations." },
   { name: "uninstall", description: "Cleanly reverse a Lodestone install (idempotent)." },
   {
+    name: "client-smoke",
+    description: "Emit real-client MCP smoke commands for supported agent clients.",
+  },
+  {
     name: "setup-models",
     description:
       "Opt-in: download embedder weights to .lodestone/models/ (consent-gated).",

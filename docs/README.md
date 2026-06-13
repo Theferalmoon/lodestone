@@ -34,6 +34,12 @@ Either command does the magic-moment work: detects your project's languages, wri
 
 If you use Codex, add `LODESTONE_CLIENT=codex` to the installer command or run `lodestone init --client codex --no-reindex` after install. This writes a project-local `.codex/config.toml` MCP entry. Codex loads that file only after the project is trusted; approve the trust prompt, then start a new Codex session if Codex was already open.
 
+Use `./node_modules/.bin/lodestone client-smoke --client codex` as the support
+diagnostic if Codex still does not list Lodestone tools after the
+`doctor --client codex` check and the trust/restart step. It validates the
+generated config and local MCP launcher, then prints exact Codex smoke commands
+without changing global Codex settings.
+
 Then open Claude Code, Codex, Cursor, or any other MCP-aware client in the same directory and ask:
 
 > *what are the main subsystems of this codebase?*

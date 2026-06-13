@@ -332,7 +332,10 @@ install. A Codex user adds <code>LODESTONE_CLIENT=codex</code> to the
 installer command, then verifies with
 <code>lodestone doctor --client codex</code>. Codex still decides
 whether the project is trusted before loading
-<code>.codex/config.toml</code>.</p>
+<code>.codex/config.toml</code>. If support needs a reproducible Codex
+check, <code>lodestone client-smoke --client codex</code> validates the
+generated config and local MCP launcher, then prints exact Codex smoke
+commands.</p>
 <h2 id="why-lodestone-is-better-than-common-alternatives">Why Lodestone
 Is Better Than Common Alternatives</h2>
 <table>
