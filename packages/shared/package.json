@@ -1,6 +1,6 @@
 {
   "name": "@lodestone/shared",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "private": true,
   "type": "module",
   "description": "Shared types, config schema, path resolver, and SQLite schema definitions for the Lodestone monorepo.",
