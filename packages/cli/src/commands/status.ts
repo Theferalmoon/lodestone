@@ -16,6 +16,8 @@ import {
   parseReadyJson,
   type ReadyJson,
 } from "@lodestone/shared";
+import { readRepoIdentity, lodestoneDirForRoot, type RepoIdentity } from "../git/repo-identity.js";
+import { pathsEqual } from "../path-equal.js";
 import { VERSION } from "../version.js";
 import { output } from "../ui/output.js";
 import { readInstallManifest } from "../uninstall/manifest-reader.js";
@@ -38,6 +40,8 @@ interface StatusReport {
   index_epoch: number;
   coverage: number | null;
   install_manifest: InstallManifestStatus;
+  repo_identity: RepoIdentity;
+  index_consistency: IndexConsistencyStatus;
   /**
    * Codex impl-003 B1: surface clock-skew when indexed_at is in the future
    * (negative staleness clamped to 0). Set when (Date.now() - indexed_at) is
@@ -52,6 +56,15 @@ interface InstallManifestStatus {
   install_state: "pending" | "complete" | null;
   reindex_state: "complete" | "failed" | "skipped" | null;
   read_error: string | null;
+}
+
+interface IndexConsistencyStatus {
+  indexed_commit: string | null;
+  head_commit: string | null;
+  git_head_matches_index: boolean | null;
+  dirty_at_index: boolean;
+  dirty_now: boolean | null;
+  warnings: string[];
 }
 
 function parseStatusArgv(argv: readonly string[]): StatusOptions {
@@ -94,7 +107,37 @@ function readInstallManifestStatus(cwd: string): InstallManifestStatus {
   };
 }
 
-function buildReport(cwd: string, marker: ReadyJson): StatusReport {
+function buildIndexConsistency(
+  marker: ReadyJson,
+  repoIdentity: RepoIdentity
+): IndexConsistencyStatus {
+  const warnings: string[] = [];
+  let gitHeadMatchesIndex: boolean | null = null;
+  if (marker.commit_at_index !== null && repoIdentity.head_commit !== null) {
+    gitHeadMatchesIndex = commitsMatch(marker.commit_at_index, repoIdentity.head_commit);
+    if (!gitHeadMatchesIndex) {
+      warnings.push(
+        `Index was built at commit ${marker.commit_at_index}, but current HEAD is ${repoIdentity.head_commit}.`
+      );
+    }
+  }
+  if (marker.dirty_at_index) {
+    warnings.push("Index was built from a dirty working tree.");
+  }
+  if (repoIdentity.dirty_now === true && marker.commit_at_index !== null) {
+    warnings.push("Working tree has uncommitted changes; rerun `lodestone reindex` if results look stale.");
+  }
+  return {
+    indexed_commit: marker.commit_at_index,
+    head_commit: repoIdentity.head_commit,
+    git_head_matches_index: gitHeadMatchesIndex,
+    dirty_at_index: marker.dirty_at_index,
+    dirty_now: repoIdentity.dirty_now,
+    warnings,
+  };
+}
+
+function buildReport(cwd: string, marker: ReadyJson, repoIdentity: RepoIdentity): StatusReport {
   const indexedMs = new Date(marker.indexed_at).getTime();
   const ageSeconds = Math.floor((Date.now() - indexedMs) / 1000);
   const staleness_seconds = Math.max(0, ageSeconds);
@@ -115,7 +158,6 @@ function buildReport(cwd: string, marker: ReadyJson): StatusReport {
   } catch {
     // ignore corrupt coverage file — surface as `unknown`
   }
-
   return {
     lodestone_version: VERSION,
     schema_version: marker.schema_version,
@@ -130,6 +172,8 @@ function buildReport(cwd: string, marker: ReadyJson): StatusReport {
     index_epoch: marker.index_epoch,
     coverage,
     install_manifest: readInstallManifestStatus(cwd),
+    repo_identity: repoIdentity,
+    index_consistency: buildIndexConsistency(marker, repoIdentity),
     clock_skew_detected,
   };
 }
@@ -164,6 +208,14 @@ function printReport(report: StatusReport): void {
   output.info(fmt("commit at index", report.commit_at_index ?? "(non-git)"));
   output.info(fmt("dirty at index", String(report.dirty_at_index)));
   output.info(fmt("index epoch", String(report.index_epoch)));
+  output.info(fmt("cwd", report.repo_identity.cwd));
+  output.info(fmt("git root", report.repo_identity.git_root ?? "(not a git repo)"));
+  if (report.repo_identity.is_git_repo) {
+    output.info(fmt("git branch", report.repo_identity.branch ?? "(detached)"));
+    output.info(fmt("git head", report.repo_identity.head_commit ?? "(unknown)"));
+    output.info(fmt("git dirty", formatNullableBoolean(report.repo_identity.dirty_now)));
+    output.info(fmt("upstream", report.repo_identity.upstream_branch ?? "(none)"));
+  }
   if (report.install_manifest.present) {
     output.info(fmt("install state", report.install_manifest.install_state ?? "unknown"));
     output.info(fmt("reindex state", report.install_manifest.reindex_state ?? "not recorded"));
@@ -178,15 +230,30 @@ function printReport(report: StatusReport): void {
       "indexed_at is in the future — clock skew detected; staleness clamped to 0."
     );
   }
+  for (const warning of report.index_consistency.warnings) {
+    output.warn(warning);
+  }
 }
 
 export async function status(argv: readonly string[]): Promise<number> {
   const opts = parseStatusArgv(argv);
   const cwd = process.cwd();
+  const repoIdentity = readRepoIdentity(cwd);
 
   const lodestoneDir = canonicalLodestoneDir(cwd);
   if (!existsSync(lodestoneDir)) {
-    output.error("No Lodestone index found in this directory. Run `lodestone init` first.");
+    if (
+      repoIdentity.git_root !== null &&
+      !pathsEqual(cwd, repoIdentity.git_root) &&
+      existsSync(lodestoneDirForRoot(repoIdentity.git_root))
+    ) {
+      output.error(
+        `No Lodestone index found in this directory. A Lodestone index exists at Git root ${repoIdentity.git_root}.`
+      );
+      output.error("Run `lodestone status` from the Git root, or run `lodestone init` here for an intentional subproject.");
+    } else {
+      output.error("No Lodestone index found in this directory. Run `lodestone init` first.");
+    }
     return 1;
   }
 
@@ -229,7 +296,7 @@ export async function status(argv: readonly string[]): Promise<number> {
     return 1;
   }
 
-  const report = buildReport(cwd, marker);
+  const report = buildReport(cwd, marker, repoIdentity);
 
   if (opts.json) {
     output.json(report);
@@ -238,4 +305,13 @@ export async function status(argv: readonly string[]): Promise<number> {
   }
   // Codex impl-003 B1: ready=false ⇒ degraded; surface to scripts via exit 1.
   return marker.ready ? 0 : 1;
+}
+
+function commitsMatch(indexed: string, head: string): boolean {
+  if (indexed.length < 7 || head.length < 7) return false;
+  return indexed === head || indexed.startsWith(head) || head.startsWith(indexed);
+}
+
+function formatNullableBoolean(value: boolean | null): string {
+  return value === null ? "(unknown)" : String(value);
 }

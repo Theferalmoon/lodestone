@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { runInstallSteps } from "../commands/init.js";
 import { uninstall, parseUninstallArgv } from "../commands/uninstall.js";
+import { NPM_OVERRIDE_PROVENANCE_REL } from "../uninstall/package-json-overrides-uninstall.js";
 
 describe("parseUninstallArgv", () => {
   it("default flags are all false", () => {
@@ -91,10 +92,21 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     expect(existsSync(path.join(tmp, ".gitignore"))).toBe(false);
     // CLAUDE.md was created by init → fully removed.
     expect(existsSync(path.join(tmp, "CLAUDE.md"))).toBe(false);
-    // .mcp.json kept (preserves friend's file structure even when empty).
-    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(true);
-    const mcp = JSON.parse(readFileSync(path.join(tmp, ".mcp.json"), "utf8"));
-    expect(mcp).toEqual({ mcpServers: {} });
+    // .mcp.json was created by init, so uninstall fully removes it.
+    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
+  });
+
+  it("init rerun preserves original created provenance for clean uninstall", async () => {
+    runInstallSteps(tmp, { writeClaudeMd: true, clients: ["codex"] });
+    runInstallSteps(tmp, { writeClaudeMd: true, clients: ["codex"] });
+
+    expect(await uninstall([])).toBe(0);
+
+    expect(existsSync(path.join(tmp, ".lodestone"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".gitignore"))).toBe(false);
+    expect(existsSync(path.join(tmp, "CLAUDE.md"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
+    expect(existsSync(path.join(tmp, ".codex"))).toBe(false);
   });
 
   it("preserves a friend-authored .gitignore with .lodestone/ pre-existing", async () => {
@@ -185,9 +197,45 @@ describe("uninstall() handler — end-to-end against real init output", () => {
 
   it("--dry-run mutates nothing on disk", async () => {
     runInstallSteps(tmp, { writeClaudeMd: true });
+    writeFileSync(
+      path.join(tmp, "package.json"),
+      `${JSON.stringify({ overrides: { protobufjs: "7.5.8" } }, null, 2)}\n`
+    );
+    const provenancePath = path.join(tmp, NPM_OVERRIDE_PROVENANCE_REL);
+    mkdirSync(path.dirname(provenancePath), { recursive: true });
+    writeFileSync(
+      provenancePath,
+      `${JSON.stringify(
+        {
+          schema_version: 1,
+          package_json_existed: true,
+          package_json_path: path.join(tmp, "package.json"),
+          overrides: { had_key: false, was_plain_object: false },
+          pins: {
+            protobufjs: {
+              installed: "7.5.8",
+              had_previous: false,
+            },
+          },
+        },
+        null,
+        2
+      )}\n`
+    );
+    mkdirSync(path.join(tmp, "node_modules", "@lodestone", "cli"), {
+      recursive: true,
+    });
+    writeFileSync(
+      path.join(tmp, "node_modules", "@lodestone", "cli", "package.json"),
+      "{}\n"
+    );
     const mcpBefore = readFileSync(path.join(tmp, ".mcp.json"));
     const giBefore = readFileSync(path.join(tmp, ".gitignore"));
     const cmBefore = readFileSync(path.join(tmp, "CLAUDE.md"));
+    const packageBefore = readFileSync(path.join(tmp, "package.json"));
+    const nodePackageBefore = readFileSync(
+      path.join(tmp, "node_modules", "@lodestone", "cli", "package.json")
+    );
     const manifestBefore = readFileSync(
       path.join(tmp, ".lodestone", "install-manifest.json")
     );
@@ -203,6 +251,15 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     ).toBe(0);
     expect(
       Buffer.compare(cmBefore, readFileSync(path.join(tmp, "CLAUDE.md")))
+    ).toBe(0);
+    expect(
+      Buffer.compare(packageBefore, readFileSync(path.join(tmp, "package.json")))
+    ).toBe(0);
+    expect(
+      Buffer.compare(
+        nodePackageBefore,
+        readFileSync(path.join(tmp, "node_modules", "@lodestone", "cli", "package.json"))
+      )
     ).toBe(0);
     expect(
       Buffer.compare(
@@ -250,8 +307,7 @@ describe("uninstall() handler — end-to-end against real init output", () => {
 
     // Agent integration gone.
     expect(existsSync(path.join(tmp, ".gitignore"))).toBe(false);
-    const mcp = JSON.parse(readFileSync(path.join(tmp, ".mcp.json"), "utf8"));
-    expect(mcp.mcpServers["lodestone-mcp"]).toBeUndefined();
+    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
     // Data preserved.
     expect(existsSync(path.join(tmp, ".lodestone"))).toBe(true);
     expect(existsSync(path.join(tmp, ".lodestone", "install-manifest.json"))).toBe(true);
@@ -268,7 +324,7 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     expect(stdout.toLowerCase()).toContain("nothing to do");
   });
 
-  it("conservative mode: missing manifest → only .mcp.json and .lodestone/ touched", async () => {
+  it("conservative mode: missing manifest preserves package.json and only touches .mcp.json/.lodestone", async () => {
     // Simulate a repo in which init was never run but a friend left over a
     // .mcp.json with a lodestone-mcp entry (e.g., they cloned a pre-installed
     // repo without running lodestone init themselves).
@@ -281,6 +337,14 @@ describe("uninstall() handler — end-to-end against real init output", () => {
       path.join(tmp, ".mcp.json"),
       `${JSON.stringify({ mcpServers: { "lodestone-mcp": { command: "x", args: [], env: {} } } }, null, 2)}\n`
     );
+    const packageJson = {
+      type: "module",
+      overrides: { protobufjs: "7.5.8" },
+    };
+    writeFileSync(
+      path.join(tmp, "package.json"),
+      `${JSON.stringify(packageJson, null, 2)}\n`
+    );
 
     expect(await uninstall([])).toBe(0);
 
@@ -290,6 +354,9 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     // .mcp.json entry removed (always attempted regardless of manifest).
     const mcp = JSON.parse(readFileSync(path.join(tmp, ".mcp.json"), "utf8"));
     expect(mcp.mcpServers["lodestone-mcp"]).toBeUndefined();
+    expect(JSON.parse(readFileSync(path.join(tmp, "package.json"), "utf8"))).toEqual(
+      packageJson
+    );
     // Stderr mentions conservative mode.
     const stderr = err.mock.calls.flat().join("\n");
     expect(stderr.toLowerCase()).toMatch(/conservative mode/);
@@ -465,8 +532,7 @@ describe("uninstall() handler — end-to-end against real init output", () => {
 
     expect(await uninstall([])).toBe(0);
 
-    const after = JSON.parse(readFileSync(path.join(tmp, ".mcp.json"), "utf8"));
-    expect(after.mcpServers["lodestone-mcp"]).toBeUndefined();
+    expect(existsSync(path.join(tmp, ".mcp.json"))).toBe(false);
   });
 
   it("preserves the manifest on partial failure so a re-run can resume (Codex §19 RED)", async () => {
@@ -489,6 +555,31 @@ describe("uninstall() handler — end-to-end against real init output", () => {
     // Force EISDIR on the next CLAUDE.md read.
     rmSync(claudeMdPath, { force: true });
     mkdirSync(claudeMdPath);
+    writeFileSync(
+      path.join(tmp, "package.json"),
+      `${JSON.stringify({ overrides: { protobufjs: "7.5.8" } }, null, 2)}\n`
+    );
+    const provenancePath = path.join(tmp, NPM_OVERRIDE_PROVENANCE_REL);
+    mkdirSync(path.dirname(provenancePath), { recursive: true });
+    writeFileSync(
+      provenancePath,
+      `${JSON.stringify(
+        {
+          schema_version: 1,
+          package_json_existed: true,
+          package_json_path: path.join(tmp, "package.json"),
+          overrides: { had_key: false, was_plain_object: false },
+          pins: {
+            protobufjs: {
+              installed: "7.5.8",
+              had_previous: false,
+            },
+          },
+        },
+        null,
+        2
+      )}\n`
+    );
 
     expect(await uninstall([])).toBe(1);
 
@@ -497,6 +588,9 @@ describe("uninstall() handler — end-to-end against real init output", () => {
       existsSync(path.join(tmp, ".lodestone", "install-manifest.json"))
     ).toBe(true);
     expect(existsSync(path.join(tmp, ".lodestone"))).toBe(true);
+    expect(JSON.parse(readFileSync(path.join(tmp, "package.json"), "utf8"))).toEqual({
+      overrides: { protobufjs: "7.5.8" },
+    });
     const stderr = err.mock.calls.flat().join("\n");
     expect(stderr.toLowerCase()).toMatch(/unreadable|preserved/);
   });

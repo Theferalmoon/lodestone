@@ -4,10 +4,10 @@
 // → delete one key → re-serialize with the install module's exact formatting:
 // 2-space indent + trailing newline).
 //
-// Per spec §19 "removing the only entry": the file is left as
-// `{ "mcpServers": {} }\n`, NOT deleted — preserves the friend's file
-// structure and any external tooling that expects `.mcp.json` to exist.
-import { existsSync, readFileSync } from "node:fs";
+// By default, removing the only entry leaves `{ "mcpServers": {} }\n` in
+// place to preserve a friend's existing file. Callers with install-manifest
+// provenance can opt into deleting the file when Lodestone created it.
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { writeFileAtomic } from "../install/atomic.js";
 import { pathsEqual } from "../path-equal.js";
@@ -15,6 +15,8 @@ import { pathsEqual } from "../path-equal.js";
 export interface RemoveMcpResult {
   /**
    * - `removed`: lodestone-mcp entry was present and is now gone.
+   * - `removed-file`: lodestone-mcp entry was present and the now-empty
+   *   Lodestone-created `.mcp.json` was deleted.
    * - `noop`: lodestone-mcp entry was absent (idempotent re-run).
    * - `missing-file`: `.mcp.json` does not exist.
    * - `unparseable`: `.mcp.json` exists but is not valid JSON; left untouched
@@ -25,7 +27,13 @@ export interface RemoveMcpResult {
    *   pending install this binary did not author). Codex r2 §19 YELLOW —
    *   never shred someone else's MCP entry.
    */
-  action: "removed" | "noop" | "missing-file" | "unparseable" | "foreign-entry";
+  action:
+    | "removed"
+    | "removed-file"
+    | "noop"
+    | "missing-file"
+    | "unparseable"
+    | "foreign-entry";
   path: string;
   detail?: string;
 }
@@ -60,7 +68,11 @@ interface McpJsonShape {
  */
 export function removeMcpEntry(
   repoRoot: string,
-  opts: { dryRun?: boolean; expectedRuntimeCommand?: string } = {}
+  opts: {
+    dryRun?: boolean;
+    expectedRuntimeCommand?: string;
+    removeFileIfEmpty?: boolean;
+  } = {}
 ): RemoveMcpResult {
   const mcpPath = path.join(repoRoot, ".mcp.json");
 
@@ -124,12 +136,45 @@ export function removeMcpEntry(
   }
 
   if (opts.dryRun === true) {
-    return { action: "removed", path: mcpPath };
+    return {
+      action: wouldRemoveAuthoredEmptyFile(obj, SERVER_NAME, opts)
+        ? "removed-file"
+        : "removed",
+      path: mcpPath,
+    };
   }
 
   delete obj.mcpServers[SERVER_NAME];
-  // Always preserve the file with `mcpServers` map (possibly empty `{}`) per
-  // spec — never delete the file. Friend's other top-level fields survive.
+  if (shouldRemoveAuthoredEmptyFile(obj, opts)) {
+    rmSync(mcpPath, { force: true });
+    return { action: "removed-file", path: mcpPath };
+  }
+
+  // Preserve the file with `mcpServers` map (possibly empty `{}`) unless
+  // manifest provenance explicitly authorizes deleting Lodestone's own file.
+  // Friend's other top-level fields survive.
   writeFileAtomic(mcpPath, `${JSON.stringify(obj, null, 2)}\n`);
   return { action: "removed", path: mcpPath };
+}
+
+function wouldRemoveAuthoredEmptyFile(
+  obj: McpJsonShape,
+  entryToRemove: string,
+  opts: { removeFileIfEmpty?: boolean }
+): boolean {
+  if (opts.removeFileIfEmpty !== true) return false;
+  if (Object.keys(obj).length !== 1) return false;
+  return Object.keys(obj.mcpServers).filter((key) => key !== entryToRemove)
+    .length === 0;
+}
+
+function shouldRemoveAuthoredEmptyFile(
+  obj: McpJsonShape,
+  opts: { removeFileIfEmpty?: boolean }
+): boolean {
+  return (
+    opts.removeFileIfEmpty === true &&
+    Object.keys(obj).length === 1 &&
+    Object.keys(obj.mcpServers).length === 0
+  );
 }

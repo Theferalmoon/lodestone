@@ -17,7 +17,7 @@
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_CLIENT=codex bash
 #
 #   # Pin a specific version, if this installer carries checksums for it
-#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.9 LODESTONE_PROFILE=lite bash
+#   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_VERSION=v0.1.10 LODESTONE_PROFILE=lite bash
 #
 #   # Strict npm advisory mode for existing projects with old/stale lockfiles
 #   curl -sSfL https://lodestone.cmndi.ai/install | LODESTONE_STRICT_NPM_OVERRIDES=1 bash
@@ -27,7 +27,7 @@
 # table below before publishing the installer ref.)
 #
 # What it does:
-#   1. Resolves the version (env LODESTONE_VERSION, default v0.1.9).
+#   1. Resolves the version (env LODESTONE_VERSION, default v0.1.10).
 #   2. Resolves the profile (env LODESTONE_PROFILE, default "lite").
 #   3. Downloads the tarballs from the GH release into a temp dir.
 #   4. Verifies each tarball's SHA-256 before installation.
@@ -40,7 +40,7 @@
 #      with `--client codex` when LODESTONE_CLIENT=codex is set.
 #   8. Points the friend at the installed docs path when the package carries it.
 #
-# Disk footprint (lite profile verified e2e 2026-06-11 against v0.1.9 on Node 22;
+# Disk footprint (lite profile verified e2e 2026-06-13 against v0.1.10 on Node 22;
 # full profile sizes from the published GitHub release assets):
 #   • Tarball download (what your bandwidth pays for):
 #         ~16 MB (lite)   /   ~89 MB (full)
@@ -69,7 +69,7 @@
 set -euo pipefail
 
 REPO="Theferalmoon/lodestone"
-LODESTONE_VERSION="${LODESTONE_VERSION:-v0.1.9}"
+LODESTONE_VERSION="${LODESTONE_VERSION:-v0.1.10}"
 LODESTONE_PROFILE="${LODESTONE_PROFILE:-lite}"
 LODESTONE_CLIENT="${LODESTONE_CLIENT:-}"
 LODESTONE_STRICT_NPM_OVERRIDES="${LODESTONE_STRICT_NPM_OVERRIDES:-0}"
@@ -239,7 +239,7 @@ fi
 
 # ── Resolve "latest" to an actual tag via the GitHub release API ──
 if [[ "$LODESTONE_VERSION" == "latest" ]]; then
-  fail "this pinned friend installer does not support LODESTONE_VERSION=latest; use LODESTONE_VERSION=v0.1.9 or fetch a newer installer"
+  fail "this pinned friend installer does not support LODESTONE_VERSION=latest; use LODESTONE_VERSION=v0.1.10 or fetch a newer installer"
 else
   TAG="$LODESTONE_VERSION"
 fi
@@ -287,6 +287,7 @@ log "installing into $(pwd)/node_modules ..."
 log "ensuring Lodestone npm overrides for advisory-clean consumer installs ..."
 node <<'NODE'
 const fs = require("node:fs");
+const path = require("node:path");
 
 const packageJsonPath = "package.json";
 let existed = fs.existsSync(packageJsonPath);
@@ -303,10 +304,6 @@ if (existed) {
   data = { private: true };
 }
 
-if (!data.overrides || typeof data.overrides !== "object" || Array.isArray(data.overrides)) {
-  data.overrides = {};
-}
-
 const strict = /^(1|true|yes)$/i.test(process.env.LODESTONE_STRICT_NPM_OVERRIDES ?? "");
 const pins = {
   protobufjs: "7.5.8"
@@ -318,6 +315,50 @@ if (strict) {
     "ip-address": "10.1.1",
     qs: "6.15.2"
   });
+}
+
+const hadOverridesKey = Object.prototype.hasOwnProperty.call(data, "overrides");
+const previousOverridesValue = hadOverridesKey ? data.overrides : undefined;
+const overridesWasPlainObject =
+  previousOverridesValue !== null &&
+  typeof previousOverridesValue === "object" &&
+  !Array.isArray(previousOverridesValue);
+const previousOverrides =
+  overridesWasPlainObject ? previousOverridesValue : {};
+const provenance = {
+  schema_version: 1,
+  package_json_existed: existed,
+  package_json_path: path.resolve(packageJsonPath),
+  overrides: {
+    had_key: hadOverridesKey,
+    was_plain_object: overridesWasPlainObject,
+    ...(hadOverridesKey ? { previous_value: previousOverridesValue } : {})
+  },
+  pins: Object.fromEntries(
+    Object.entries(pins).map(([name, version]) => [
+      name,
+      {
+        installed: version,
+        had_previous: Object.prototype.hasOwnProperty.call(previousOverrides, name),
+        ...(Object.prototype.hasOwnProperty.call(previousOverrides, name)
+          ? { previous: previousOverrides[name] }
+          : {})
+      }
+    ])
+  )
+};
+fs.mkdirSync(".lodestone", { recursive: true });
+const provenancePath = path.join(".lodestone", "npm-overrides-provenance.json");
+if (!fs.existsSync(provenancePath)) {
+  fs.writeFileSync(provenancePath, `${JSON.stringify(provenance, null, 2)}\n`);
+} else {
+  console.error(
+    "[lodestone-install] preserving existing package.json override provenance"
+  );
+}
+
+if (!data.overrides || typeof data.overrides !== "object" || Array.isArray(data.overrides)) {
+  data.overrides = {};
 }
 
 let changed = !existed;

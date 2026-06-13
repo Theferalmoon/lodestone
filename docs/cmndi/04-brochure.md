@@ -72,7 +72,7 @@ Lodestone v0 is the first ship. We are not pretending it is the last word.
 - **Five languages in v0.** TypeScript / JavaScript / Python / Go / Rust. Adding a language is one new tree-sitter grammar plus a small extractor; we are doing the next batch on customer demand.
 - **Friend mode only.** Multi-repo "Pro mode" is wired but exits with a clean "v0.5+ work" message. Temporal KG history is Pro-only; friend mode is a current-state local KG with git-aware recent changes. The companion product (Lodestone Forge — multi-KG, Docker-Compose-orchestrated) is the v1+ work.
 - **No GPU acceleration.** Apple Silicon CoreML EP is the closest thing today; install `onnxruntime-node@latest` to pick it up. GPU support is tracked separately, not in v0 scope.
-- **Production audit clean at v0.1.9 prep.** `pnpm audit --prod` is clean as of 2026-06-11 after patched transitive overrides. Registry advisories can change, so strict environments should rerun the audit during intake.
+- **Production audit clean at v0.1.10 prep.** `pnpm audit --prod` is clean as of 2026-06-13 after patched transitive overrides. Registry advisories can change, so strict environments should rerun the audit during intake.
 
 ## How to try it
 
@@ -90,7 +90,7 @@ Two products, one strategy:
 
 | Product | Tier | Status | What it is |
 |---|---|---|---|
-| **Lodestone** (this) | C | v0.1.9 friend install | Single-KG per-project package set. Privacy-first. The local sidecar. |
+| **Lodestone** (this) | C | v0.1.10 friend install | Single-KG per-project package set. Privacy-first. The local sidecar. |
 | **Lodestone Forge** | C | Planned post-v0 dogfood | Docker-Compose bundle: per-project code KG (lifts Lodestone) + operational KG + coding training corpus + federation router + LoRA training factory. Friend wires DNS / secrets / GPU; Forge ships the logic. |
 
 Both products federate by query — a friend on the Forge stack can route a question through one MCP entrypoint and get answers from the right channel (code / ops / training corpus) tagged so the calling agent knows which channel each hit came from. Lodestone alone is the per-project privacy-first wedge; Forge is the operator-side multi-channel stack.

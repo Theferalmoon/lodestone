@@ -34,6 +34,7 @@ describe("removeCodexConfigEntry", () => {
     });
     expect(result.action).toBe("removed-file");
     expect(existsSync(codexConfigPath(tmp))).toBe(false);
+    expect(existsSync(path.join(tmp, ".codex"))).toBe(false);
   });
 
   it("removes only the lodestone-mcp entry when the file had other settings", () => {
@@ -48,6 +49,21 @@ describe("removeCodexConfigEntry", () => {
     const body = readFileSync(codexConfigPath(tmp), "utf8");
     expect(body).toContain('model = "gpt-5.5"');
     expect(body).not.toContain("lodestone-mcp");
+    expect(existsSync(path.join(tmp, ".codex"))).toBe(true);
+  });
+
+  it("keeps the .codex directory when other files remain", () => {
+    const manifest = writeCodexConfig(tmp);
+    writeFileSync(path.join(tmp, ".codex", "notes.txt"), "friend-owned\n");
+    const result = removeCodexConfigEntry(tmp, manifest, {
+      dryRun: false,
+      expectedRuntimeCommand: runtime(),
+    });
+    expect(result.action).toBe("removed-file");
+    expect(existsSync(codexConfigPath(tmp))).toBe(false);
+    expect(readFileSync(path.join(tmp, ".codex", "notes.txt"), "utf8")).toBe(
+      "friend-owned\n"
+    );
   });
 
   it("respects provenance when lodestone-mcp points at another install", () => {
@@ -97,6 +113,7 @@ describe("removeCodexConfigEntry", () => {
       });
       expect(result.action).toBe("removed-file");
       expect(existsSync(codexConfigPath(tmp))).toBe(false);
+      expect(existsSync(path.join(tmp, ".codex"))).toBe(false);
     } finally {
       rmSync(linkRoot, { force: true });
     }

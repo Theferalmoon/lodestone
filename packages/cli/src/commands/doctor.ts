@@ -6,11 +6,13 @@
 import { existsSync } from "node:fs";
 
 import { lodestoneSubpath } from "@lodestone/shared";
+import { readRepoIdentity, lodestoneDirForRoot } from "../git/repo-identity.js";
 import {
   checkCodexConfig,
   type CodexConfigHealth,
 } from "../install/codex-config.js";
 import { checkMcpJson, type McpJsonHealth } from "../install/mcp-config.js";
+import { pathsEqual } from "../path-equal.js";
 import { output } from "../ui/output.js";
 import { readInstallManifest } from "../uninstall/manifest-reader.js";
 
@@ -86,6 +88,30 @@ export async function doctor(argv: readonly string[]): Promise<number> {
   output.info("lodestone doctor");
   output.info(fmt("node", process.version));
   output.info(fmt("offline mode", process.env.LODESTONE_OFFLINE === "1" ? "enabled" : "disabled"));
+
+  const repoIdentity = readRepoIdentity(cwd);
+  output.info(fmt("cwd", repoIdentity.cwd));
+  output.info(fmt("git root", repoIdentity.git_root ?? "(not a git repo)"));
+  if (repoIdentity.is_git_repo) {
+    output.info(fmt("git branch", repoIdentity.branch ?? "(detached)"));
+    output.info(fmt("git head", repoIdentity.head_commit ?? "(unknown)"));
+    output.info(fmt("git dirty", formatNullableBoolean(repoIdentity.dirty_now)));
+    output.info(fmt("upstream", repoIdentity.upstream_branch ?? "(none)"));
+  }
+
+  if (
+    repoIdentity.git_root !== null &&
+    !pathsEqual(cwd, repoIdentity.git_root) &&
+    !existsSync(repoIdentity.lodestone_dir) &&
+    existsSync(lodestoneDirForRoot(repoIdentity.git_root))
+  ) {
+    degraded = true;
+    output.warn(
+      `This directory is inside Git root ${repoIdentity.git_root}, where a Lodestone index exists. ` +
+        "Run Lodestone from the Git root unless this subdirectory is intentional."
+    );
+  }
+
   output.info(fmt("ready marker", existsSync(lodestoneSubpath(cwd, "ready")) ? "present" : "missing"));
 
   const manifest = readInstallManifest(cwd);
@@ -166,4 +192,8 @@ function formatCodexHealth(health: CodexConfigHealth): string {
     case "unparseable":
       return `unparseable (${health.detail})`;
   }
+}
+
+function formatNullableBoolean(value: boolean | null): string {
+  return value === null ? "(unknown)" : String(value);
 }

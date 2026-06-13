@@ -2,7 +2,7 @@
 // Reverse the project-local Codex MCP config entry created by
 // `lodestone init --client codex`. Conservative and manifest-scoped: only
 // removes the entry when its command matches this repo's runtime shim.
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, rmSync, rmdirSync } from "node:fs";
 import path from "node:path";
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import type { CodexConfigResult } from "../install/codex-config.js";
@@ -75,11 +75,23 @@ export function removeCodexConfigEntry(
 
   if (manifest?.action === "created" && Object.keys(root).length === 0) {
     rmSync(cfgPath, { force: true });
+    removeEmptyParentDirectory(cfgPath);
     return { action: "removed-file", path: cfgPath };
   }
 
   writeFileAtomic(cfgPath, stringifyToml(root));
   return { action: "removed", path: cfgPath };
+}
+
+function removeEmptyParentDirectory(cfgPath: string): void {
+  const parent = path.dirname(cfgPath);
+  try {
+    if (readdirSync(parent).length === 0) {
+      rmdirSync(parent);
+    }
+  } catch {
+    // Best-effort cleanup only. The important deletion is config.toml.
+  }
 }
 
 function readCodexToml(cfgPath: string): TomlObject {

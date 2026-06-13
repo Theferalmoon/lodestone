@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect, vi } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, realpathSync } from "node:fs";
+import { devNull, tmpdir } from "node:os";
 import path from "node:path";
 import { reindex } from "../commands/reindex.js";
 import { doctor, parseDoctorArgv } from "../commands/doctor.js";
@@ -16,6 +17,14 @@ import { upgrade } from "../commands/upgrade.js";
 // (POST-§20 Issue C). See commands.reindex.test.ts for dedicated coverage.
 // seed-skills() is no longer a stub — Codex v0.1.1 §11 RED #4 fix.
 // See commands.seed-skills.test.ts for its dedicated coverage.
+
+function git(cwd: string, args: readonly string[]): void {
+  execFileSync("git", [...args], {
+    cwd,
+    env: { ...process.env, GIT_CONFIG_GLOBAL: devNull, GIT_CONFIG_NOSYSTEM: "1" },
+    stdio: ["ignore", "ignore", "ignore"],
+  });
+}
 
 describe("stub commands (return 0, warn, accept future flags)", () => {
   it("parseDoctorArgv() accepts optional client checks", () => {
@@ -64,7 +73,7 @@ describe("stub commands (return 0, warn, accept future flags)", () => {
   });
 
   it("doctor() returns 0 and reports baseline install state", async () => {
-    const tmp = mkdtempSync(path.join(tmpdir(), "lodestone-doctor-"));
+    const tmp = realpathSync(mkdtempSync(path.join(tmpdir(), "lodestone-doctor-")));
     const prevCwd = process.cwd();
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     try {
@@ -76,6 +85,31 @@ describe("stub commands (return 0, warn, accept future flags)", () => {
     } finally {
       process.chdir(prevCwd);
       log.mockRestore();
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("doctor() reports repo identity and warns when run from a subdirectory with a root index", async () => {
+    const tmp = realpathSync(mkdtempSync(path.join(tmpdir(), "lodestone-doctor-")));
+    const prevCwd = process.cwd();
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      git(tmp, ["init", "-q"]);
+      mkdirSync(path.join(tmp, ".lodestone"));
+      mkdirSync(path.join(tmp, "src"));
+      process.chdir(path.join(tmp, "src"));
+      expect(await doctor([])).toBe(1);
+      const stdout = log.mock.calls.flat().join("\n");
+      const stderr = err.mock.calls.flat().join("\n");
+      expect(stdout).toContain("git root");
+      expect(stdout).toContain(tmp);
+      expect(stderr).toContain("Lodestone index exists");
+      expect(stderr).toContain("Run Lodestone from the Git root");
+    } finally {
+      process.chdir(prevCwd);
+      log.mockRestore();
+      err.mockRestore();
       rmSync(tmp, { recursive: true, force: true });
     }
   });

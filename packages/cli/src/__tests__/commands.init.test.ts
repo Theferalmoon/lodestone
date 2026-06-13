@@ -196,8 +196,11 @@ describe("runInstallSteps", () => {
     expect(body).toContain(`cwd = "${tmp}"`);
   });
 
-  it("idempotent — re-running on the same repo only updates installed_at", () => {
+  it("idempotent — re-running on the same repo preserves original uninstall provenance", () => {
     const first = runInstallSteps(tmp, { writeClaudeMd: true });
+    expect(first.mcp_json.action).toBe("created");
+    expect(first.gitignore.action).toBe("created");
+    expect(first.claude_md.action).toBe("created");
     const mcpAfter1 = readFileSync(path.join(tmp, ".mcp.json"));
     const giAfter1 = readFileSync(path.join(tmp, ".gitignore"));
     const cmAfter1 = readFileSync(path.join(tmp, "CLAUDE.md"));
@@ -209,9 +212,9 @@ describe("runInstallSteps", () => {
     }
 
     const second = runInstallSteps(tmp, { writeClaudeMd: true });
-    expect(second.mcp_json.action).toBe("updated");
-    expect(second.gitignore.action).toBe("noop");
-    expect(second.claude_md.action).toBe("already_present");
+    expect(second.mcp_json.action).toBe(first.mcp_json.action);
+    expect(second.gitignore.action).toBe(first.gitignore.action);
+    expect(second.claude_md.action).toBe(first.claude_md.action);
 
     // Friend-facing files byte-equal across runs.
     expect(Buffer.compare(mcpAfter1, readFileSync(path.join(tmp, ".mcp.json")))).toBe(0);
