@@ -150,11 +150,21 @@ function computePackageBytes(
 
 function pruneNodeModulesScaffolding(nodeModulesPath: string): void {
   if (!existsSync(nodeModulesPath)) return;
-  pruneEmptyDirectories(nodeModulesPath);
+  pruneTopLevelNpmScaffolding(nodeModulesPath);
 
   removeNpmMetadataOnlyTree(nodeModulesPath);
 
-  pruneEmptyDirectories(nodeModulesPath);
+  removeEmptyDirectory(nodeModulesPath);
+}
+
+function pruneTopLevelNpmScaffolding(nodeModulesPath: string): void {
+  const entries = readDirectoryEntries(nodeModulesPath);
+  if (entries === null) return;
+
+  for (const entry of entries) {
+    if (entry !== ".bin" && !entry.startsWith("@")) continue;
+    removeEmptyDirectory(path.join(nodeModulesPath, entry));
+  }
 }
 
 function removeNpmMetadataOnlyTree(nodeModulesPath: string): void {
@@ -174,7 +184,7 @@ function readDirectoryEntries(dir: string): string[] | null {
   }
 }
 
-function pruneEmptyDirectories(dir: string): void {
+function removeEmptyDirectory(dir: string): void {
   let st;
   try {
     st = lstatSync(dir);
@@ -189,23 +199,8 @@ function pruneEmptyDirectories(dir: string): void {
   } catch {
     return;
   }
-  for (const entry of entries) {
-    const child = path.join(dir, entry);
-    let childStat;
-    try {
-      childStat = lstatSync(child);
-    } catch {
-      continue;
-    }
-    if (childStat.isDirectory() && !childStat.isSymbolicLink()) {
-      pruneEmptyDirectories(child);
-    }
-  }
-
   try {
-    if (readdirSync(dir).length === 0) {
-      rmdirSync(dir);
-    }
+    if (entries.length === 0) rmdirSync(dir);
   } catch {
     // Best-effort cleanup only. npm already removed the package payload.
   }

@@ -120,6 +120,33 @@ describe("removeLodestoneNpmPackages", () => {
     expect(existsSync(path.join(tmp, "node_modules"))).toBe(false);
   });
 
+  it("preserves unrelated user packages and their empty directories", () => {
+    createLodestonePackage("@lodestone/cli");
+    writeFixtureFile("node_modules/left-alone/package.json", "{}\n");
+    mkdirSync(path.join(tmp, "node_modules", "left-alone", "cache"), {
+      recursive: true,
+    });
+    mkdirSync(path.join(tmp, "node_modules", "empty-placeholder"), {
+      recursive: true,
+    });
+    writeFixtureFile("node_modules/.package-lock.json", "{}\n");
+
+    const runNpm = vi.fn(() => {
+      rmSync(path.join(tmp, "node_modules", "@lodestone", "cli"), {
+        recursive: true,
+        force: true,
+      });
+    });
+
+    const r = removeLodestoneNpmPackages(tmp, { runNpm });
+
+    expect(r.action).toBe("removed");
+    expect(existsSync(path.join(tmp, "node_modules", "left-alone"))).toBe(true);
+    expect(existsSync(path.join(tmp, "node_modules", "left-alone", "cache"))).toBe(true);
+    expect(existsSync(path.join(tmp, "node_modules", "empty-placeholder"))).toBe(true);
+    expect(existsSync(path.join(tmp, "node_modules", ".package-lock.json"))).toBe(true);
+  });
+
   it("returns failed when npm errors and leaves packages intact", () => {
     createLodestonePackage("@lodestone/cli");
     const error = Object.assign(new Error("npm exited 1"), {
