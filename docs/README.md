@@ -40,6 +40,11 @@ diagnostic if Codex still does not list Lodestone tools after the
 generated config and local MCP launcher, then prints exact Codex smoke commands
 without changing global Codex settings.
 
+Use `./node_modules/.bin/lodestone client-smoke --client claude-code` as the
+equivalent Claude Code support diagnostic. It validates `.mcp.json`, checks the
+local MCP launcher, and prints exact `claude --mcp-config ... --strict-mcp-config`
+smoke commands without changing global Claude settings.
+
 Then open Claude Code, Codex, Cursor, or any other MCP-aware client in the same directory and ask:
 
 > *what are the main subsystems of this codebase?*

@@ -158,6 +158,16 @@ checks `.codex/config.toml`, checks that the local Lodestone MCP launcher
 exists and is executable, and prints exact Codex commands for a trusted smoke
 repo.
 
+For Claude Code, collect the shared MCP support smoke command:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client claude-code
+```
+
+This command does not run Claude Code and does not edit global Claude settings.
+It checks `.mcp.json`, checks that the local Lodestone MCP launcher exists and
+is executable, and prints exact Claude Code commands for a trusted smoke repo.
+
 For Claude Code, Cursor, Cline, cmndclaw, and other clients that use the
 project `.mcp.json`, no extra installer option is required. Verify that shared
 MCP config with:

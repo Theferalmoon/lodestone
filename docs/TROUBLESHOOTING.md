@@ -122,6 +122,18 @@ the same way an already trusted interactive project does.
 If you do not need Codex, skip the Codex adapter. The default `.mcp.json`
 configuration still works for MCP-aware clients that read `.mcp.json`.
 
+For Claude Code support, collect the `.mcp.json` smoke report:
+
+```bash
+./node_modules/.bin/lodestone client-smoke --client claude-code
+```
+
+That helper does not run Claude Code or edit global Claude settings. It
+validates `.mcp.json`, checks that `.lodestone/runtime/lodestone-mcp` exists
+and is executable, and prints exact
+`claude --mcp-config ... --strict-mcp-config` commands a maintainer can run in a
+trusted smoke repo.
+
 ## `.lodestone/` is corrupt
 
 **Symptom:** MCP tools return errors mentioning schema versions, or `lodestone status` reports the index in an inconsistent state.
